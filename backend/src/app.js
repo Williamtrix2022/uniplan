@@ -25,7 +25,10 @@ app.use(express.urlencoded({ extended: true }));
 // ========== IMPORTAR RUTAS ==========
 const authRoutes = require('./routes/authRoutes');
 const studentRoutes = require('./routes/studentRoutes');
-
+const subjectRoutes = require('./routes/subjectRoutes');
+const taskRoutes = require('./routes/taskRoutes');
+const noteRoutes = require('./routes/noteRoutes');
+const pomodoroRoutes = require('./routes/pomodoroRoutes');
 
 
 // 4. Logger simple de peticiones
@@ -47,7 +50,9 @@ app.get('/', (req, res) => {
       auth: '/api/auth',
       students: '/api/students',
       subjects: '/api/subjects',
-      tasks: '/api/tasks'
+      tasks: '/api/tasks',
+      notes: '/api/notes',
+      pomodoro: '/api/pomodoro'
     }
   });
 });
@@ -55,6 +60,10 @@ app.get('/', (req, res) => {
 // ========== IMPORTAR RUTAS ==========
 app.use('/api/auth', authRoutes);
 app.use('/api/students', studentRoutes);
+app.use('/api/subjects', subjectRoutes);
+app.use('/api/tasks', taskRoutes);
+app.use('/api/notes', noteRoutes);
+app.use('/api/pomodoro', pomodoroRoutes);
 
 // Health check - Para verificar que el servidor funciona
 app.get('/api/health', (req, res) => {
