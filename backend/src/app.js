@@ -29,6 +29,8 @@ const subjectRoutes = require('./routes/subjectRoutes');
 const taskRoutes = require('./routes/taskRoutes');
 const noteRoutes = require('./routes/noteRoutes');
 const pomodoroRoutes = require('./routes/pomodoroRoutes');
+const calendarRoutes = require('./routes/calendarRoutes');
+const dashboardRoutes = require('./routes/dashboardRoutes');
 
 
 // 4. Logger simple de peticiones
@@ -45,6 +47,8 @@ app.get('/', (req, res) => {
     success: true,
     message: 'Bienvenido a Uniplan API',
     version: '1.0.0',
+    author: 'William Moya Santana',
+    description: 'API REST para gestión académica universitaria',
     endpoints: {
       health: '/api/health',
       auth: '/api/auth',
@@ -52,8 +56,11 @@ app.get('/', (req, res) => {
       subjects: '/api/subjects',
       tasks: '/api/tasks',
       notes: '/api/notes',
-      pomodoro: '/api/pomodoro'
-    }
+      pomodoro: '/api/pomodoro',
+      calendar: '/api/calendar',
+      dashboard: '/api/dashboard'
+    },
+    documentation: 'Ver README.md para más información'
   });
 });
 
@@ -64,6 +71,8 @@ app.use('/api/subjects', subjectRoutes);
 app.use('/api/tasks', taskRoutes);
 app.use('/api/notes', noteRoutes);
 app.use('/api/pomodoro', pomodoroRoutes);
+app.use('/api/calendar', calendarRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 
 // Health check - Para verificar que el servidor funciona
 app.get('/api/health', (req, res) => {
