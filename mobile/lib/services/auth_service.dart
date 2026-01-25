@@ -104,6 +104,20 @@ class AuthService {
     }
   }
 
+  // ========== OBTENER NOMBRE DEL USUARIO ==========
+  Future<String> getUserName() async {
+    try {
+      final response = await getProfile();
+      if (response['success'] == true) {
+        final data = response['data'];
+        return data['nombre'] ?? 'Usuario';
+      }
+      return 'Usuario';
+    } catch (e) {
+      return 'Usuario';
+    }
+  }
+
   // ========== GUARDAR TOKEN ==========
   Future<void> _saveToken(String token) async {
     final prefs = await SharedPreferences.getInstance();
@@ -132,7 +146,7 @@ class AuthService {
   Future<Map<String, dynamic>?> getUserData() async {
     final prefs = await SharedPreferences.getInstance();
     final userDataString = prefs.getString(_userKey);
-    
+
     if (userDataString != null) {
       // Aquí deberías parsear el string a Map
       // Por simplicidad, retornamos null por ahora

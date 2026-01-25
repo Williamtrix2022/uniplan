@@ -8,6 +8,7 @@ import '../../services/auth_service.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
 import 'register_screen.dart';
+import '../home/home_screen.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -42,11 +43,10 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (mounted) {
-        // Navegar al home (lo implementaremos después)
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('¡Bienvenido a Uniplan!'),
-            backgroundColor: AppTheme.success,
+        // Navegar al home
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const HomeScreen(),
           ),
         );
       }
@@ -89,14 +89,12 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: AppTheme.lightGreen,
                       borderRadius: BorderRadius.circular(AppSizes.radiusXL),
                     ),
-                    child: Center(
-                     child: Image.asset(
-                     "assets/images/uniplan_logo.png"
-,
-                       width: 200,
-                       height: 200,
-                      fit: BoxFit.contain,
-                    ),
+                    child: const Center(
+                      child: Icon(
+                        Icons.lightbulb_outline,
+                        size: 80,
+                        color: AppTheme.primaryGreen,
+                      ),
                     ),
                   ),
                 ),
@@ -105,7 +103,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // Título
                 const Text(
-                  'Bienvenido a Uniplan',
+                  'Bienvenido de nuevo',
                   style: TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
@@ -114,7 +112,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: 8),
                 const Text(
-                  'Organiza tu estudio, conquista tus metas 🎓✨',
+                  'Tu espacio de enfoque te espera',
                   style: TextStyle(
                     fontSize: 14,
                     color: AppTheme.greyText,

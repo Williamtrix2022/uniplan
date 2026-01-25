@@ -7,6 +7,7 @@ import '../../config/theme.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
+import '../home/home_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -85,13 +86,13 @@ class _RegisterScreenState extends State<RegisterScreen> {
       );
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('¡Cuenta creada exitosamente!'),
-            backgroundColor: AppTheme.success,
+        // Ir directamente al home (ya que register también devuelve token)
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const HomeScreen(),
           ),
+          (route) => false,
         );
-        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {
