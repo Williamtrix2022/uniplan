@@ -11,6 +11,7 @@ import '../../services/dashboard_service.dart';
 import '../../models/task.dart';
 import '../tasks/tasks_screen.dart';
 import '../tasks/task_form_screen.dart';
+import '../pomodoro/pomodoro_screen.dart';
 
 import 'dart:math' as math;
 
@@ -284,7 +285,12 @@ class _HomeScreenState extends State<HomeScreen> {
               // Botón Start
               ElevatedButton.icon(
                 onPressed: () {
-                  // TODO: Iniciar Pomodoro
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const PomodoroScreen(),
+                    ),
+                  ).then((_) => _loadDashboardData());
                 },
                 icon: const Icon(Icons.play_arrow, size: 20),
                 label: const Text('Start'),
@@ -334,15 +340,27 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: AppTheme.primaryGreen,
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
               shape: BoxShape.circle,
+              gradient: const RadialGradient(
+                colors: [
+                  Colors.orangeAccent,
+                  Colors.deepOrange,
+                ],
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.deepOrange.withOpacity(0.6),
+                  blurRadius: 12,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
             child: const Icon(
               Icons.local_fire_department,
-              color: AppTheme.white,
-              size: 20,
+              color: Colors.white,
+              size: 22,
             ),
           ),
           const SizedBox(width: 12),
