@@ -9,6 +9,9 @@ import '../../services/auth_service.dart';
 import '../../services/task_service.dart';
 import '../../services/dashboard_service.dart';
 import '../../models/task.dart';
+import '../tasks/tasks_screen.dart';
+import '../tasks/task_form_screen.dart';
+
 import 'dart:math' as math;
 
 class HomeScreen extends StatefulWidget {
@@ -22,7 +25,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
   final TaskService _taskService = TaskService();
   final DashboardService _dashboardService = DashboardService();
-  
+
   String userName = '';
   List<Task> todayTasks = [];
   int pomodorosThisWeek = 0;
@@ -40,14 +43,14 @@ class _HomeScreenState extends State<HomeScreen> {
     try {
       // Cargar nombre del usuario
       userName = await _authService.getUserName();
-      
+
       // Cargar tareas del día
       final allTasks = await _taskService.getTasks(estado: 'pendiente');
       final today = DateTime.now();
       todayTasks = allTasks.where((task) {
         return task.fechaEntrega.year == today.year &&
-               task.fechaEntrega.month == today.month &&
-               task.fechaEntrega.day == today.day;
+            task.fechaEntrega.month == today.month &&
+            task.fechaEntrega.day == today.day;
       }).toList();
 
       // Cargar estadísticas de pomodoro
@@ -60,7 +63,6 @@ class _HomeScreenState extends State<HomeScreen> {
       } catch (e) {
         pomodorosThisWeek = 0;
       }
-
     } catch (e) {
       print('Error loading dashboard: $e');
     } finally {
@@ -70,15 +72,19 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-   
-  
+  String _getGreeting() {
+    final hour = DateTime.now().hour;
+    if (hour < 12) return 'Buenos días';
+    if (hour < 18) return 'Buenas tardes';
+    return 'Buenas noches';
+  }
 
   String _getFormattedDate() {
     final now = DateTime.now();
     final weekday = DateFormat('EEEE', 'es_ES').format(now);
     final day = now.day;
     final month = DateFormat('MMMM', 'es_ES').format(now);
-    
+
     return '${weekday[0].toUpperCase()}${weekday.substring(1)}, $day de $month';
   }
 
@@ -100,19 +106,19 @@ class _HomeScreenState extends State<HomeScreen> {
                     children: [
                       // Header
                       _buildHeader(),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Pomodoro Timer Card
                       _buildPomodoroCard(),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // Racha actual
                       _buildStreakCard(),
-                      
+
                       const SizedBox(height: 32),
-                      
+
                       // Título de tareas
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -127,7 +133,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                           TextButton(
                             onPressed: () {
-                              // TODO: Navegar a pantalla de tareas
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (_) => const TasksScreen(),
+                                ),
+                              );
                             },
                             child: const Text(
                               'Ver todo →',
@@ -139,12 +150,12 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 16),
-                      
+
                       // Lista de tareas
                       _buildTasksList(),
-                      
+
                       const SizedBox(height: 100),
                     ],
                   ),
@@ -153,7 +164,12 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // TODO: Agregar tarea
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const TaskFormScreen(),
+            ),
+          ).then((_) => _loadDashboardData());
         },
         backgroundColor: AppTheme.primaryGreen,
         child: const Icon(Icons.add, color: AppTheme.white),
@@ -229,7 +245,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                 ),
-                
+
                 // Tiempo y texto
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -258,9 +274,9 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          
+
           const SizedBox(height: 24),
-          
+
           // Botones
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -284,9 +300,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
               ),
-              
+
               const SizedBox(width: 12),
-              
+
               // Botón Configuración
               Container(
                 decoration: BoxDecoration(
@@ -402,8 +418,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTaskCard(Task task) {
-    
-    
+    final priorityColor = Color(
+        int.parse(task.getPriorityColor().substring(1), radix: 16) +
+            0xFF000000);
+
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(16),
@@ -443,9 +461,9 @@ class _HomeScreenState extends State<HomeScreen> {
                   : null,
             ),
           ),
-          
+
           const SizedBox(width: 12),
-          
+
           // Info de la tarea
           Expanded(
             child: Column(
@@ -495,7 +513,7 @@ class _HomeScreenState extends State<HomeScreen> {
               ],
             ),
           ),
-          
+
           // Icono de menú
           IconButton(
             onPressed: () {
@@ -537,7 +555,12 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget _buildNavItem(IconData icon, String label, bool isActive) {
     return InkWell(
       onTap: () {
-        // TODO: Navegación
+        if (label == 'Tasks') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (context) => const TasksScreen()),
+          ).then((_) => _loadDashboardData()); // Recargar al volver
+        }
       },
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -580,22 +603,22 @@ class _CircularProgressPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
     final radius = size.width / 2;
-    
+
     // Círculo de fondo
     final backgroundPaint = Paint()
       ..color = backgroundColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 8;
-    
+
     canvas.drawCircle(center, radius - 4, backgroundPaint);
-    
+
     // Círculo de progreso
     final progressPaint = Paint()
       ..color = color
       ..style = PaintingStyle.stroke
       ..strokeWidth = 8
       ..strokeCap = StrokeCap.round;
-    
+
     final sweepAngle = 2 * math.pi * progress;
     canvas.drawArc(
       Rect.fromCircle(center: center, radius: radius - 4),
