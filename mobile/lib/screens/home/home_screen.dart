@@ -13,6 +13,7 @@ import '../tasks/tasks_screen.dart';
 import '../tasks/task_form_screen.dart';
 import '../pomodoro/pomodoro_screen.dart';
 import '../calendar/calendar_screen.dart';
+import '../profile/profile_screen.dart';
 
 import 'dart:math' as math;
 
@@ -571,7 +572,7 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, bool isActive) {
+ Widget _buildNavItem(IconData icon, String label, bool isActive) {
   return InkWell(
     onTap: () {
       if (label == 'Tasks') {
@@ -587,6 +588,14 @@ class _HomeScreenState extends State<HomeScreen> {
           context,
           MaterialPageRoute(
             builder: (context) => const CalendarScreen(),
+          ),
+        ).then((_) => _loadDashboardData());
+      } 
+      else if (label == 'Profile') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const ProfileScreen(),
           ),
         ).then((_) => _loadDashboardData());
       }
@@ -614,6 +623,7 @@ class _HomeScreenState extends State<HomeScreen> {
     ),
   );
 }
+
 
 }
 
