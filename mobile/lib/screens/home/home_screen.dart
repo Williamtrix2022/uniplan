@@ -12,6 +12,7 @@ import '../../models/task.dart';
 import '../tasks/tasks_screen.dart';
 import '../tasks/task_form_screen.dart';
 import '../pomodoro/pomodoro_screen.dart';
+import '../calendar/calendar_screen.dart';
 
 import 'dart:math' as math;
 
@@ -571,36 +572,49 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildNavItem(IconData icon, String label, bool isActive) {
-    return InkWell(
-      onTap: () {
-        if (label == 'Tasks') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const TasksScreen()),
-          ).then((_) => _loadDashboardData()); // Recargar al volver
-        }
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: isActive ? AppTheme.primaryGreen : AppTheme.greyText,
-            size: 24,
+  return InkWell(
+    onTap: () {
+      if (label == 'Tasks') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const TasksScreen(),
           ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-              color: isActive ? AppTheme.primaryGreen : AppTheme.greyText,
-            ),
+        ).then((_) => _loadDashboardData());
+      } 
+      else if (label == 'Calendar') {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => const CalendarScreen(),
           ),
-        ],
-      ),
-    );
-  }
+        ).then((_) => _loadDashboardData());
+      }
+    },
+    child: Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Icon(
+          icon,
+          color: isActive ? AppTheme.primaryGreen : AppTheme.greyText,
+          size: 24,
+        ),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 12,
+            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+            color: isActive
+                ? AppTheme.primaryGreen
+                : AppTheme.greyText,
+          ),
+        ),
+      ],
+    ),
+  );
+}
+
 }
 
 // ============================================

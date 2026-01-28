@@ -44,15 +44,11 @@
 
 \## 🛠️ Tecnologías Utilizadas
 
-
-
 \### Frontend (Mobile)
 
 \- \*\*Flutter\*\* 3.x - Framework de desarrollo móvil
 
 \- \*\*Dart\*\* - Lenguaje de programación
-
-
 
 \### Backend (API)
 
