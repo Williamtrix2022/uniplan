@@ -7,6 +7,7 @@ import '../../config/theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/dashboard_service.dart';
 import '../auth/login_screen.dart';
+import 'change_password_screen.dart';
 import 'edit_profile_screen.dart';
 import 'pomodoro_settings_screen.dart';
 
@@ -372,6 +373,20 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 context,
                 MaterialPageRoute(
                   builder: (context) => const PomodoroSettingsScreen(),
+                ),
+              );
+            },
+          ),
+          const Divider(height: 1),
+          _buildMenuItem(
+            icon: Icons.lock_outline,
+            title: 'Cambiar contraseña',
+            subtitle: 'Actualiza tu contraseña desde tu perfil',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ChangePasswordScreen(),
                 ),
               );
             },
