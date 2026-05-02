@@ -81,6 +81,78 @@ class AuthService {
     }
   }
 
+  // ========== FORGOT PASSWORD ==========
+  Future<Map<String, dynamic>> forgotPassword({
+    required String email,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        ApiConfig.forgotPassword,
+        {
+          'correo': email,
+        },
+      );
+
+      if (response['success'] == true) {
+        return response;
+      }
+
+      throw Exception(response['message'] ?? 'Error al solicitar recuperación');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // ========== RESET PASSWORD ==========
+  Future<Map<String, dynamic>> resetPassword({
+    required String email,
+    required String token,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _apiService.post(
+        ApiConfig.resetPassword,
+        {
+          'correo': email,
+          'token': token,
+          'nuevaContrasena': newPassword,
+        },
+      );
+
+      if (response['success'] == true) {
+        return response;
+      }
+
+      throw Exception(response['message'] ?? 'Error al restablecer contraseña');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // ========== CHANGE PASSWORD ==========
+  Future<Map<String, dynamic>> changePassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    try {
+      final response = await _apiService.patch(
+        ApiConfig.changePassword,
+        body: {
+          'contrasenaActual': currentPassword,
+          'nuevaContrasena': newPassword,
+        },
+      );
+
+      if (response['success'] == true) {
+        return response;
+      }
+
+      throw Exception(response['message'] ?? 'Error al cambiar contraseña');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // ========== LOGOUT ==========
   Future<void> logout() async {
     await _removeToken();
