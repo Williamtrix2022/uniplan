@@ -12,7 +12,7 @@ const app = express();
 // 1. CORS - Permitir peticiones desde Flutter
 app.use(cors({
   origin: '*', // En producción, especifica el dominio de tu app
-  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
