@@ -2,10 +2,42 @@
 // UTILIDADES DE VALIDACIÓN
 // ============================================
 
+const dns = require('dns').promises;
+
 // Validar email
 const isValidEmail = (email) => {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
+};
+
+const blockedDomains = new Set([
+  'example.com',
+  'example.org',
+  'example.net',
+  'test.com',
+  'mailinator.com',
+  'tempmail.com',
+  '10minutemail.com',
+  'guerrillamail.com'
+]);
+
+const hasMailExchange = async (domain) => {
+  try {
+    const mxRecords = await dns.resolveMx(domain);
+    return Array.isArray(mxRecords) && mxRecords.length > 0;
+  } catch (error) {
+    return false;
+  }
+};
+
+// Validar que el correo sea entregable (formato + dominio con MX)
+const isRealEmail = async (email) => {
+  if (!isValidEmail(email)) return false;
+
+  const domain = email.split('@')[1].toLowerCase();
+  if (blockedDomains.has(domain)) return false;
+
+  return hasMailExchange(domain);
 };
 
 // Validar contraseña (mínimo 6 caracteres)
@@ -79,6 +111,7 @@ const isNotPastDate = (dateString) => {
 
 module.exports = {
   isValidEmail,
+  isRealEmail,
   isValidPassword,
   isValidDate,
   isValidTime,

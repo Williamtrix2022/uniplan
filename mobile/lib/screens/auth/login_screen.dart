@@ -7,6 +7,7 @@ import '../../config/theme.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
+import 'forgot_password_screen.dart';
 import 'register_screen.dart';
 import '../home/home_screen.dart';
 
@@ -285,7 +286,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       alignment: Alignment.centerRight,
                       child: TextButton(
                         onPressed: () {
-                          // TODO: Recuperar contraseña
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => const ForgotPasswordScreen(),
+                            ),
+                          );
                         },
                         style: TextButton.styleFrom(
                           foregroundColor: AppTheme.primaryGreen,

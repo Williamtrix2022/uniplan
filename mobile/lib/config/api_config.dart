@@ -7,7 +7,7 @@ class ApiConfig {
   // IMPORTANTE: Elige UNA opción según tu dispositivo
   
   // OPCIÓN 1: Android Emulator (AVD)
-  static const String baseUrl = 'http://192.168.1.6:3000';
+  static const String baseUrl = 'http://192.168.1.123:3000';
   
   // OPCIÓN 2: iOS Simulator
   // static const String baseUrl = 'http://localhost:3000';
@@ -29,6 +29,9 @@ class ApiConfig {
   static const String login = '$apiPrefix/auth/login';
   static const String register = '$apiPrefix/auth/register';
   static const String profile = '$apiPrefix/auth/profile';
+  static const String forgotPassword = '$apiPrefix/auth/forgot-password';
+  static const String resetPassword = '$apiPrefix/auth/reset-password';
+  static const String changePassword = '$apiPrefix/auth/change-password';
   
   // Students
   static const String students = '$apiPrefix/students';

@@ -1,0 +1,190 @@
+import 'package:flutter/material.dart';
+import '../../config/theme.dart';
+import '../../services/auth_service.dart';
+import '../../widgets/common/custom_button.dart';
+import '../../widgets/common/custom_text_field.dart';
+
+class ResetPasswordScreen extends StatefulWidget {
+  final String? initialEmail;
+  final String? initialToken;
+
+  const ResetPasswordScreen({super.key, this.initialEmail, this.initialToken});
+
+  @override
+  State<ResetPasswordScreen> createState() => _ResetPasswordScreenState();
+}
+
+class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
+  final _formKey = GlobalKey<FormState>();
+  final _emailController = TextEditingController();
+  final _tokenController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+  final _authService = AuthService();
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _emailController.text = widget.initialEmail ?? '';
+    _tokenController.text = widget.initialToken ?? '';
+  }
+
+  @override
+  void dispose() {
+    _emailController.dispose();
+    _tokenController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _handleResetPassword() async {
+    if (!_formKey.currentState!.validate()) return;
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.resetPassword(
+        email: _emailController.text.trim(),
+        token: _tokenController.text.trim(),
+        newPassword: _passwordController.text,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Contraseña restablecida correctamente'),
+            backgroundColor: AppTheme.success,
+          ),
+        );
+        Navigator.popUntil(context, (route) => route.isFirst);
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: AppTheme.white,
+      appBar: AppBar(
+        title: const Text('Restablecer contraseña'),
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(AppSizes.paddingL),
+        child: Form(
+          key: _formKey,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 20),
+              const Text(
+                'Ingresa tu token y nueva contraseña',
+                style: TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.darkText,
+                ),
+              ),
+              const SizedBox(height: 8),
+              const Text(
+                'El token llega al correo que registraste en Uniplan.',
+                style: TextStyle(
+                  fontSize: 14,
+                  color: AppTheme.greyText,
+                ),
+              ),
+              const SizedBox(height: 28),
+              CustomTextField(
+                label: 'Correo electrónico',
+                hintText: 'ejemplo@universidad.edu',
+                controller: _emailController,
+                keyboardType: TextInputType.emailAddress,
+                prefixIcon: Icons.email_outlined,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'El correo es obligatorio';
+                  }
+                  final email = value.trim();
+                  final regex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
+                  if (!regex.hasMatch(email)) {
+                    return 'Ingresa un correo válido';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              CustomTextField(
+                label: 'Token de recuperación',
+                hintText: 'Pega aquí tu token',
+                controller: _tokenController,
+                prefixIcon: Icons.vpn_key_outlined,
+                validator: (value) {
+                  if (value == null || value.trim().isEmpty) {
+                    return 'El token es obligatorio';
+                  }
+                  if (value.trim().length < 20) {
+                    return 'El token no parece válido';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              CustomTextField(
+                label: 'Nueva contraseña',
+                hintText: '••••••••',
+                controller: _passwordController,
+                obscureText: true,
+                prefixIcon: Icons.lock_outline,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Ingresa una nueva contraseña';
+                  }
+                  if (value.length < 6) {
+                    return 'Mínimo 6 caracteres';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 20),
+              CustomTextField(
+                label: 'Confirmar contraseña',
+                hintText: '••••••••',
+                controller: _confirmPasswordController,
+                obscureText: true,
+                prefixIcon: Icons.lock_reset_outlined,
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Confirma la contraseña';
+                  }
+                  if (value != _passwordController.text) {
+                    return 'Las contraseñas no coinciden';
+                  }
+                  return null;
+                },
+              ),
+              const SizedBox(height: 24),
+              CustomButton(
+                text: 'Restablecer contraseña',
+                onPressed: _handleResetPassword,
+                isLoading: _isLoading,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}

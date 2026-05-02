@@ -85,6 +85,23 @@ JWT_EXPIRE=7d
 
 # Bcrypt
 BCRYPT_ROUNDS=10
+
+# Recuperación de contraseña / envío de correos
+RESET_PASSWORD_URL=uniplan://reset-password
+# URL web opcional para correos (recomendado para enlaces clickeables en todos los clientes)
+RESET_PASSWORD_WEB_URL=https://tu-dominio.com/reset-password
+RESET_TOKEN_EXPIRE_MINUTES=30
+
+# Opción A: API de Resend
+RESEND_API_KEY=re_xxxxxxxxxxxxxxxxxxxxx
+RESEND_FROM=Uniplan <no-reply@tu-dominio.com>
+
+# Opción B: SMTP (fallback)
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=tu_correo@ejemplo.com
+SMTP_PASS=tu_app_password
+SMTP_FROM=Uniplan <no-reply@uniplan.app>
 ```
 
 ---
@@ -161,7 +178,10 @@ backend/
 |--------|------|-------------|------|
 | POST | `/api/auth/register` | Registrar estudiante | No |
 | POST | `/api/auth/login` | Iniciar sesión | No |
+| POST | `/api/auth/forgot-password` | Solicitar recuperación (envía correo) | No |
+| POST | `/api/auth/reset-password` | Restablecer contraseña (correo + token) | No |
 | GET | `/api/auth/profile` | Obtener perfil | Sí |
+| PATCH | `/api/auth/change-password` | Cambiar contraseña autenticado | Sí |
 
 ### Materias
 

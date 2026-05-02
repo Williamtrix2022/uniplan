@@ -95,6 +95,107 @@ class Student {
       throw error;
     }
   }
+
+  // Crear tabla de recuperación de contraseña si no existe
+  static async ensurePasswordResetTable() {
+    const query = `
+      CREATE TABLE IF NOT EXISTS password_resets (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        student_id INT NOT NULL,
+        token_hash VARCHAR(255) NOT NULL,
+        expires_at DATETIME NOT NULL,
+        used TINYINT(1) DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        used_at DATETIME NULL,
+        INDEX idx_token_hash (token_hash),
+        INDEX idx_student_id (student_id),
+        CONSTRAINT fk_password_resets_student
+          FOREIGN KEY (student_id) REFERENCES estudiantes(id)
+          ON DELETE CASCADE
+      )
+    `;
+
+    try {
+      await pool.execute(query);
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Guardar token de recuperación (invalidando anteriores activos)
+  static async savePasswordResetToken(studentId, tokenHash, expiresAt) {
+    const invalidateQuery = `
+      UPDATE password_resets
+      SET used = 1, used_at = NOW()
+      WHERE student_id = ? AND used = 0
+    `;
+
+    const insertQuery = `
+      INSERT INTO password_resets (student_id, token_hash, expires_at)
+      VALUES (?, ?, ?)
+    `;
+
+    try {
+      await pool.execute(invalidateQuery, [studentId]);
+      const [result] = await pool.execute(insertQuery, [studentId, tokenHash, expiresAt]);
+      return result.insertId;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Buscar token válido por hash
+  static async findValidPasswordResetByHash(tokenHash) {
+    const query = `
+      SELECT pr.id, pr.student_id, pr.expires_at, pr.used, s.activo
+      FROM password_resets pr
+      INNER JOIN estudiantes s ON s.id = pr.student_id
+      WHERE pr.token_hash = ?
+        AND pr.used = 0
+        AND pr.expires_at > NOW()
+        AND s.activo = TRUE
+      LIMIT 1
+    `;
+
+    try {
+      const [rows] = await pool.execute(query, [tokenHash]);
+      return rows[0] || null;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Marcar token como usado
+  static async markPasswordResetAsUsed(resetId) {
+    const query = `
+      UPDATE password_resets
+      SET used = 1, used_at = NOW()
+      WHERE id = ?
+    `;
+
+    try {
+      const [result] = await pool.execute(query, [resetId]);
+      return result.affectedRows > 0;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Actualizar contraseña del estudiante
+  static async updatePassword(studentId, hashedPassword) {
+    const query = `
+      UPDATE estudiantes
+      SET contrasena = ?
+      WHERE id = ? AND activo = TRUE
+    `;
+
+    try {
+      const [result] = await pool.execute(query, [hashedPassword, studentId]);
+      return result.affectedRows > 0;
+    } catch (error) {
+      throw error;
+    }
+  }
 }
 
 module.exports = Student;
