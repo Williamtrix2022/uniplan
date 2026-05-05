@@ -130,15 +130,15 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
         await _taskService.createTask(task);
       }
 
-      if (mounted) {
-        Navigator.pop(context, true);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(isEditing ? 'Tarea actualizada' : 'Tarea creada'),
-            backgroundColor: AppTheme.success,
-          ),
-        );
-      }
+      if (!mounted) return;
+      final messenger = ScaffoldMessenger.maybeOf(context);
+      Navigator.pop(context, true);
+      messenger?.showSnackBar(
+        SnackBar(
+          content: Text(isEditing ? 'Tarea actualizada' : 'Tarea creada'),
+          backgroundColor: AppTheme.success,
+        ),
+      );
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -182,111 +182,53 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   }
 
   Future<void> _showCreateSubjectDialog() async {
-    final nameController = TextEditingController();
-    final codeController = TextEditingController();
-    bool creating = false;
-
-    final Subject? createdSubject = await showDialog<Subject>(
+    final Map<String, String?>? draft = await showDialog<Map<String, String?>>(
       context: context,
-      builder: (dialogContext) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              title: const Text('Nueva materia'),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextField(
-                    controller: nameController,
-                    autofocus: true,
-                    decoration: const InputDecoration(
-                      labelText: 'Nombre *',
-                      hintText: 'Ej. Matemáticas',
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  TextField(
-                    controller: codeController,
-                    decoration: const InputDecoration(
-                      labelText: 'Código (opcional)',
-                      hintText: 'Ej. MAT-101',
-                    ),
-                  ),
-                ],
-              ),
-              actions: [
-                TextButton(
-                  onPressed: creating ? null : () => Navigator.pop(dialogContext),
-                  child: const Text('Cancelar'),
-                ),
-                ElevatedButton(
-                  onPressed: creating
-                      ? null
-                      : () async {
-                          final name = nameController.text.trim();
-                          if (name.isEmpty) {
-                            ScaffoldMessenger.of(dialogContext).showSnackBar(
-                              const SnackBar(
-                                content: Text('El nombre de la materia es obligatorio'),
-                                backgroundColor: AppTheme.error,
-                              ),
-                            );
-                            return;
-                          }
-
-                          setDialogState(() => creating = true);
-                          try {
-                            final created = await _subjectService.createSubject(
-                              nombre: name,
-                              codigo: codeController.text.trim().isEmpty
-                                  ? null
-                                  : codeController.text.trim(),
-                            );
-                            if (!dialogContext.mounted) return;
-                            Navigator.of(dialogContext).pop(created);
-                          } catch (e) {
-                            if (!dialogContext.mounted) return;
-                            setDialogState(() => creating = false);
-                            ScaffoldMessenger.of(dialogContext).showSnackBar(
-                              SnackBar(
-                                content: Text('Error creando materia: ${e.toString()}'),
-                                backgroundColor: AppTheme.error,
-                              ),
-                            );
-                          }
-                        },
-                  child: creating
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(strokeWidth: 2),
-                        )
-                      : const Text('Crear'),
-                ),
-              ],
-            );
-          },
-        );
-      },
+      builder: (_) => const _CreateSubjectDialog(),
     );
 
-    nameController.dispose();
-    codeController.dispose();
+    if (!mounted || draft == null) return;
 
-    if (!mounted || createdSubject == null) return;
+    final name = draft['nombre']?.trim() ?? '';
+    if (name.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('El nombre de la materia es obligatorio'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+      return;
+    }
 
-    setState(() {
-      _subjects = [..._subjects, createdSubject]
-        ..sort((a, b) => a.nombre.compareTo(b.nombre));
-      selectedSubjectId = createdSubject.id;
-    });
+    try {
+      final createdSubject = await _subjectService.createSubject(
+        nombre: name,
+        codigo: draft['codigo'],
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Materia creada correctamente'),
-        backgroundColor: AppTheme.success,
-      ),
-    );
+      if (!mounted) return;
+
+      setState(() {
+        _subjects = [..._subjects, createdSubject]
+          ..sort((a, b) => a.nombre.compareTo(b.nombre));
+        selectedSubjectId = createdSubject.id;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Materia creada correctamente'),
+          backgroundColor: AppTheme.success,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error creando materia: ${e.toString()}'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+    }
   }
 
   @override
@@ -560,6 +502,87 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
         color: isSelected ? AppTheme.white : AppTheme.darkText,
         fontWeight: FontWeight.w600,
       ),
+    );
+  }
+}
+
+class _CreateSubjectDialog extends StatefulWidget {
+  const _CreateSubjectDialog();
+
+  @override
+  State<_CreateSubjectDialog> createState() => _CreateSubjectDialogState();
+}
+
+class _CreateSubjectDialogState extends State<_CreateSubjectDialog> {
+  late final TextEditingController _nameController;
+  late final TextEditingController _codeController;
+
+  @override
+  void initState() {
+    super.initState();
+    _nameController = TextEditingController();
+    _codeController = TextEditingController();
+  }
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _codeController.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final name = _nameController.text.trim();
+    if (name.isEmpty) return;
+    FocusScope.of(context).unfocus();
+    Navigator.of(context).pop({
+      'nombre': name,
+      'codigo': _codeController.text.trim().isEmpty
+          ? null
+          : _codeController.text.trim(),
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AlertDialog(
+      title: const Text('Nueva materia'),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _nameController,
+            autofocus: true,
+            decoration: const InputDecoration(
+              labelText: 'Nombre *',
+              hintText: 'Ej. Matemáticas',
+            ),
+            onSubmitted: (_) => _submit(),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _codeController,
+            decoration: const InputDecoration(
+              labelText: 'Código (opcional)',
+              hintText: 'Ej. MAT-101',
+            ),
+            onSubmitted: (_) => _submit(),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () {
+            FocusScope.of(context).unfocus();
+            Navigator.pop(context);
+          },
+          child: const Text('Cancelar'),
+        ),
+        ElevatedButton(
+          onPressed: _submit,
+          child: const Text('Crear'),
+        ),
+      ],
     );
   }
 }
