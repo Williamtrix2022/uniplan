@@ -12,6 +12,7 @@ class Task {
   final String prioridad; // 'baja', 'media', 'alta'
   final String estado; // 'pendiente', 'en_progreso', 'completada'
   final bool completada;
+  final bool esProyecto;
   final String? materiaNombre;
   final String? materiaColor;
 
@@ -25,6 +26,7 @@ class Task {
     this.prioridad = 'media',
     this.estado = 'pendiente',
     this.completada = false,
+    this.esProyecto = false,
     this.materiaNombre,
     this.materiaColor,
   });
@@ -40,6 +42,7 @@ class Task {
       prioridad: json['prioridad'] ?? 'media',
       estado: json['estado'] ?? 'pendiente',
       completada: json['completada'] == 1 || json['completada'] == true,
+      esProyecto: json['es_proyecto'] == 1 || json['es_proyecto'] == true,
       materiaNombre: json['materia_nombre'],
       materiaColor: json['materia_color'],
     );
@@ -56,6 +59,7 @@ class Task {
       'prioridad': prioridad,
       'estado': estado,
       'completada': completada,
+      'es_proyecto': esProyecto,
     };
   }
 
@@ -84,6 +88,7 @@ class Task {
     String? prioridad,
     String? estado,
     bool? completada,
+    bool? esProyecto,
     String? materiaNombre,
     String? materiaColor,
   }) {
@@ -97,6 +102,7 @@ class Task {
       prioridad: prioridad ?? this.prioridad,
       estado: estado ?? this.estado,
       completada: completada ?? this.completada,
+      esProyecto: esProyecto ?? this.esProyecto,
       materiaNombre: materiaNombre ?? this.materiaNombre,
       materiaColor: materiaColor ?? this.materiaColor,
     );

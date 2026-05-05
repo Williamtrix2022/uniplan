@@ -10,15 +10,22 @@ class TaskService {
   final ApiService _apiService = ApiService();
 
   // Obtener todas las tareas
-  Future<List<Task>> getTasks({String? estado, String? prioridad}) async {
+  Future<List<Task>> getTasks({
+    String? estado,
+    String? prioridad,
+    int? idMateria,
+    bool? esProyecto,
+  }) async {
     try {
       String endpoint = ApiConfig.tasks;
       
       // Agregar query parameters si existen
-      if (estado != null || prioridad != null) {
+      if (estado != null || prioridad != null || idMateria != null || esProyecto != null) {
         final params = <String>[];
         if (estado != null) params.add('estado=$estado');
         if (prioridad != null) params.add('prioridad=$prioridad');
+        if (idMateria != null) params.add('id_materia=$idMateria');
+        if (esProyecto != null) params.add('es_proyecto=$esProyecto');
         endpoint += '?${params.join('&')}';
       }
 
@@ -71,19 +78,37 @@ class TaskService {
 
   // Completar tarea
   Future<Task> completeTask(int taskId) async {
+    return toggleTaskComplete(taskId, completada: true);
+  }
+
+  // Marcar/desmarcar tarea
+  Future<Task> toggleTaskComplete(int taskId, {required bool completada}) async {
     try {
       final response = await _apiService.patch(
-        '${ApiConfig.tasks}/$taskId/complete',
+        '${ApiConfig.tasks}/$taskId/toggle',
+        body: {
+          'completada': completada,
+        },
       );
       
       if (response['success'] == true) {
         return Task.fromJson(response['data']);
       }
       
-      throw Exception('Error al completar tarea');
+      throw Exception('Error al actualizar estado de tarea');
     } catch (e) {
       rethrow;
     }
+  }
+
+  // Obtener tareas por materia
+  Future<List<Task>> getTasksBySubject(int idMateria) async {
+    return getTasks(idMateria: idMateria);
+  }
+
+  // Obtener tareas de proyecto
+  Future<List<Task>> getProjectTasks() async {
+    return getTasks(esProyecto: true);
   }
 
   // Actualizar tarea
