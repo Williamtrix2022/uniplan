@@ -30,7 +30,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final DashboardService _dashboardService = DashboardService();
 
   String userName = '';
-  List<Task> todayTasks = [];
+  List<Task> dashboardTasks = [];
   int pomodorosThisWeek = 0;
   bool isLoading = true;
 
@@ -47,14 +47,28 @@ class _HomeScreenState extends State<HomeScreen> {
       // Cargar nombre del usuario
       userName = await _authService.getUserName();
 
-      // Cargar tareas del día
-      final allTasks = await _taskService.getTasks(estado: 'pendiente');
-      final today = DateTime.now();
-      todayTasks = allTasks.where((task) {
-        return task.fechaEntrega.year == today.year &&
-            task.fechaEntrega.month == today.month &&
-            task.fechaEntrega.day == today.day;
-      }).toList();
+      // Cargar tareas ordenadas por fecha y prioridad
+      final allTasks = await _taskService.getTasks();
+      allTasks.sort((a, b) {
+        final dateCompare = a.fechaEntrega.compareTo(b.fechaEntrega);
+        if (dateCompare != 0) return dateCompare;
+
+        int weight(String prioridad) {
+          switch (prioridad) {
+            case 'alta':
+              return 3;
+            case 'media':
+              return 2;
+            case 'baja':
+              return 1;
+            default:
+              return 0;
+          }
+        }
+
+        return weight(b.prioridad).compareTo(weight(a.prioridad));
+      });
+      dashboardTasks = allTasks;
 
       // Cargar estadísticas de pomodoro
       try {
@@ -127,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           const Text(
-                            'Hoy',
+                            'Tareas',
                             style: TextStyle(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
@@ -396,7 +410,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTasksList() {
-    if (todayTasks.isEmpty) {
+    if (dashboardTasks.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(40),
         decoration: BoxDecoration(
@@ -412,7 +426,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
             const Text(
-              'Ninguna tarea para hoy',
+              'No tienes tareas registradas',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -421,11 +435,24 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              '¡Disfruta tu día!',
+              'Crea una tarea para empezar',
               style: TextStyle(
                 fontSize: 14,
                 color: AppTheme.greyText,
               ),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TaskFormScreen(),
+                  ),
+                ).then((_) => _loadDashboardData());
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('Agregar tarea'),
             ),
           ],
         ),
@@ -433,7 +460,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Column(
-      children: todayTasks.map((task) => _buildTaskCard(task)).toList(),
+      children: dashboardTasks.map((task) => _buildTaskCard(task)).toList(),
     );
   }
 
@@ -456,7 +483,10 @@ class _HomeScreenState extends State<HomeScreen> {
           GestureDetector(
             onTap: () async {
               try {
-                await _taskService.completeTask(task.id);
+                await _taskService.toggleTaskComplete(
+                  task.id,
+                  completada: !task.completada,
+                );
                 _loadDashboardData();
               } catch (e) {
                 print('Error completing task: $e');
@@ -521,8 +551,17 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
                       const SizedBox(width: 8),
                     ],
+                    Container(
+                      width: 8,
+                      height: 8,
+                      decoration: BoxDecoration(
+                        color: priorityColor,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 6),
                     Text(
-                      DateFormat('HH:mm').format(task.fechaEntrega),
+                      '${DateFormat('dd MMM', 'es_ES').format(task.fechaEntrega)} · ${task.prioridad.toUpperCase()}',
                       style: const TextStyle(
                         fontSize: 13,
                         color: AppTheme.greyText,

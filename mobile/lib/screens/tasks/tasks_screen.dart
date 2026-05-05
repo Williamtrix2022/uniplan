@@ -4,9 +4,12 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+
 import '../../config/theme.dart';
 import '../../models/task.dart';
-import '../../services/task_service.dart';
+import '../../providers/task_provider.dart';
+import '../../widgets/tasks/task_filter.dart';
 import 'task_form_screen.dart';
 
 class TasksScreen extends StatefulWidget {
@@ -16,116 +19,55 @@ class TasksScreen extends StatefulWidget {
   State<TasksScreen> createState() => _TasksScreenState();
 }
 
-class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStateMixin {
-  late TabController _tabController;
-  final TaskService _taskService = TaskService();
-  
-  List<Task> allTasks = [];
-  List<Task> todayTasks = [];
-  List<Task> weekTasks = [];
-  List<Task> upcomingTasks = [];
-  List<Task> projectTasks = [];
-  
-  bool isLoading = true;
-  String? selectedFilter;
+class _TasksScreenState extends State<TasksScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tabController;
+  final TextEditingController _searchController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 4, vsync: this);
+    _tabController = TabController(length: 3, vsync: this);
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) {
         setState(() {});
       }
     });
-    _loadTasks();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<TaskProvider>().initialize();
+    });
   }
 
   @override
   void dispose() {
+    _searchController.dispose();
     _tabController.dispose();
     super.dispose();
   }
 
-  Future<void> _loadTasks() async {
-    setState(() => isLoading = true);
-
-    try {
-      final tasks = await _taskService.getTasks();
-      final now = DateTime.now();
-      final today = DateTime(now.year, now.month, now.day);
-      final weekEnd = today.add(const Duration(days: 7));
-
-      setState(() {
-        allTasks = tasks;
-        
-        // Filtrar tareas de hoy
-        todayTasks = tasks.where((task) {
-          final taskDate = DateTime(
-            task.fechaEntrega.year,
-            task.fechaEntrega.month,
-            task.fechaEntrega.day,
-          );
-          return taskDate.isAtSameMomentAs(today) && !task.completada;
-        }).toList();
-
-        // Filtrar tareas de la semana
-        weekTasks = tasks.where((task) {
-          final taskDate = DateTime(
-            task.fechaEntrega.year,
-            task.fechaEntrega.month,
-            task.fechaEntrega.day,
-          );
-          return taskDate.isAfter(today) &&
-                 taskDate.isBefore(weekEnd) &&
-                 !task.completada;
-        }).toList();
-
-        // Filtrar tareas próximas (después de una semana)
-        upcomingTasks = tasks.where((task) {
-          final taskDate = DateTime(
-            task.fechaEntrega.year,
-            task.fechaEntrega.month,
-            task.fechaEntrega.day,
-          );
-          return taskDate.isAfter(weekEnd) && !task.completada;
-        }).toList();
-
-        // Tareas tipo proyecto o de alta prioridad
-        projectTasks = tasks.where((task) {
-          return task.prioridad == 'alta' && !task.completada;
-        }).toList();
-      });
-    } catch (e) {
-      print('Error loading tasks: $e');
-    } finally {
-      setState(() => isLoading = false);
-    }
-  }
-
   Future<void> _toggleTaskComplete(Task task) async {
+    final provider = context.read<TaskProvider>();
     try {
-      await _taskService.completeTask(task.id);
-      _loadTasks();
-      
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tarea completada'),
-            backgroundColor: AppTheme.success,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
+      await provider.toggleTask(task);
+      if (!mounted) return;
+      final completed = !task.completada;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text(completed ? 'Tarea completada' : 'Tarea marcada pendiente'),
+          backgroundColor: AppTheme.success,
+          duration: const Duration(seconds: 2),
+        ),
+      );
     } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppTheme.error,
-          ),
-        );
-      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
     }
   }
 
@@ -149,33 +91,31 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
       ),
     );
 
-    if (confirmed == true) {
-      try {
-        await _taskService.deleteTask(task.id);
-        _loadTasks();
-        
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Tarea eliminada'),
-              backgroundColor: AppTheme.success,
-            ),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('Error: ${e.toString()}'),
-              backgroundColor: AppTheme.error,
-            ),
-          );
-        }
-      }
+    if (confirmed != true) return;
+    if (!mounted) return;
+
+    final provider = context.read<TaskProvider>();
+    try {
+      await provider.deleteTask(task.id);
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Tarea eliminada'),
+          backgroundColor: AppTheme.success,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
     }
   }
 
-  void _openTaskForm({Task? task}) async {
+  Future<void> _openTaskForm({Task? task}) async {
     final result = await Navigator.push(
       context,
       MaterialPageRoute(
@@ -183,70 +123,172 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
       ),
     );
 
-    if (result == true) {
-      _loadTasks();
+    if (result == true && mounted) {
+      await context.read<TaskProvider>().refresh();
+    }
+  }
+
+  void _showFilterBottomSheet(TaskProvider provider) {
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.white,
+      builder: (context) {
+        return TaskFilter(
+          status: provider.statusFilter,
+          priority: provider.priorityFilter,
+          subjectId: provider.subjectFilter,
+          projectFilter: provider.projectFilter,
+          sortOption: provider.sortOption,
+          subjects: provider.subjects,
+          onStatusChanged: provider.setStatusFilter,
+          onPriorityChanged: provider.setPriorityFilter,
+          onSubjectChanged: provider.setSubjectFilter,
+          onProjectFilterChanged: provider.setProjectFilter,
+          onSortChanged: provider.setSortOption,
+          onClear: () {
+            provider.clearFilters();
+            _searchController.clear();
+            Navigator.pop(context);
+          },
+        );
+      },
+    );
+  }
+
+  List<Task> _tasksByTab(List<Task> tasks, int tabIndex) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final tomorrow = today.add(const Duration(days: 1));
+    final weekEnd = today.add(const Duration(days: 7));
+
+    DateTime normalize(DateTime date) => DateTime(date.year, date.month, date.day);
+
+    switch (tabIndex) {
+      case 0:
+        return tasks.where((task) {
+          final due = normalize(task.fechaEntrega);
+          return due.year == today.year &&
+              due.month == today.month &&
+              due.day == today.day;
+        }).toList();
+      case 1:
+        return tasks.where((task) {
+          final due = normalize(task.fechaEntrega);
+          return !due.isBefore(tomorrow) && !due.isAfter(weekEnd);
+        }).toList();
+      case 2:
+        return tasks.where((task) => task.esProyecto).toList();
+      default:
+        return tasks;
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppTheme.white,
-      appBar: AppBar(
-        title: const Text('Mis Tareas'),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list),
-            onPressed: () {
-              // TODO: Mostrar filtros
-            },
+    return Consumer<TaskProvider>(
+      builder: (context, provider, child) {
+        final filteredTasks = provider.filteredTasks;
+        final todayTasks = _tasksByTab(filteredTasks, 0);
+        final weekTasks = _tasksByTab(filteredTasks, 1);
+        final projectTasks = _tasksByTab(filteredTasks, 2);
+
+        return Scaffold(
+          backgroundColor: AppTheme.white,
+          appBar: AppBar(
+            title: const Text('Mis Tareas'),
+            actions: [
+              IconButton(
+                icon: const Icon(Icons.filter_list),
+                onPressed: () => _showFilterBottomSheet(provider),
+              ),
+            ],
+            bottom: TabBar(
+              controller: _tabController,
+              labelColor: AppTheme.primaryGreen,
+              unselectedLabelColor: AppTheme.greyText,
+              indicatorColor: AppTheme.primaryGreen,
+              indicatorWeight: 3,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
+              ),
+              tabs: const [
+                Tab(text: 'Hoy'),
+                Tab(text: 'Semana'),
+                Tab(text: 'Proyecto'),
+              ],
+            ),
           ),
-        ],
-        bottom: TabBar(
-          controller: _tabController,
-          labelColor: AppTheme.primaryGreen,
-          unselectedLabelColor: AppTheme.greyText,
-          indicatorColor: AppTheme.primaryGreen,
-          indicatorWeight: 3,
-          labelStyle: const TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
+          body: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 12, 16, 6),
+                child: TextField(
+                  controller: _searchController,
+                  onChanged: provider.setSearchQuery,
+                  decoration: InputDecoration(
+                    hintText: 'Buscar por título, descripción o materia',
+                    prefixIcon: const Icon(Icons.search),
+                    suffixIcon: provider.searchQuery.isEmpty
+                        ? null
+                        : IconButton(
+                            onPressed: () {
+                              _searchController.clear();
+                              provider.setSearchQuery('');
+                            },
+                            icon: const Icon(Icons.clear),
+                          ),
+                    filled: true,
+                    fillColor: AppTheme.lightGrey,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                ),
+              ),
+              Expanded(
+                child: provider.isLoading && provider.tasks.isEmpty
+                    ? _buildSkeletonList()
+                    : RefreshIndicator(
+                        onRefresh: provider.refresh,
+                        color: AppTheme.primaryGreen,
+                        child: TabBarView(
+                          controller: _tabController,
+                          children: [
+                            _buildTaskList(
+                              todayTasks,
+                              'No tienes tareas para hoy',
+                            ),
+                            _buildTaskList(
+                              weekTasks,
+                              'No hay tareas esta semana',
+                            ),
+                            _buildTaskList(
+                              projectTasks,
+                              'No hay tareas de proyecto o alta prioridad',
+                            ),
+                          ],
+                        ),
+                      ),
+              ),
+            ],
           ),
-          tabs: const [
-            Tab(text: 'Hoy'),
-            Tab(text: 'Semana'),
-            Tab(text: 'Próximamente'),
-            Tab(text: 'Proyectos'),
-          ],
-        ),
-      ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : RefreshIndicator(
-              onRefresh: _loadTasks,
-              color: AppTheme.primaryGreen,
-              child: TabBarView(
-                controller: _tabController,
-                children: [
-                  _buildTaskList(todayTasks, 'No tienes tareas para hoy'),
-                  _buildTaskList(weekTasks, 'No hay tareas esta semana'),
-                  _buildTaskList(upcomingTasks, 'No hay tareas próximas'),
-                  _buildTaskList(projectTasks, 'No hay proyectos activos'),
-                ],
+          floatingActionButton: FloatingActionButton.extended(
+            onPressed: () => _openTaskForm(),
+            backgroundColor: AppTheme.primaryGreen,
+            icon: const Icon(Icons.add, color: AppTheme.white),
+            label: const Text(
+              'Nueva tarea',
+              style: TextStyle(
+                color: AppTheme.white,
+                fontWeight: FontWeight.w600,
               ),
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openTaskForm(),
-        backgroundColor: AppTheme.primaryGreen,
-        icon: const Icon(Icons.add, color: AppTheme.white),
-        label: const Text(
-          'Nueva tarea',
-          style: TextStyle(
-            color: AppTheme.white,
-            fontWeight: FontWeight.w600,
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -274,12 +316,29 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.all(AppSizes.paddingM),
-      itemCount: tasks.length,
-      itemBuilder: (context, index) {
-        return _buildTaskCard(tasks[index]);
-      },
+    final listKey = ValueKey(
+      '${_tabController.index}-${tasks.length}-${_searchController.text}',
+    );
+
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 220),
+      child: ListView.builder(
+        key: listKey,
+        padding: const EdgeInsets.all(AppSizes.paddingM),
+        itemCount: tasks.length,
+        itemBuilder: (context, index) {
+          final task = tasks[index];
+          return TweenAnimationBuilder<double>(
+            duration: Duration(milliseconds: 180 + (index * 25)),
+            tween: Tween(begin: 0.95, end: 1),
+            builder: (context, value, child) => Opacity(
+              opacity: value.clamp(0.0, 1.0),
+              child: Transform.scale(scale: value, child: child),
+            ),
+            child: _buildTaskCard(task),
+          );
+        },
+      ),
     );
   }
 
@@ -287,7 +346,6 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
     final priorityColor = Color(
       int.parse(task.getPriorityColor().substring(1), radix: 16) + 0xFF000000,
     );
-    
     final isOverdue = task.fechaEntrega.isBefore(DateTime.now()) && !task.completada;
 
     return Dismissible(
@@ -326,12 +384,11 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
           ),
         );
       },
-      onDismissed: (direction) {
-        _deleteTask(task);
-      },
+      onDismissed: (direction) => _deleteTask(task),
       child: GestureDetector(
         onTap: () => _openTaskForm(task: task),
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 220),
           margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
@@ -351,23 +408,19 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
           ),
           child: Row(
             children: [
-              // Checkbox
               GestureDetector(
                 onTap: () => _toggleTaskComplete(task),
-                child: Container(
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
                   width: 24,
                   height: 24,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
-                      color: task.completada 
-                          ? AppTheme.primaryGreen 
-                          : priorityColor,
+                      color: task.completada ? AppTheme.primaryGreen : priorityColor,
                       width: 2,
                     ),
-                    color: task.completada 
-                        ? AppTheme.primaryGreen 
-                        : Colors.transparent,
+                    color: task.completada ? AppTheme.primaryGreen : Colors.transparent,
                   ),
                   child: task.completada
                       ? const Icon(
@@ -378,10 +431,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                       : null,
                 ),
               ),
-              
               const SizedBox(width: 12),
-              
-              // Barra de prioridad
               Container(
                 width: 4,
                 height: 40,
@@ -390,10 +440,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              
               const SizedBox(width: 12),
-              
-              // Info de la tarea
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -403,15 +450,11 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
-                        color: task.completada 
-                            ? AppTheme.greyText 
-                            : AppTheme.darkText,
-                        decoration: task.completada 
-                            ? TextDecoration.lineThrough 
-                            : null,
+                        color: task.completada ? AppTheme.greyText : AppTheme.darkText,
+                        decoration:
+                            task.completada ? TextDecoration.lineThrough : null,
                       ),
                     ),
-                    
                     if (task.descripcion != null && task.descripcion!.isNotEmpty) ...[
                       const SizedBox(height: 4),
                       Text(
@@ -424,9 +467,7 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                         ),
                       ),
                     ],
-                    
                     const SizedBox(height: 8),
-                    
                     Row(
                       children: [
                         if (task.materiaNombre != null) ...[
@@ -450,7 +491,6 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                           ),
                           const SizedBox(width: 8),
                         ],
-                        
                         Icon(
                           Icons.calendar_today,
                           size: 14,
@@ -462,10 +502,10 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                           style: TextStyle(
                             fontSize: 12,
                             color: isOverdue ? AppTheme.error : AppTheme.greyText,
-                            fontWeight: isOverdue ? FontWeight.w600 : FontWeight.normal,
+                            fontWeight:
+                                isOverdue ? FontWeight.w600 : FontWeight.normal,
                           ),
                         ),
-                        
                         if (isOverdue) ...[
                           const SizedBox(width: 8),
                           Container(
@@ -492,8 +532,6 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
                   ],
                 ),
               ),
-              
-              // Menú de opciones
               PopupMenuButton<String>(
                 icon: const Icon(
                   Icons.more_vert,
@@ -534,6 +572,52 @@ class _TasksScreenState extends State<TasksScreen> with SingleTickerProviderStat
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSkeletonList() {
+    return ListView.builder(
+      padding: const EdgeInsets.all(AppSizes.paddingM),
+      itemCount: 6,
+      itemBuilder: (context, index) => Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.lightGrey,
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 24,
+              height: 24,
+              decoration: BoxDecoration(
+                color: AppTheme.borderGrey,
+                shape: BoxShape.circle,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    height: 14,
+                    width: 180,
+                    color: AppTheme.borderGrey,
+                  ),
+                  const SizedBox(height: 8),
+                  Container(
+                    height: 12,
+                    width: 140,
+                    color: AppTheme.borderGrey,
+                  ),
+                ],
+              ),
+            ),
+          ],
         ),
       ),
     );

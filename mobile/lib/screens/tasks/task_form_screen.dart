@@ -4,8 +4,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import '../../models/subject.dart';
 import '../../config/theme.dart';
 import '../../models/task.dart';
+import '../../services/subject_service.dart';
 import '../../services/task_service.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
@@ -22,6 +24,7 @@ class TaskFormScreen extends StatefulWidget {
 class _TaskFormScreenState extends State<TaskFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final TaskService _taskService = TaskService();
+  final SubjectService _subjectService = SubjectService();
   
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
@@ -30,6 +33,10 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   TimeOfDay selectedTime = TimeOfDay.now();
   String selectedPriority = 'media';
   String selectedStatus = 'pendiente';
+  bool selectedIsProject = false;
+  int? selectedSubjectId;
+  bool _isLoadingSubjects = false;
+  List<Subject> _subjects = [];
   
   bool isLoading = false;
   bool get isEditing => widget.task != null;
@@ -44,10 +51,14 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
       selectedDate = widget.task!.fechaEntrega;
       selectedPriority = widget.task!.prioridad;
       selectedStatus = widget.task!.estado;
+      selectedIsProject = widget.task!.esProyecto;
+      selectedSubjectId = widget.task!.idMateria;
     } else {
       _titleController = TextEditingController();
       _descriptionController = TextEditingController();
     }
+
+    _loadSubjects();
   }
 
   @override
@@ -102,6 +113,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
       final task = Task(
         id: isEditing ? widget.task!.id : 0,
         idEstudiante: 0,
+        idMateria: selectedSubjectId,
         titulo: _titleController.text.trim(),
         descripcion: _descriptionController.text.trim().isNotEmpty 
             ? _descriptionController.text.trim() 
@@ -109,6 +121,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
         fechaEntrega: dateTime,
         prioridad: selectedPriority,
         estado: selectedStatus,
+        esProyecto: selectedIsProject,
       );
 
       if (isEditing) {
@@ -140,6 +153,140 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
         setState(() => isLoading = false);
       }
     }
+  }
+
+  Future<void> _loadSubjects() async {
+    setState(() => _isLoadingSubjects = true);
+
+    try {
+      final subjects = await _subjectService.getSubjects();
+      if (mounted) {
+        setState(() {
+          _subjects = subjects;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error cargando materias: ${e.toString()}'),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoadingSubjects = false);
+      }
+    }
+  }
+
+  Future<void> _showCreateSubjectDialog() async {
+    final nameController = TextEditingController();
+    final codeController = TextEditingController();
+    bool creating = false;
+
+    final Subject? createdSubject = await showDialog<Subject>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (context, setDialogState) {
+            return AlertDialog(
+              title: const Text('Nueva materia'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: nameController,
+                    autofocus: true,
+                    decoration: const InputDecoration(
+                      labelText: 'Nombre *',
+                      hintText: 'Ej. Matemáticas',
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  TextField(
+                    controller: codeController,
+                    decoration: const InputDecoration(
+                      labelText: 'Código (opcional)',
+                      hintText: 'Ej. MAT-101',
+                    ),
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: creating ? null : () => Navigator.pop(dialogContext),
+                  child: const Text('Cancelar'),
+                ),
+                ElevatedButton(
+                  onPressed: creating
+                      ? null
+                      : () async {
+                          final name = nameController.text.trim();
+                          if (name.isEmpty) {
+                            ScaffoldMessenger.of(dialogContext).showSnackBar(
+                              const SnackBar(
+                                content: Text('El nombre de la materia es obligatorio'),
+                                backgroundColor: AppTheme.error,
+                              ),
+                            );
+                            return;
+                          }
+
+                          setDialogState(() => creating = true);
+                          try {
+                            final created = await _subjectService.createSubject(
+                              nombre: name,
+                              codigo: codeController.text.trim().isEmpty
+                                  ? null
+                                  : codeController.text.trim(),
+                            );
+                            if (!dialogContext.mounted) return;
+                            Navigator.of(dialogContext).pop(created);
+                          } catch (e) {
+                            if (!dialogContext.mounted) return;
+                            setDialogState(() => creating = false);
+                            ScaffoldMessenger.of(dialogContext).showSnackBar(
+                              SnackBar(
+                                content: Text('Error creando materia: ${e.toString()}'),
+                                backgroundColor: AppTheme.error,
+                              ),
+                            );
+                          }
+                        },
+                  child: creating
+                      ? const SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
+                      : const Text('Crear'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    nameController.dispose();
+    codeController.dispose();
+
+    if (!mounted || createdSubject == null) return;
+
+    setState(() {
+      _subjects = [..._subjects, createdSubject]
+        ..sort((a, b) => a.nombre.compareTo(b.nombre));
+      selectedSubjectId = createdSubject.id;
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Materia creada correctamente'),
+        backgroundColor: AppTheme.success,
+      ),
+    );
   }
 
   @override
@@ -178,6 +325,70 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 controller: _descriptionController,
                 maxLines: 4,
               ),
+              const SizedBox(height: 20),
+
+              // Materia asociada
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Materia asociada',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.darkText,
+                    ),
+                  ),
+                  TextButton.icon(
+                    onPressed: _showCreateSubjectDialog,
+                    icon: const Icon(Icons.add, size: 16),
+                    label: const Text('Agregar materia'),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 8),
+              if (_subjects.isEmpty && !_isLoadingSubjects)
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: AppTheme.lightGrey,
+                    borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                  ),
+                  child: const Text(
+                    'No tienes materias creadas aún. Usa "Agregar materia".',
+                    style: TextStyle(color: AppTheme.greyText),
+                  ),
+                ),
+              if (_isLoadingSubjects)
+                const LinearProgressIndicator(color: AppTheme.primaryGreen)
+              else
+                DropdownButtonFormField<int?>(
+                  initialValue: selectedSubjectId,
+                  decoration: InputDecoration(
+                    filled: true,
+                    fillColor: AppTheme.lightGrey,
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(AppSizes.radiusM),
+                      borderSide: BorderSide.none,
+                    ),
+                  ),
+                  items: [
+                    const DropdownMenuItem<int?>(
+                      value: null,
+                      child: Text('Sin materia'),
+                    ),
+                    ..._subjects.map(
+                      (subject) => DropdownMenuItem<int?>(
+                        value: subject.id,
+                        child: Text(subject.nombre),
+                      ),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    setState(() => selectedSubjectId = value);
+                  },
+                ),
 
               const SizedBox(height: 20),
 
@@ -242,6 +453,19 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
               ),
 
               const SizedBox(height: 20),
+
+              SwitchListTile.adaptive(
+                contentPadding: EdgeInsets.zero,
+                title: const Text('Marcar como proyecto'),
+                subtitle: const Text('Las tareas de proyecto aparecen en la pestaña Proyecto'),
+                value: selectedIsProject,
+                activeThumbColor: AppTheme.primaryGreen,
+                onChanged: (value) {
+                  setState(() => selectedIsProject = value);
+                },
+              ),
+
+              const SizedBox(height: 8),
 
               // Estado
               if (isEditing) ...[
