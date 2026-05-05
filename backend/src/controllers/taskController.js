@@ -7,7 +7,7 @@ const Task = require('../models/Task');
 // Crear nueva tarea
 const createTask = async (req, res) => {
   try {
-    const { id_materia, titulo, descripcion, fecha_entrega, prioridad, estado, recordatorio } = req.body;
+    const { id_materia, titulo, descripcion, fecha_entrega, prioridad, estado, recordatorio, es_proyecto } = req.body;
     const id_estudiante = req.user.id;
 
     if (!titulo || !fecha_entrega) {
@@ -25,7 +25,8 @@ const createTask = async (req, res) => {
       fecha_entrega,
       prioridad,
       estado,
-      recordatorio
+      recordatorio,
+      es_proyecto
     });
 
     const task = await Task.findById(taskId);
@@ -50,12 +51,15 @@ const createTask = async (req, res) => {
 const getMyTasks = async (req, res) => {
   try {
     const id_estudiante = req.user.id;
-    const { estado, prioridad, id_materia } = req.query;
+    const { estado, prioridad, id_materia, es_proyecto } = req.query;
 
     const filters = {};
     if (estado) filters.estado = estado;
     if (prioridad) filters.prioridad = prioridad;
     if (id_materia) filters.id_materia = id_materia;
+    if (es_proyecto !== undefined) {
+      filters.es_proyecto = es_proyecto === 'true' || es_proyecto === '1';
+    }
 
     const tasks = await Task.findByStudent(id_estudiante, filters);
 
@@ -136,7 +140,7 @@ const getTaskById = async (req, res) => {
 const updateTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const { titulo, descripcion, fecha_entrega, prioridad, estado, id_materia } = req.body;
+    const { titulo, descripcion, fecha_entrega, prioridad, estado, id_materia, es_proyecto } = req.body;
 
     const task = await Task.findById(id);
 
@@ -160,7 +164,8 @@ const updateTask = async (req, res) => {
       fecha_entrega: fecha_entrega || task.fecha_entrega,
       prioridad: prioridad || task.prioridad,
       estado: estado || task.estado,
-      id_materia: id_materia !== undefined ? id_materia : task.id_materia
+      id_materia: id_materia !== undefined ? id_materia : task.id_materia,
+      es_proyecto: es_proyecto !== undefined ? es_proyecto : task.es_proyecto
     });
 
     if (!updated) {
@@ -188,10 +193,11 @@ const updateTask = async (req, res) => {
   }
 };
 
-// Marcar tarea como completada
-const completeTask = async (req, res) => {
+// Marcar/desmarcar tarea como completada
+const toggleTaskComplete = async (req, res) => {
   try {
     const { id } = req.params;
+    const { completada } = req.body || {};
     const task = await Task.findById(id);
 
     if (!task) {
@@ -208,12 +214,15 @@ const completeTask = async (req, res) => {
       });
     }
 
-    const completed = await Task.markAsCompleted(id);
+    const nextState =
+      typeof completada === 'boolean' ? completada : !Boolean(task.completada);
 
-    if (!completed) {
+    const updated = await Task.setCompletion(id, nextState);
+
+    if (!updated) {
       return res.status(400).json({
         success: false,
-        message: 'No se pudo completar la tarea'
+        message: 'No se pudo actualizar el estado de la tarea'
       });
     }
 
@@ -221,15 +230,17 @@ const completeTask = async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Tarea marcada como completada',
+      message: nextState
+        ? 'Tarea marcada como completada'
+        : 'Tarea marcada como pendiente',
       data: updatedTask
     });
 
   } catch (error) {
-    console.error('Error en completeTask:', error);
+    console.error('Error en toggleTaskComplete:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al completar tarea',
+      message: 'Error al actualizar estado de tarea',
       error: error.message
     });
   }
@@ -306,7 +317,7 @@ module.exports = {
   getUpcomingTasks,
   getTaskById,
   updateTask,
-  completeTask,
+  toggleTaskComplete,
   deleteTask,
   getTaskStats
 };
