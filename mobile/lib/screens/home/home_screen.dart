@@ -197,6 +197,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader() {
+    final firstName = userName.trim().isNotEmpty
+        ? userName.trim().split(' ').first
+        : 'Usuario';
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -204,10 +208,19 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Hola, ${userName.split(' ')[0]}',
+              _getGreeting(),
               style: const TextStyle(
-                fontSize: 28,
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
+                color: AppTheme.darkText,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              'Hola, $firstName',
+              style: const TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
                 color: AppTheme.darkText,
               ),
             ),
