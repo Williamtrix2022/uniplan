@@ -8,13 +8,11 @@ class TaskFilter extends StatelessWidget {
   final String? status;
   final String? priority;
   final int? subjectId;
-  final bool? projectFilter;
   final TaskSortOption sortOption;
   final List<Subject> subjects;
   final ValueChanged<String?> onStatusChanged;
   final ValueChanged<String?> onPriorityChanged;
   final ValueChanged<int?> onSubjectChanged;
-  final ValueChanged<bool?> onProjectFilterChanged;
   final ValueChanged<TaskSortOption> onSortChanged;
   final VoidCallback onClear;
 
@@ -23,13 +21,11 @@ class TaskFilter extends StatelessWidget {
     required this.status,
     required this.priority,
     required this.subjectId,
-    required this.projectFilter,
     required this.sortOption,
     required this.subjects,
     required this.onStatusChanged,
     required this.onPriorityChanged,
     required this.onSubjectChanged,
-    required this.onProjectFilterChanged,
     required this.onSortChanged,
     required this.onClear,
   });
@@ -91,34 +87,32 @@ class TaskFilter extends StatelessWidget {
           const SizedBox(height: 12),
           DropdownButtonFormField<int?>(
             initialValue: subjectId,
+            isExpanded: true,
             decoration: const InputDecoration(
               labelText: 'Materia',
               border: OutlineInputBorder(),
             ),
             items: [
-              const DropdownMenuItem<int?>(value: null, child: Text('Todas')),
+              const DropdownMenuItem<int?>(
+                value: null,
+                child: Text(
+                  'Todas',
+                  overflow: TextOverflow.ellipsis,
+                  maxLines: 1,
+                ),
+              ),
               ...subjects.map(
                 (subject) => DropdownMenuItem<int?>(
                   value: subject.id,
-                  child: Text(subject.nombre),
+                  child: Text(
+                    subject.nombre,
+                    overflow: TextOverflow.ellipsis,
+                    maxLines: 1,
+                  ),
                 ),
               ),
             ],
             onChanged: onSubjectChanged,
-          ),
-          const SizedBox(height: 12),
-          DropdownButtonFormField<bool?>(
-            initialValue: projectFilter,
-            decoration: const InputDecoration(
-              labelText: 'Tipo',
-              border: OutlineInputBorder(),
-            ),
-            items: const [
-              DropdownMenuItem<bool?>(value: null, child: Text('Todas')),
-              DropdownMenuItem<bool?>(value: true, child: Text('Solo proyectos')),
-              DropdownMenuItem<bool?>(value: false, child: Text('Solo no proyectos')),
-            ],
-            onChanged: onProjectFilterChanged,
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<TaskSortOption>(

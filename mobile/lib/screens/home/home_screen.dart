@@ -68,7 +68,18 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return weight(b.prioridad).compareTo(weight(a.prioridad));
       });
-      dashboardTasks = allTasks;
+      final today = DateTime.now();
+      final dayStart = DateTime(today.year, today.month, today.day);
+      dashboardTasks = allTasks.where((task) {
+        final due = DateTime(
+          task.fechaEntrega.year,
+          task.fechaEntrega.month,
+          task.fechaEntrega.day,
+        );
+        final isCompleted = task.completada || task.estado == 'completada';
+        final isOverdue = due.isBefore(dayStart);
+        return !isCompleted && !isOverdue;
+      }).toList();
 
       // Cargar estadísticas de pomodoro
       try {
@@ -439,7 +450,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 16),
             const Text(
-              'No tienes tareas registradas',
+              'No tienes tareas activas',
               style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -448,7 +459,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(height: 8),
             const Text(
-              'Crea una tarea para empezar',
+              'No hay pendientes vigentes por mostrar',
               style: TextStyle(
                 fontSize: 14,
                 color: AppTheme.greyText,
@@ -482,30 +493,27 @@ class _HomeScreenState extends State<HomeScreen> {
         int.parse(task.getPriorityColor().substring(1), radix: 16) +
             0xFF000000);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.white,
-        borderRadius: BorderRadius.circular(AppSizes.radiusM),
-        border: Border.all(color: AppTheme.borderGrey, width: 1),
-      ),
-      child: Row(
-        children: [
-          // Checkbox
-          GestureDetector(
-            onTap: () async {
-              try {
-                await _taskService.toggleTaskComplete(
-                  task.id,
-                  completada: !task.completada,
-                );
-                _loadDashboardData();
-              } catch (e) {
-                print('Error completing task: $e');
-              }
-            },
-            child: Container(
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TaskFormScreen(task: task),
+          ),
+        ).then((_) => _loadDashboardData());
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: AppTheme.white,
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+          border: Border.all(color: AppTheme.borderGrey, width: 1),
+        ),
+        child: Row(
+          children: [
+            // Checkbox
+            Container(
               width: 24,
               height: 24,
               decoration: BoxDecoration(
@@ -523,81 +531,116 @@ class _HomeScreenState extends State<HomeScreen> {
                     )
                   : null,
             ),
-          ),
 
-          const SizedBox(width: 12),
+            const SizedBox(width: 12),
 
-          // Info de la tarea
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  task.titulo,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.darkText,
+            // Info de la tarea
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    task.titulo,
+                    style: const TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.darkText,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    if (task.materiaNombre != null) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      if (task.materiaNombre != null) ...[
+                        Flexible(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: AppTheme.lightGreen,
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Text(
+                              task.materiaNombre!,
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                              style: const TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                color: AppTheme.primaryGreen,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                      ],
                       Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
+                        width: 8,
+                        height: 8,
                         decoration: BoxDecoration(
-                          color: AppTheme.lightGreen,
-                          borderRadius: BorderRadius.circular(4),
+                          color: priorityColor,
+                          shape: BoxShape.circle,
                         ),
+                      ),
+                      const SizedBox(width: 6),
+                      Expanded(
                         child: Text(
-                          task.materiaNombre!,
+                          '${DateFormat('dd MMM', 'es_ES').format(task.fechaEntrega)} · ${task.prioridad.toUpperCase()}',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
                           style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                            color: AppTheme.primaryGreen,
+                            fontSize: 13,
+                            color: AppTheme.greyText,
                           ),
                         ),
                       ),
-                      const SizedBox(width: 8),
                     ],
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: priorityColor,
-                        shape: BoxShape.circle,
+                  ),
+                ],
+              ),
+            ),
+
+            PopupMenuButton<String>(
+              icon: const Icon(Icons.more_vert, color: AppTheme.greyText),
+              onSelected: (value) async {
+                if (value == 'delete') {
+                  try {
+                    await _taskService.deleteTask(task.id);
+                    if (!mounted) return;
+                    _loadDashboardData();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Tarea eliminada'),
+                        backgroundColor: AppTheme.success,
                       ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      '${DateFormat('dd MMM', 'es_ES').format(task.fechaEntrega)} · ${task.prioridad.toUpperCase()}',
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppTheme.greyText,
+                    );
+                  } catch (e) {
+                    if (!mounted) return;
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Error: ${e.toString()}'),
+                        backgroundColor: AppTheme.error,
                       ),
-                    ),
-                  ],
+                    );
+                  }
+                }
+              },
+              itemBuilder: (context) => const [
+                PopupMenuItem<String>(
+                  value: 'delete',
+                  child: Row(
+                    children: [
+                      Icon(Icons.delete_outline, size: 18, color: AppTheme.error),
+                      SizedBox(width: 8),
+                      Text('Eliminar'),
+                    ],
+                  ),
                 ),
               ],
             ),
-          ),
-
-          // Icono de menú
-          IconButton(
-            onPressed: () {
-              // TODO: Opciones de tarea
-            },
-            icon: const Icon(Icons.more_vert),
-            iconSize: 20,
-            color: AppTheme.greyText,
-            constraints: const BoxConstraints(),
-            padding: EdgeInsets.zero,
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

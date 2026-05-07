@@ -138,13 +138,11 @@ class _TasksScreenState extends State<TasksScreen>
           status: provider.statusFilter,
           priority: provider.priorityFilter,
           subjectId: provider.subjectFilter,
-          projectFilter: provider.projectFilter,
           sortOption: provider.sortOption,
           subjects: provider.subjects,
           onStatusChanged: provider.setStatusFilter,
           onPriorityChanged: provider.setPriorityFilter,
           onSubjectChanged: provider.setSubjectFilter,
-          onProjectFilterChanged: provider.setProjectFilter,
           onSortChanged: provider.setSortOption,
           onClear: () {
             provider.clearFilters();
@@ -166,12 +164,7 @@ class _TasksScreenState extends State<TasksScreen>
 
     switch (tabIndex) {
       case 0:
-        return tasks.where((task) {
-          final due = normalize(task.fechaEntrega);
-          return due.year == today.year &&
-              due.month == today.month &&
-              due.day == today.day;
-        }).toList();
+        return tasks;
       case 1:
         return tasks.where((task) {
           final due = normalize(task.fechaEntrega);
@@ -214,7 +207,7 @@ class _TasksScreenState extends State<TasksScreen>
                 fontSize: 14,
               ),
               tabs: const [
-                Tab(text: 'Hoy'),
+                Tab(text: 'Todas'),
                 Tab(text: 'Semana'),
                 Tab(text: 'Proyecto'),
               ],
@@ -259,7 +252,7 @@ class _TasksScreenState extends State<TasksScreen>
                           children: [
                             _buildTaskList(
                               todayTasks,
-                              'No tienes tareas para hoy',
+                              'No tienes tareas',
                             ),
                             _buildTaskList(
                               weekTasks,
@@ -471,21 +464,25 @@ class _TasksScreenState extends State<TasksScreen>
                     Row(
                       children: [
                         if (task.materiaNombre != null) ...[
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.lightGreen,
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              task.materiaNombre!,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.primaryGreen,
+                          Flexible(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.lightGreen,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                              child: Text(
+                                task.materiaNombre!,
+                                overflow: TextOverflow.ellipsis,
+                                maxLines: 1,
+                                style: const TextStyle(
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w600,
+                                  color: AppTheme.primaryGreen,
+                                ),
                               ),
                             ),
                           ),
@@ -497,13 +494,17 @@ class _TasksScreenState extends State<TasksScreen>
                           color: isOverdue ? AppTheme.error : AppTheme.greyText,
                         ),
                         const SizedBox(width: 4),
-                        Text(
-                          DateFormat('dd MMM', 'es_ES').format(task.fechaEntrega),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: isOverdue ? AppTheme.error : AppTheme.greyText,
-                            fontWeight:
-                                isOverdue ? FontWeight.w600 : FontWeight.normal,
+                        Flexible(
+                          child: Text(
+                            DateFormat('dd MMM', 'es_ES').format(task.fechaEntrega),
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isOverdue ? AppTheme.error : AppTheme.greyText,
+                              fontWeight:
+                                  isOverdue ? FontWeight.w600 : FontWeight.normal,
+                            ),
                           ),
                         ),
                         if (isOverdue) ...[
