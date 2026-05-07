@@ -6,9 +6,7 @@ import 'package:flutter/material.dart';
 
 import 'dart:async';
 import '../config/theme.dart';
-import '../services/auth_service.dart';
 import 'auth/login_screen.dart';
-import 'home/home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -19,7 +17,6 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with SingleTickerProviderStateMixin {
-  final AuthService _authService = AuthService();
   late AnimationController _animationController;
   late Animation<double> _fadeAnimation;
   late Animation<double> _scaleAnimation;
@@ -60,18 +57,10 @@ class _SplashScreenState extends State<SplashScreen>
     // Esperar animación
     await Future.delayed(const Duration(milliseconds: 2500));
 
-    // Cargar token guardado
-    await _authService.loadToken();
-
-    // Verificar si está autenticado
-    final isAuthenticated = await _authService.isAuthenticated();
-
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => isAuthenticated
-              ? const HomeScreen() // Si tiene sesión activa
-              : const LoginScreen(), // Si no tiene sesión
+          builder: (context) => const LoginScreen(),
         ),
       );
     }

@@ -163,7 +163,7 @@ class AuthService {
   // ========== VERIFICAR SI ESTÁ AUTENTICADO ==========
   Future<bool> isAuthenticated() async {
     final token = await getToken();
-    return token != null;
+    return token != null && token.trim().isNotEmpty;
   }
 
   // ========== OBTENER PERFIL ==========
