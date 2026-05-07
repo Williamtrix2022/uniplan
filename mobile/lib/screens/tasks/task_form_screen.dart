@@ -9,8 +9,6 @@ import '../../config/theme.dart';
 import '../../models/task.dart';
 import '../../services/subject_service.dart';
 import '../../services/task_service.dart';
-import '../../widgets/common/custom_button.dart';
-import '../../widgets/common/custom_text_field.dart';
 
 class TaskFormScreen extends StatefulWidget {
   final Task? task;
@@ -231,222 +229,686 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
+  Future<void> _showManageSubjectsSheet() async {
+    if (_subjects.isEmpty) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('No hay materias para eliminar'),
+          backgroundColor: AppTheme.info,
+        ),
+      );
+      return;
+    }
+
+    final int? selectedToDelete = await showModalBottomSheet<int>(
+      context: context,
+      isScrollControlled: true,
       backgroundColor: AppTheme.white,
-      appBar: AppBar(
-        title: Text(isEditing ? 'Editar tarea' : 'Nueva tarea'),
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSizes.paddingL),
-        child: Form(
-          key: _formKey,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Título
-              CustomTextField(
-                label: 'Título de la tarea',
-                hintText: 'Ej. Estudiar para el examen',
-                controller: _titleController,
-                validator: (value) {
-                  if (value == null || value.isEmpty) {
-                    return 'El título es obligatorio';
-                  }
-                  return null;
-                },
-              ),
+      showDragHandle: true,
+      builder: (sheetContext) {
+        final maxHeight = MediaQuery.of(sheetContext).size.height * 0.8;
+        final estimatedHeight = 130.0 + (_subjects.length * 64.0);
+        final sheetHeight = estimatedHeight.clamp(220.0, maxHeight);
 
-              const SizedBox(height: 20),
-
-              // Descripción
-              CustomTextField(
-                label: 'Descripción (opcional)',
-                hintText: 'Agrega más detalles...',
-                controller: _descriptionController,
-                maxLines: 4,
-              ),
-              const SizedBox(height: 20),
-
-              // Materia asociada
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        return SafeArea(
+          child: SizedBox(
+            height: sheetHeight,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Materia asociada',
+                    'Eliminar materia',
                     style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
                       color: AppTheme.darkText,
                     ),
                   ),
-                  TextButton.icon(
-                    onPressed: _showCreateSubjectDialog,
-                    icon: const Icon(Icons.add, size: 16),
-                    label: const Text('Agregar materia'),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Selecciona la materia que quieres eliminar permanentemente.',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: AppTheme.greyText,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Expanded(
+                    child: ListView.builder(
+                      itemCount: _subjects.length,
+                      itemBuilder: (context, index) {
+                        final subject = _subjects[index];
+                        return ListTile(
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(
+                            subject.nombre,
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                          ),
+                          subtitle:
+                              subject.codigo != null && subject.codigo!.isNotEmpty
+                                  ? Text(
+                                      subject.codigo!,
+                                      overflow: TextOverflow.ellipsis,
+                                      maxLines: 1,
+                                    )
+                                  : null,
+                          trailing:
+                              const Icon(Icons.delete_outline, color: AppTheme.error),
+                          onTap: () => Navigator.pop(sheetContext, subject.id),
+                        );
+                      },
+                    ),
                   ),
                 ],
               ),
-              const SizedBox(height: 8),
-              if (_subjects.isEmpty && !_isLoadingSubjects)
-                Container(
-                  width: double.infinity,
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: AppTheme.lightGrey,
-                    borderRadius: BorderRadius.circular(AppSizes.radiusM),
-                  ),
-                  child: const Text(
-                    'No tienes materias creadas aún. Usa "Agregar materia".',
-                    style: TextStyle(color: AppTheme.greyText),
-                  ),
-                ),
-              if (_isLoadingSubjects)
-                const LinearProgressIndicator(color: AppTheme.primaryGreen)
-              else
-                DropdownButtonFormField<int?>(
-                  initialValue: selectedSubjectId,
-                  decoration: InputDecoration(
-                    filled: true,
-                    fillColor: AppTheme.lightGrey,
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(AppSizes.radiusM),
-                      borderSide: BorderSide.none,
-                    ),
-                  ),
-                  items: [
-                    const DropdownMenuItem<int?>(
-                      value: null,
-                      child: Text('Sin materia'),
-                    ),
-                    ..._subjects.map(
-                      (subject) => DropdownMenuItem<int?>(
-                        value: subject.id,
-                        child: Text(subject.nombre),
+            ),
+          ),
+        );
+      },
+    );
+
+    if (!mounted || selectedToDelete == null) return;
+    await _confirmAndDeleteSubject(selectedToDelete);
+  }
+
+  Future<void> _confirmAndDeleteSubject(int subjectId) async {
+    Subject? subject;
+    for (final item in _subjects) {
+      if (item.id == subjectId) {
+        subject = item;
+        break;
+      }
+    }
+    if (subject == null) return;
+
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Eliminar materia'),
+        content: Text(
+          'Se eliminará "${subject!.nombre}" de forma permanente.\\n\\n'
+          'Las tareas, notas y sesiones asociadas quedarán sin materia asignada.\\n'
+          '¿Deseas continuar?',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+            child: const Text('Eliminar'),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true || !mounted) return;
+
+    try {
+      await _subjectService.deleteSubject(subjectId);
+      if (!mounted) return;
+
+      setState(() {
+        _subjects = _subjects.where((item) => item.id != subjectId).toList();
+        if (selectedSubjectId == subjectId) {
+          selectedSubjectId = null;
+        }
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Materia "${subject.nombre}" eliminada'),
+          backgroundColor: AppTheme.success,
+        ),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error eliminando materia: ${e.toString()}'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+    }
+  }
+
+  Widget _buildSectionLabel(String text, BuildContext context) {
+    final theme = Theme.of(context);
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(
+        text.toUpperCase(),
+        style: theme.textTheme.labelSmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 1.1,
+        ),
+      ),
+    );
+  }
+
+  InputDecoration _fieldDecoration(
+    BuildContext context, {
+    required String hintText,
+  }) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return InputDecoration(
+      hintText: hintText,
+      filled: true,
+      fillColor: colorScheme.surface,
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: colorScheme.outlineVariant),
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: colorScheme.outlineVariant),
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: colorScheme.outlineVariant),
+      ),
+    );
+  }
+
+  BoxDecoration _selectorDecoration(BuildContext context, {Color? color}) {
+    final colorScheme = Theme.of(context).colorScheme;
+    return BoxDecoration(
+      color: color ?? colorScheme.surface,
+      borderRadius: BorderRadius.circular(12),
+      border: Border.all(color: colorScheme.outlineVariant),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final textTheme = theme.textTheme;
+
+    return Scaffold(
+      backgroundColor: AppTheme.white,
+      appBar: AppBar(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        surfaceTintColor: Colors.transparent,
+        scrolledUnderElevation: 0,
+        leading: Padding(
+          padding: const EdgeInsets.only(left: 8),
+          child: IconButton(
+            onPressed: () => Navigator.pop(context),
+            style: IconButton.styleFrom(
+              shape: const CircleBorder(),
+              hoverColor: colorScheme.surfaceContainerHighest,
+            ),
+            icon: const Icon(Icons.arrow_back),
+          ),
+        ),
+        title: Text(
+          isEditing ? 'Editar tarea' : 'Nueva tarea',
+          style: textTheme.headlineMedium?.copyWith(
+            color: AppTheme.darkText,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        actions: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: IconButton(
+              onPressed: () {},
+              style: IconButton.styleFrom(
+                shape: const CircleBorder(),
+                hoverColor: colorScheme.surfaceContainerHighest,
+              ),
+              icon: const Icon(Icons.more_vert),
+            ),
+          ),
+        ],
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 24),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildSectionLabel('Título de la tarea', context),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 56,
+                      child: TextFormField(
+                        controller: _titleController,
+                        decoration: _fieldDecoration(
+                          context,
+                          hintText: 'Ej. Estudiar para el examen',
+                        ),
+                        validator: (value) {
+                          if (value == null || value.isEmpty) {
+                            return 'El título es obligatorio';
+                          }
+                          return null;
+                        },
                       ),
                     ),
+                    const SizedBox(height: 32),
+
+                    _buildSectionLabel('Descripción', context),
+                    const SizedBox(height: 8),
+                    TextFormField(
+                      controller: _descriptionController,
+                      minLines: 4,
+                      maxLines: 6,
+                      decoration: _fieldDecoration(
+                        context,
+                        hintText: 'Agrega más detalles...',
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildSectionLabel('Materia asociada', context),
+                        if (_subjects.isNotEmpty)
+                          TextButton(
+                            style: TextButton.styleFrom(
+                              padding: EdgeInsets.zero,
+                              minimumSize: Size.zero,
+                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                            ),
+                            onPressed: _showManageSubjectsSheet,
+                            child: const Text(
+                              'ELIMINAR MATERIA',
+                              style: TextStyle(
+                                fontSize: 11,
+                                letterSpacing: 1,
+                                fontWeight: FontWeight.w700,
+                                color: AppTheme.error,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    if (_subjects.isEmpty && !_isLoadingSubjects)
+                      GestureDetector(
+                        onTap: _showCreateSubjectDialog,
+                        child: Container(
+                          decoration: _selectorDecoration(context),
+                          padding: const EdgeInsets.all(12),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 40,
+                                height: 40,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: colorScheme.secondaryContainer,
+                                ),
+                                child: Icon(
+                                  Icons.school_outlined,
+                                  color: colorScheme.onSecondaryContainer,
+                                ),
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      'Agregar nueva materia',
+                                      style: textTheme.bodyLarge?.copyWith(
+                                        fontWeight: FontWeight.w600,
+                                        color: AppTheme.darkText,
+                                      ),
+                                    ),
+                                    Text(
+                                      'Toca para crearla',
+                                      style: textTheme.labelMedium?.copyWith(
+                                        color: AppTheme.greyText,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      )
+                    else if (_isLoadingSubjects)
+                      const LinearProgressIndicator(color: AppTheme.primaryGreen)
+                    else
+                      Container(
+                        decoration: _selectorDecoration(context),
+                        child: DropdownButtonHideUnderline(
+                          child: DropdownButton<int?>(
+                            value: selectedSubjectId,
+                            isExpanded: true,
+                            icon: const Padding(
+                              padding: EdgeInsets.only(right: 12),
+                              child: Text(
+                                'CAMBIAR',
+                                style: TextStyle(
+                                  color: AppTheme.info,
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w700,
+                                ),
+                              ),
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            selectedItemBuilder: (context) => [
+                              _buildSelectedSubjectRow(
+                                context,
+                                'Sin materia',
+                                'Sin código',
+                              ),
+                              ..._subjects.map(
+                                (subject) => _buildSelectedSubjectRow(
+                                  context,
+                                  subject.nombre,
+                                  subject.codigo?.isNotEmpty == true
+                                      ? subject.codigo!
+                                      : 'Sin código',
+                                ),
+                              ),
+                            ],
+                            items: [
+                              DropdownMenuItem<int?>(
+                                value: null,
+                                child: _buildSelectedSubjectRow(
+                                  context,
+                                  'Sin materia',
+                                  'Sin código',
+                                ),
+                              ),
+                              ..._subjects.map(
+                                (subject) => DropdownMenuItem<int?>(
+                                  value: subject.id,
+                                  child: _buildSelectedSubjectRow(
+                                    context,
+                                    subject.nombre,
+                                    subject.codigo?.isNotEmpty == true
+                                        ? subject.codigo!
+                                        : 'Sin código',
+                                  ),
+                                ),
+                              ),
+                            ],
+                            onChanged: (value) => setState(() => selectedSubjectId = value),
+                          ),
+                        ),
+                      ),
+                    const SizedBox(height: 32),
+
+                    _buildSectionLabel('Fecha de entrega', context),
+                    const SizedBox(height: 8),
+                    InkWell(
+                      onTap: _selectDate,
+                      borderRadius: BorderRadius.circular(12),
+                      child: Container(
+                        decoration: _selectorDecoration(context),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        child: Row(
+                          children: [
+                            const Icon(Icons.calendar_today, color: AppTheme.primaryGreen),
+                            const SizedBox(width: 12),
+                            Text(
+                              DateFormat('MMMM d, yyyy', 'es_ES').format(selectedDate),
+                              style: textTheme.bodyLarge?.copyWith(color: AppTheme.darkText),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    _buildSectionLabel('Prioridad', context),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerHigh,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.all(4),
+                      child: Row(
+                        children: [
+                          _buildPriorityItem(context, 'Baja', 'baja'),
+                          _buildPriorityItem(context, 'Media', 'media'),
+                          _buildPriorityItem(context, 'Alta', 'alta'),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+
+                    if (isEditing) ...[
+                      _buildSectionLabel('Estado', context),
+                      const SizedBox(height: 8),
+                      Wrap(
+                        spacing: 10,
+                        runSpacing: 10,
+                        children: [
+                          _buildStatusChip(context, 'Pendiente', 'pendiente'),
+                          _buildStatusChip(context, 'En progreso', 'en_progreso'),
+                          _buildStatusChip(context, 'Completada', 'completada'),
+                        ],
+                      ),
+                      const SizedBox(height: 32),
+                    ],
+
+                    _buildSectionLabel('Marcar como proyecto', context),
+                    const SizedBox(height: 8),
+                    Container(
+                      decoration: BoxDecoration(
+                        color: colorScheme.surfaceContainerLow,
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.account_tree_outlined, color: AppTheme.darkText),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Marcar como proyecto',
+                                  style: textTheme.bodyLarge?.copyWith(
+                                    fontWeight: FontWeight.w600,
+                                    color: AppTheme.darkText,
+                                  ),
+                                ),
+                                Text(
+                                  'Las tareas de proyecto aparecen en su pestaña',
+                                  style: textTheme.labelMedium?.copyWith(
+                                    color: AppTheme.greyText,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Switch.adaptive(
+                            value: selectedIsProject,
+                            activeTrackColor: AppTheme.primaryGreen,
+                            onChanged: (value) => setState(() => selectedIsProject = value),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24),
                   ],
-                  onChanged: (value) {
-                    setState(() => selectedSubjectId = value);
-                  },
-                ),
-
-              const SizedBox(height: 20),
-
-              // Fecha de entrega
-              const Text(
-                'Fecha de entrega',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.darkText,
                 ),
               ),
-              const SizedBox(height: 8),
-              InkWell(
-                onTap: _selectDate,
-                child: Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: AppTheme.lightGrey,
-                    borderRadius: BorderRadius.circular(AppSizes.radiusM),
-                  ),
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.calendar_today,
-                        color: AppTheme.primaryGreen,
-                        size: 20,
+            ),
+          ),
+          SafeArea(
+            top: false,
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  SizedBox(
+                    width: double.infinity,
+                    height: 56,
+                    child: ElevatedButton(
+                      onPressed: isLoading ? null : _saveTask,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.primaryGreen,
+                        foregroundColor: AppTheme.white,
+                        elevation: 2,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
                       ),
-                      const SizedBox(width: 12),
-                      Text(
-                        DateFormat('EEEE, d MMMM yyyy', 'es_ES').format(selectedDate),
-                        style: const TextStyle(
-                          fontSize: 14,
+                      child: isLoading
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                color: AppTheme.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                          : Text(
+                              isEditing ? 'Actualizar tarea' : 'Crear tarea',
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  SizedBox(
+                    width: double.infinity,
+                    height: 48,
+                    child: TextButton(
+                      onPressed: () => Navigator.pop(context),
+                      style: TextButton.styleFrom(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: const Text(
+                        'Cancelar',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w600,
                           color: AppTheme.darkText,
                         ),
                       ),
-                    ],
+                    ),
                   ),
-                ),
+                ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
-              const SizedBox(height: 20),
-
-              // Prioridad
-              const Text(
-                'Prioridad',
-                style: TextStyle(
-                  fontSize: 14,
+  Widget _buildSelectedSubjectRow(
+    BuildContext context,
+    String title,
+    String subtitle,
+  ) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final textTheme = Theme.of(context).textTheme;
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(8),
+            color: colorScheme.secondaryContainer,
+          ),
+          child: Icon(
+            Icons.school_outlined,
+            color: colorScheme.onSecondaryContainer,
+          ),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                title,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w600,
                   color: AppTheme.darkText,
                 ),
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  _buildPriorityChip('Baja', 'baja', AppTheme.success),
-                  const SizedBox(width: 8),
-                  _buildPriorityChip('Media', 'media', AppTheme.warning),
-                  const SizedBox(width: 8),
-                  _buildPriorityChip('Alta', 'alta', AppTheme.error),
-                ],
+              Text(
+                subtitle,
+                overflow: TextOverflow.ellipsis,
+                maxLines: 1,
+                style: textTheme.labelMedium?.copyWith(color: AppTheme.greyText),
               ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 
-              const SizedBox(height: 20),
-
-              SwitchListTile.adaptive(
-                contentPadding: EdgeInsets.zero,
-                title: const Text('Marcar como proyecto'),
-                subtitle: const Text('Las tareas de proyecto aparecen en la pestaña Proyecto'),
-                value: selectedIsProject,
-                activeThumbColor: AppTheme.primaryGreen,
-                onChanged: (value) {
-                  setState(() => selectedIsProject = value);
-                },
-              ),
-
-              const SizedBox(height: 8),
-
-              // Estado
-              if (isEditing) ...[
-                const Text(
-                  'Estado',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.darkText,
+  Widget _buildPriorityItem(BuildContext context, String label, String value) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final isSelected = selectedPriority == value;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => setState(() => selectedPriority = value),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          decoration: BoxDecoration(
+            color: isSelected ? colorScheme.surface : Colors.transparent,
+            borderRadius: BorderRadius.circular(10),
+            boxShadow: isSelected
+                ? [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.06),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              if (isSelected)
+                Container(
+                  width: 8,
+                  height: 8,
+                  margin: const EdgeInsets.only(right: 8),
+                  decoration: BoxDecoration(
+                    color: colorScheme.error,
+                    shape: BoxShape.circle,
                   ),
                 ),
-                const SizedBox(height: 8),
-                Wrap(
-                  spacing: 8,
-                  children: [
-                    _buildStatusChip('Pendiente', 'pendiente'),
-                    _buildStatusChip('En progreso', 'en_progreso'),
-                    _buildStatusChip('Completada', 'completada'),
-                  ],
+              Text(
+                label,
+                style: const TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.darkText,
                 ),
-                const SizedBox(height: 20),
-              ],
-
-              const SizedBox(height: 32),
-
-              // Botón guardar
-              CustomButton(
-                text: isEditing ? 'Actualizar tarea' : 'Crear tarea',
-                onPressed: _saveTask,
-                isLoading: isLoading,
-              ),
-
-              const SizedBox(height: 12),
-
-              // Botón cancelar
-              CustomButton(
-                text: 'Cancelar',
-                onPressed: () => Navigator.pop(context),
-                isOutlined: true,
               ),
             ],
           ),
@@ -455,53 +917,27 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     );
   }
 
-  Widget _buildPriorityChip(String label, String value, Color color) {
-    final isSelected = selectedPriority == value;
-    
-    return Expanded(
-      child: GestureDetector(
-        onTap: () => setState(() => selectedPriority = value),
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          decoration: BoxDecoration(
-            color: isSelected ? color : AppTheme.lightGrey,
-            borderRadius: BorderRadius.circular(AppSizes.radiusM),
-            border: Border.all(
-              color: isSelected ? color : Colors.transparent,
-              width: 2,
-            ),
-          ),
-          child: Text(
-            label,
-            textAlign: TextAlign.center,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: isSelected ? AppTheme.white : AppTheme.greyText,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStatusChip(String label, String value) {
+  Widget _buildStatusChip(BuildContext context, String label, String value) {
+    final colorScheme = Theme.of(context).colorScheme;
     final isSelected = selectedStatus == value;
-    
     return ChoiceChip(
       label: Text(label),
       selected: isSelected,
-      onSelected: (selected) {
-        if (selected) {
-          setState(() => selectedStatus = value);
-        }
-      },
-      selectedColor: AppTheme.primaryGreen,
-      backgroundColor: AppTheme.lightGrey,
+      showCheckmark: false,
+      onSelected: (_) => setState(() => selectedStatus = value),
       labelStyle: TextStyle(
         color: isSelected ? AppTheme.white : AppTheme.darkText,
         fontWeight: FontWeight.w600,
       ),
+      selectedColor: AppTheme.primaryGreen,
+      backgroundColor: Colors.transparent,
+      side: BorderSide(
+        color: isSelected ? AppTheme.primaryGreen : colorScheme.outlineVariant,
+      ),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(999),
+      ),
+      materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
     );
   }
 }

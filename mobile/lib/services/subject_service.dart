@@ -44,4 +44,11 @@ class SubjectService {
 
     throw Exception(response['message'] ?? 'No se pudo crear la materia');
   }
+
+  Future<void> deleteSubject(int subjectId) async {
+    final response = await _apiService.delete('${ApiConfig.subjects}/$subjectId');
+    if (response['success'] != true) {
+      throw Exception(response['message'] ?? 'No se pudo eliminar la materia');
+    }
+  }
 }

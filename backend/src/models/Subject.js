@@ -83,9 +83,9 @@ class Subject {
     }
   }
 
-  // Eliminar materia (soft delete)
+  // Eliminar materia (hard delete)
   static async delete(id) {
-    const query = 'UPDATE materias SET activo = FALSE WHERE id = ?';
+    const query = 'DELETE FROM materias WHERE id = ?';
     
     try {
       const [result] = await pool.execute(query, [id]);
