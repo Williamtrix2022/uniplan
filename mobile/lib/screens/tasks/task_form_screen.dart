@@ -23,10 +23,10 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final TaskService _taskService = TaskService();
   final SubjectService _subjectService = SubjectService();
-  
+
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
-  
+
   DateTime selectedDate = DateTime.now();
   TimeOfDay selectedTime = TimeOfDay.now();
   String selectedPriority = 'media';
@@ -35,17 +35,18 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   int? selectedSubjectId;
   bool _isLoadingSubjects = false;
   List<Subject> _subjects = [];
-  
+
   bool isLoading = false;
   bool get isEditing => widget.task != null;
 
   @override
   void initState() {
     super.initState();
-    
+
     if (isEditing) {
       _titleController = TextEditingController(text: widget.task!.titulo);
-      _descriptionController = TextEditingController(text: widget.task!.descripcion ?? '');
+      _descriptionController =
+          TextEditingController(text: widget.task!.descripcion ?? '');
       selectedDate = widget.task!.fechaEntrega;
       selectedPriority = widget.task!.prioridad;
       selectedStatus = widget.task!.estado;
@@ -113,8 +114,8 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
         idEstudiante: 0,
         idMateria: selectedSubjectId,
         titulo: _titleController.text.trim(),
-        descripcion: _descriptionController.text.trim().isNotEmpty 
-            ? _descriptionController.text.trim() 
+        descripcion: _descriptionController.text.trim().isNotEmpty
+            ? _descriptionController.text.trim()
             : null,
         fechaEntrega: dateTime,
         prioridad: selectedPriority,
@@ -244,68 +245,121 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     final int? selectedToDelete = await showModalBottomSheet<int>(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.white,
-      showDragHandle: true,
+      backgroundColor: Colors.transparent,
+      constraints: BoxConstraints(
+        maxHeight: MediaQuery.of(context).size.height * 0.85,
+      ),
       builder: (sheetContext) {
-        final maxHeight = MediaQuery.of(sheetContext).size.height * 0.8;
-        final estimatedHeight = 130.0 + (_subjects.length * 64.0);
-        final sheetHeight = estimatedHeight.clamp(220.0, maxHeight);
+        final colorScheme = Theme.of(sheetContext).colorScheme;
+        final textTheme = Theme.of(sheetContext).textTheme;
 
-        return SafeArea(
-          child: SizedBox(
-            height: sheetHeight,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'Eliminar materia',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.darkText,
-                    ),
+        return Container(
+          decoration: const BoxDecoration(
+            color: AppTheme.surface,
+            borderRadius: BorderRadius.vertical(top: Radius.circular(32)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                child: Container(
+                  width: 48,
+                  height: 6,
+                  decoration: BoxDecoration(
+                    color: AppTheme.outlineVariant,
+                    borderRadius: BorderRadius.circular(999),
                   ),
-                  const SizedBox(height: 6),
-                  const Text(
-                    'Selecciona la materia que quieres eliminar permanentemente.',
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: AppTheme.greyText,
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Eliminar materia',
+                      style: textTheme.headlineMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: colorScheme.onSurface,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: ListView.builder(
-                      itemCount: _subjects.length,
-                      itemBuilder: (context, index) {
-                        final subject = _subjects[index];
-                        return ListTile(
-                          contentPadding: EdgeInsets.zero,
-                          title: Text(
-                            subject.nombre,
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                          ),
-                          subtitle:
-                              subject.codigo != null && subject.codigo!.isNotEmpty
-                                  ? Text(
+                    const SizedBox(height: 4),
+                    Text(
+                      'Selecciona la materia que quieres eliminar permanentemente.',
+                      style: textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Flexible(
+                child: ListView.builder(
+                  shrinkWrap: true,
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 48),
+                  itemCount: _subjects.length,
+                  itemBuilder: (context, index) {
+                    final subject = _subjects[index];
+                    return Padding(
+                      padding: EdgeInsets.only(
+                        bottom: index < _subjects.length - 1 ? 8 : 0,
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: colorScheme.surfaceContainerLow,
+                          borderRadius: BorderRadius.circular(16),
+                        ),
+                        padding: const EdgeInsets.all(16),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    subject.nombre,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    style: textTheme.bodyLarge?.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                      color: colorScheme.onSurface,
+                                    ),
+                                  ),
+                                  if (subject.codigo != null &&
+                                      subject.codigo!.isNotEmpty) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
                                       subject.codigo!,
                                       overflow: TextOverflow.ellipsis,
                                       maxLines: 1,
-                                    )
-                                  : null,
-                          trailing:
-                              const Icon(Icons.delete_outline, color: AppTheme.error),
-                          onTap: () => Navigator.pop(sheetContext, subject.id),
-                        );
-                      },
-                    ),
-                  ),
-                ],
+                                      style: textTheme.labelMedium?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                      ),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            IconButton(
+                              onPressed: () =>
+                                  Navigator.pop(sheetContext, subject.id),
+                              icon: const Icon(Icons.delete_outline),
+                              color: AppTheme.error,
+                              style: IconButton.styleFrom(
+                                backgroundColor: Colors.transparent,
+                                hoverColor: AppTheme.errorContainer,
+                                shape: const CircleBorder(),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
               ),
-            ),
+            ],
           ),
         );
       },
@@ -501,7 +555,6 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-
                     _buildSectionLabel('Descripción', context),
                     const SizedBox(height: 8),
                     TextFormField(
@@ -514,26 +567,43 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _buildSectionLabel('Materia asociada', context),
                         if (_subjects.isNotEmpty)
-                          TextButton(
-                            style: TextButton.styleFrom(
-                              padding: EdgeInsets.zero,
-                              minimumSize: Size.zero,
-                              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                            ),
-                            onPressed: _showManageSubjectsSheet,
-                            child: const Text(
-                              'ELIMINAR MATERIA',
-                              style: TextStyle(
-                                fontSize: 11,
-                                letterSpacing: 1,
-                                fontWeight: FontWeight.w700,
-                                color: AppTheme.error,
+                          InkWell(
+                            onTap: _showManageSubjectsSheet,
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.errorContainer,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.delete_outline_rounded,
+                                    size: 14,
+                                    color:
+                                        AppTheme.error.withValues(alpha: 0.8),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Text(
+                                    'ELIMINAR',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      letterSpacing: 0.8,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.error,
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
                           ),
@@ -586,7 +656,8 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                         ),
                       )
                     else if (_isLoadingSubjects)
-                      const LinearProgressIndicator(color: AppTheme.primaryGreen)
+                      const LinearProgressIndicator(
+                          color: AppTheme.primaryGreen)
                     else
                       Container(
                         decoration: _selectorDecoration(context),
@@ -605,7 +676,8 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                                 ),
                               ),
                             ),
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 12, vertical: 8),
                             selectedItemBuilder: (context) => [
                               _buildSelectedSubjectRow(
                                 context,
@@ -644,12 +716,12 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                                 ),
                               ),
                             ],
-                            onChanged: (value) => setState(() => selectedSubjectId = value),
+                            onChanged: (value) =>
+                                setState(() => selectedSubjectId = value),
                           ),
                         ),
                       ),
                     const SizedBox(height: 32),
-
                     _buildSectionLabel('Fecha de entrega', context),
                     const SizedBox(height: 8),
                     InkWell(
@@ -657,21 +729,24 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         decoration: _selectorDecoration(context),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 14),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_today, color: AppTheme.primaryGreen),
+                            const Icon(Icons.calendar_today,
+                                color: AppTheme.primaryGreen),
                             const SizedBox(width: 12),
                             Text(
-                              DateFormat('MMMM d, yyyy', 'es_ES').format(selectedDate),
-                              style: textTheme.bodyLarge?.copyWith(color: AppTheme.darkText),
+                              DateFormat('MMMM d, yyyy', 'es_ES')
+                                  .format(selectedDate),
+                              style: textTheme.bodyLarge
+                                  ?.copyWith(color: AppTheme.darkText),
                             ),
                           ],
                         ),
                       ),
                     ),
                     const SizedBox(height: 32),
-
                     _buildSectionLabel('Prioridad', context),
                     const SizedBox(height: 8),
                     Container(
@@ -689,7 +764,6 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                       ),
                     ),
                     const SizedBox(height: 32),
-
                     if (isEditing) ...[
                       _buildSectionLabel('Estado', context),
                       const SizedBox(height: 8),
@@ -698,13 +772,13 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                         runSpacing: 10,
                         children: [
                           _buildStatusChip(context, 'Pendiente', 'pendiente'),
-                          _buildStatusChip(context, 'En progreso', 'en_progreso'),
+                          _buildStatusChip(
+                              context, 'En progreso', 'en_progreso'),
                           _buildStatusChip(context, 'Completada', 'completada'),
                         ],
                       ),
                       const SizedBox(height: 32),
                     ],
-
                     _buildSectionLabel('Marcar como proyecto', context),
                     const SizedBox(height: 8),
                     Container(
@@ -712,10 +786,12 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                         color: colorScheme.surfaceContainerLow,
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 12, vertical: 12),
                       child: Row(
                         children: [
-                          const Icon(Icons.account_tree_outlined, color: AppTheme.darkText),
+                          const Icon(Icons.account_tree_outlined,
+                              color: AppTheme.darkText),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -740,7 +816,8 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                           Switch.adaptive(
                             value: selectedIsProject,
                             activeTrackColor: AppTheme.primaryGreen,
-                            onChanged: (value) => setState(() => selectedIsProject = value),
+                            onChanged: (value) =>
+                                setState(() => selectedIsProject = value),
                           ),
                         ],
                       ),
@@ -859,7 +936,8 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 subtitle,
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
-                style: textTheme.labelMedium?.copyWith(color: AppTheme.greyText),
+                style:
+                    textTheme.labelMedium?.copyWith(color: AppTheme.greyText),
               ),
             ],
           ),
