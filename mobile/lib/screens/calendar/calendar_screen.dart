@@ -8,6 +8,10 @@ import 'package:intl/intl.dart';
 import '../../config/theme.dart';
 import '../../models/calendar_event.dart';
 import '../../services/calendar_service.dart';
+import '../../widgets/bottom_nav_bar.dart';
+import '../home/home_screen.dart';
+import '../tasks/tasks_screen.dart';
+import '../profile/profile_screen.dart';
 import 'event_form_screen.dart';
 
 class CalendarScreen extends StatefulWidget {
@@ -19,11 +23,12 @@ class CalendarScreen extends StatefulWidget {
 
 class _CalendarScreenState extends State<CalendarScreen> {
   final CalendarService _calendarService = CalendarService();
-  
+
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
-  
+  int _selectedIndex = 2;
+
   Map<DateTime, List<CalendarEvent>> _events = {};
   List<CalendarEvent> _selectedEvents = [];
   bool isLoading = true;
@@ -46,14 +51,14 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
       // Organizar eventos por día
       final Map<DateTime, List<CalendarEvent>> eventsMap = {};
-      
+
       for (var event in events) {
         final date = DateTime(
           event.fecha.year,
           event.fecha.month,
           event.fecha.day,
         );
-        
+
         if (eventsMap[date] == null) {
           eventsMap[date] = [];
         }
@@ -133,7 +138,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       try {
         await _calendarService.deleteEvent(event.id!);
         _loadEvents();
-        
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -160,6 +165,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
     return Scaffold(
       backgroundColor: AppTheme.white,
       appBar: AppBar(
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back),
+        ),
         title: Text(
           DateFormat('MMMM yyyy', 'es_ES').format(_focusedDay),
         ),
@@ -182,9 +191,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
               children: [
                 // Calendario
                 _buildCalendar(),
-                
+
                 const SizedBox(height: 8),
-                
+
                 // Título de eventos
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -212,9 +221,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                     ],
                   ),
                 ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 // Lista de eventos
                 Expanded(
                   child: _selectedEvents.isEmpty
@@ -235,7 +244,43 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
         ),
       ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _selectedIndex,
+        onItemSelected: _onItemTapped,
+      ),
     );
+  }
+
+  void _onItemTapped(int index) {
+    if (index == _selectedIndex) return;
+
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false,
+        );
+        break;
+      case 1:
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const TasksScreen()),
+          (route) => false,
+        );
+        break;
+      case 3:
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const ProfileScreen()),
+          (route) => false,
+        );
+        break;
+    }
   }
 
   Widget _buildCalendar() {
@@ -261,7 +306,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
         eventLoader: _getEventsForDay,
         startingDayOfWeek: StartingDayOfWeek.monday,
         locale: 'es_ES',
-        
+
         // Estilo
         calendarStyle: CalendarStyle(
           todayDecoration: BoxDecoration(
@@ -278,7 +323,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
           weekendTextStyle: const TextStyle(color: AppTheme.error),
         ),
-        
+
         headerStyle: const HeaderStyle(
           formatButtonVisible: false,
           titleCentered: true,
@@ -287,7 +332,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
             fontWeight: FontWeight.w600,
           ),
         ),
-        
+
         onDaySelected: _onDaySelected,
         onFormatChanged: (format) {
           setState(() {
@@ -334,7 +379,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
 
   Widget _buildEventCard(CalendarEvent event) {
     final eventColor = event.getColor();
-    
+
     return GestureDetector(
       onTap: () => _openEventForm(event: event),
       child: Container(
@@ -366,9 +411,9 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            
+
             const SizedBox(width: 12),
-            
+
             // Información del evento
             Expanded(
               child: Column(
@@ -395,7 +440,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           ),
                         ),
                       ),
-                      
+
                       if (event.materiaNombre != null) ...[
                         const SizedBox(width: 8),
                         Flexible(
@@ -411,9 +456,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       ],
                     ],
                   ),
-                  
                   const SizedBox(height: 6),
-                  
                   Text(
                     event.titulo,
                     style: const TextStyle(
@@ -422,7 +465,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       color: AppTheme.darkText,
                     ),
                   ),
-                  
                   if (event.descripcion != null &&
                       event.descripcion!.isNotEmpty) ...[
                     const SizedBox(height: 4),
@@ -436,13 +478,10 @@ class _CalendarScreenState extends State<CalendarScreen> {
                       ),
                     ),
                   ],
-                  
                   const SizedBox(height: 6),
-                  
                   Row(
                     children: [
-                      if (!event.todoElDia &&
-                          event.horaInicio != null) ...[
+                      if (!event.todoElDia && event.horaInicio != null) ...[
                         Icon(
                           Icons.access_time,
                           size: 14,
@@ -471,7 +510,6 @@ class _CalendarScreenState extends State<CalendarScreen> {
                           ),
                         ),
                       ],
-                      
                       if (event.ubicacion != null &&
                           event.ubicacion!.isNotEmpty) ...[
                         const SizedBox(width: 12),
@@ -497,7 +535,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
                 ],
               ),
             ),
-            
+
             // Menú de opciones
             PopupMenuButton<String>(
               icon: const Icon(

@@ -127,7 +127,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 onRefresh: _loadDashboardData,
                 color: AppTheme.primaryGreen,
                 child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: ClampingScrollPhysics(),
+                  ),
                   padding: const EdgeInsets.all(AppSizes.paddingL),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -184,7 +186,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Lista de tareas
                       _buildTasksList(),
 
-                      const SizedBox(height: 100),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
@@ -631,7 +633,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   value: 'delete',
                   child: Row(
                     children: [
-                      Icon(Icons.delete_outline, size: 18, color: AppTheme.error),
+                      Icon(Icons.delete_outline,
+                          size: 18, color: AppTheme.error),
                       SizedBox(width: 8),
                       Text('Eliminar'),
                     ],
@@ -667,59 +670,53 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
- Widget _buildNavItem(IconData icon, String label, bool isActive) {
-  return InkWell(
-    onTap: () {
-      if (label == 'Tasks') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const TasksScreen(),
+  Widget _buildNavItem(IconData icon, String label, bool isActive) {
+    return InkWell(
+      onTap: () {
+        if (label == 'Tasks') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const TasksScreen(),
+            ),
+          ).then((_) => _loadDashboardData());
+        } else if (label == 'Calendar') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CalendarScreen(),
+            ),
+          ).then((_) => _loadDashboardData());
+        } else if (label == 'Profile') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ProfileScreen(),
+            ),
+          ).then((_) => _loadDashboardData());
+        }
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            color: isActive ? AppTheme.primaryGreen : AppTheme.greyText,
+            size: 24,
           ),
-        ).then((_) => _loadDashboardData());
-      } 
-      else if (label == 'Calendar') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const CalendarScreen(),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+              color: isActive ? AppTheme.primaryGreen : AppTheme.greyText,
+            ),
           ),
-        ).then((_) => _loadDashboardData());
-      } 
-      else if (label == 'Profile') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const ProfileScreen(),
-          ),
-        ).then((_) => _loadDashboardData());
-      }
-    },
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          icon,
-          color: isActive ? AppTheme.primaryGreen : AppTheme.greyText,
-          size: 24,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-            color: isActive
-                ? AppTheme.primaryGreen
-                : AppTheme.greyText,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-
+        ],
+      ),
+    );
+  }
 }
 
 // ============================================
