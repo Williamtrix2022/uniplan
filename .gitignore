@@ -86,9 +86,8 @@ credentials/
 
 # ========== AGENT TOOLS ==========
 .atl/
-.agents/
+# .agents/ - versioned with custom agents
 # .claude/ - versioned with skills
-!.claude/skills/
 skills-lock.json
 
 # ========== DOCUMENTACIÓN ==========
