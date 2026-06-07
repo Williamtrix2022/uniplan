@@ -146,71 +146,25 @@ class _TasksScreenState extends State<TasksScreen> {
     }
   }
 
-  Future<void> _toggleTaskComplete(Task task) async {
+
+  Future<void> _deleteTask(Task task) async {
     try {
-      await _taskService.toggleTaskComplete(task.id,
-          completada: !task.completada);
+      await _taskService.deleteTask(task.id);
       await _loadTasks();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(!task.completada
-              ? 'Tarea completada'
-              : 'Tarea marcada pendiente'),
+        const SnackBar(
+          content: Text('Tarea eliminada'),
           backgroundColor: AppTheme.success,
-          duration: const Duration(seconds: 2),
         ),
       );
     } catch (e) {
-      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
           backgroundColor: AppTheme.error,
         ),
       );
-    }
-  }
-
-  Future<void> _deleteTask(Task task) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Eliminar tarea'),
-        content: const Text('¿Estás seguro de eliminar esta tarea?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Cancelar'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
-            child: const Text('Eliminar'),
-          ),
-        ],
-      ),
-    );
-
-    if (confirmed == true) {
-      try {
-        await _taskService.deleteTask(task.id);
-        await _loadTasks();
-        if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Tarea eliminada'),
-            backgroundColor: AppTheme.success,
-          ),
-        );
-      } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppTheme.error,
-          ),
-        );
-      }
     }
   }
 
@@ -487,25 +441,12 @@ class _TasksScreenState extends State<TasksScreen> {
 
   Color _getSideBarColor(Task task, bool isOverdue) {
     if (isOverdue) return AppTheme.error;
-    if (task.completada) return AppTheme.onSurfaceVariant.withOpacity(0.5);
-
-    if (task.materiaColor != null && task.materiaColor!.isNotEmpty) {
-      try {
-        final colorStr = task.materiaColor!.replaceFirst('#', '');
-        return Color(int.parse('FF$colorStr', radix: 16));
-      } catch (_) {}
+    if (task.completada || task.estado == 'completada') {
+      return AppTheme.onSurfaceVariant.withOpacity(0.4);
     }
+    if (task.estado == 'en_progreso') return AppTheme.info; // Azul
 
-    switch (task.prioridad.toLowerCase()) {
-      case 'alta':
-        return AppTheme.error;
-      case 'media':
-        return Colors.orange;
-      case 'baja':
-        return Colors.blue;
-      default:
-        return AppTheme.primaryGreen;
-    }
+    return AppTheme.primaryGreen; // Verde = pendiente
   }
 
   @override
@@ -779,7 +720,12 @@ class _TasksScreenState extends State<TasksScreen> {
                         itemBuilder: (context, index) {
                           final task = _filteredTasks[index];
                           final isOverdue =
-                              task.fechaEntrega.isBefore(DateTime.now()) &&
+                              task.fechaEntrega.isBefore(
+                                    DateTime(
+                                      DateTime.now().year,
+                                      DateTime.now().month,
+                                      DateTime.now().day,
+                                    )) &&
                                   !task.completada;
                           final sideBarColor =
                               _getSideBarColor(task, isOverdue);
@@ -989,36 +935,6 @@ class _TasksScreenState extends State<TasksScreen> {
                                                       ],
                                                     ),
                                                   ],
-                                                ),
-                                              ),
-                                              const SizedBox(width: 12),
-                                              // Checkbox circular
-                                              GestureDetector(
-                                                onTap: () =>
-                                                    _toggleTaskComplete(task),
-                                                child: AnimatedContainer(
-                                                  duration: const Duration(
-                                                      milliseconds: 180),
-                                                  width: 24,
-                                                  height: 24,
-                                                  decoration: BoxDecoration(
-                                                    shape: BoxShape.circle,
-                                                    border: Border.all(
-                                                      color: AppTheme
-                                                          .outlineVariant,
-                                                      width: 2,
-                                                    ),
-                                                    color: task.completada
-                                                        ? AppTheme.primaryGreen
-                                                        : Colors.transparent,
-                                                  ),
-                                                  child: task.completada
-                                                      ? const Icon(
-                                                          Icons.check,
-                                                          size: 14,
-                                                          color: AppTheme.white,
-                                                        )
-                                                      : null,
                                                 ),
                                               ),
                                             ],

@@ -571,7 +571,43 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         _buildSectionLabel('Materia asociada', context),
-                        if (_subjects.isNotEmpty)
+                        if (_subjects.isNotEmpty) ...[
+                          InkWell(
+                            onTap: _showCreateSubjectDialog,
+                            borderRadius: BorderRadius.circular(8),
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryContainer,
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.add_rounded,
+                                    size: 14,
+                                    color: AppTheme.primaryGreen
+                                        .withValues(alpha: 0.8),
+                                  ),
+                                  const SizedBox(width: 4),
+                                  const Text(
+                                    'AGREGAR',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      letterSpacing: 0.8,
+                                      fontWeight: FontWeight.w700,
+                                      color: AppTheme.primaryGreen,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
                           InkWell(
                             onTap: _showManageSubjectsSheet,
                             borderRadius: BorderRadius.circular(8),
@@ -607,7 +643,8 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                               ),
                             ),
                           ),
-                      ],
+                          ],
+                        ],
                     ),
                     const SizedBox(height: 8),
                     if (_subjects.isEmpty && !_isLoadingSubjects)
