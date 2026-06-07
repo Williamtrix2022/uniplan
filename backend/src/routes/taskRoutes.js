@@ -28,8 +28,11 @@ router.get('/:id', taskController.getTaskById);
 // PUT /api/tasks/:id - Actualizar tarea
 router.put('/:id', taskController.updateTask);
 
-// PATCH /api/tasks/:id/complete - Marcar como completada
-router.patch('/:id/complete', taskController.completeTask);
+// PATCH /api/tasks/:id/complete - Compatibilidad con ruta previa
+router.patch('/:id/complete', taskController.toggleTaskComplete);
+
+// PATCH /api/tasks/:id/toggle - Marcar/desmarcar como completada
+router.patch('/:id/toggle', taskController.toggleTaskComplete);
 
 // DELETE /api/tasks/:id - Eliminar tarea
 router.delete('/:id', taskController.deleteTask);

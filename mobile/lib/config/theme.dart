@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
-  // ========== COLORES ==========
+  // ========== COLORES MATERIAL DESIGN 3 ==========
   static const Color primaryGreen = Color(0xFF00D9A0);
   static const Color lightGreen = Color(0xFFE0F9F4);
   static const Color darkText = Color(0xFF1A1A1A);
@@ -21,6 +21,23 @@ class AppTheme {
   static const Color warning = Color(0xFFF59E0B);
   static const Color info = Color(0xFF3B82F6);
 
+  // Material Design 3 - Surface colors
+  static const Color surface = Color(0xFFFAFBFC);
+  static const Color surfaceContainerHighest = Color(0xFFE1E3E1);
+  static const Color primaryContainer = Color(0xFFA8F0DD);
+  static const Color tertiaryContainer = Color(0xFFF5E6F7);
+  static const Color outline = Color(0xFF747775);
+  static const Color outlineVariant = Color(0xFFC4C7C5);
+  static const Color surfaceContainer = Color(0xFFEEEEEE);
+  static const Color surfaceContainerHigh = Color(0xFFEAEAEA);
+  static const Color errorContainer = Color(0xFFF9DEDC);
+
+  // Fixed colors (M3)
+  static const Color primaryFixed = Color(0xFFB8F0DD);
+  static const Color secondaryFixed = Color(0xFFD6E5F5);
+  static const Color tertiaryFixed = Color(0xFFF5E6F7);
+  static const Color onSurfaceVariant = Color(0xFF404944);
+
   // ========== TEMA CLARO ==========
   static ThemeData lightTheme = ThemeData(
     useMaterial3: true,
@@ -32,8 +49,15 @@ class AppTheme {
     colorScheme: const ColorScheme.light(
       primary: primaryGreen,
       secondary: lightGreen,
-      surface: white,
+      surface: surface,
       error: error,
+      // Material 3 extended colors
+      surfaceContainerHighest: surfaceContainerHighest,
+      primaryContainer: primaryContainer,
+      outline: outline,
+      outlineVariant: outlineVariant,
+      errorContainer: errorContainer,
+      onSurfaceVariant: onSurfaceVariant,
     ),
 
     // AppBar
@@ -150,14 +174,13 @@ class AppTheme {
     ),
 
     // Card (SIN shadowColor para evitar errores)
-cardTheme: const CardThemeData(
-  color: white,
-  elevation: 2,
-  shape: RoundedRectangleBorder(
-    borderRadius: BorderRadius.all(Radius.circular(16)),
-  ),
-),
-
+    cardTheme: const CardThemeData(
+      color: white,
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.all(Radius.circular(16)),
+      ),
+    ),
 
     // Bottom Navigation Bar
     bottomNavigationBarTheme: const BottomNavigationBarThemeData(
@@ -172,7 +195,7 @@ cardTheme: const CardThemeData(
   // ========== SOMBRAS PERSONALIZADAS ==========
   static List<BoxShadow> softShadow = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.05),
+      color: Colors.black.withValues(alpha: 0.05),
       blurRadius: 10,
       offset: const Offset(0, 4),
     ),
@@ -180,7 +203,7 @@ cardTheme: const CardThemeData(
 
   static List<BoxShadow> cardShadow = [
     BoxShadow(
-      color: Colors.black.withOpacity(0.08),
+      color: Colors.black.withValues(alpha: 0.08),
       blurRadius: 20,
       offset: const Offset(0, 4),
     ),
@@ -188,7 +211,8 @@ cardTheme: const CardThemeData(
 
   // ========== BORDER RADIUS ==========
   static const BorderRadius smallRadius = BorderRadius.all(Radius.circular(8));
-  static const BorderRadius mediumRadius = BorderRadius.all(Radius.circular(12));
+  static const BorderRadius mediumRadius =
+      BorderRadius.all(Radius.circular(12));
   static const BorderRadius largeRadius = BorderRadius.all(Radius.circular(16));
   static const BorderRadius xlRadius = BorderRadius.all(Radius.circular(24));
 }

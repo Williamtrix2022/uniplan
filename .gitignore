@@ -84,6 +84,12 @@ temp/
 secrets/
 credentials/
 
+# ========== AGENT TOOLS ==========
+.atl/
+# .agents/ - versioned with custom agents
+# .claude/ - versioned with skills
+skills-lock.json
+
 # ========== DOCUMENTACIÓN ==========
 # Mantén los docs pero ignora archivos temporales
 docs/*.tmp

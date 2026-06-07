@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/task_service.dart';
@@ -30,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final DashboardService _dashboardService = DashboardService();
 
   String userName = '';
-  List<Task> todayTasks = [];
+  List<Task> dashboardTasks = [];
   int pomodorosThisWeek = 0;
   bool isLoading = true;
 
@@ -47,13 +48,38 @@ class _HomeScreenState extends State<HomeScreen> {
       // Cargar nombre del usuario
       userName = await _authService.getUserName();
 
-      // Cargar tareas del día
-      final allTasks = await _taskService.getTasks(estado: 'pendiente');
+      // Cargar tareas ordenadas por fecha y prioridad
+      final allTasks = await _taskService.getTasks();
+      allTasks.sort((a, b) {
+        final dateCompare = a.fechaEntrega.compareTo(b.fechaEntrega);
+        if (dateCompare != 0) return dateCompare;
+
+        int weight(String prioridad) {
+          switch (prioridad) {
+            case 'alta':
+              return 3;
+            case 'media':
+              return 2;
+            case 'baja':
+              return 1;
+            default:
+              return 0;
+          }
+        }
+
+        return weight(b.prioridad).compareTo(weight(a.prioridad));
+      });
       final today = DateTime.now();
-      todayTasks = allTasks.where((task) {
-        return task.fechaEntrega.year == today.year &&
-            task.fechaEntrega.month == today.month &&
-            task.fechaEntrega.day == today.day;
+      final dayStart = DateTime(today.year, today.month, today.day);
+      dashboardTasks = allTasks.where((task) {
+        final due = DateTime(
+          task.fechaEntrega.year,
+          task.fechaEntrega.month,
+          task.fechaEntrega.day,
+        );
+        final isCompleted = task.completada || task.estado == 'completada';
+        final isOverdue = due.isBefore(dayStart);
+        return !isCompleted && !isOverdue;
       }).toList();
 
       // Cargar estadísticas de pomodoro
@@ -102,7 +128,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 onRefresh: _loadDashboardData,
                 color: AppTheme.primaryGreen,
                 child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: ClampingScrollPhysics(),
+                  ),
                   padding: const EdgeInsets.all(AppSizes.paddingL),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -126,9 +154,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
-                            'Hoy',
-                            style: TextStyle(
+                          Text(
+                            'Tareas',
+                            style: GoogleFonts.inter(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.darkText,
@@ -143,11 +171,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               );
                             },
-                            child: const Text(
+                            child: Text(
                               'Ver todo →',
-                              style: TextStyle(
+                              style: GoogleFonts.inter(
                                 color: AppTheme.primaryGreen,
                                 fontWeight: FontWeight.w600,
+                                fontSize: 13,
                               ),
                             ),
                           ),
@@ -159,7 +188,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Lista de tareas
                       _buildTasksList(),
 
-                      const SizedBox(height: 100),
+                      const SizedBox(height: 24),
                     ],
                   ),
                 ),
@@ -183,6 +212,10 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildHeader() {
+    final firstName = userName.trim().isNotEmpty
+        ? userName.trim().split(' ').first
+        : 'Usuario';
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -190,19 +223,28 @@ class _HomeScreenState extends State<HomeScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              'Hola, ${userName.split(' ')[0]}',
-              style: const TextStyle(
-                fontSize: 28,
+              _getGreeting(),
+              style: GoogleFonts.inter(
+                fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.darkText,
               ),
             ),
             const SizedBox(height: 4),
             Text(
+              'Hola, $firstName',
+              style: GoogleFonts.inter(
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.darkText,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
               _getFormattedDate(),
-              style: const TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 14,
-                color: AppTheme.greyText,
+                color: AppTheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -381,7 +423,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 2),
                 Text(
                   '$pomodorosThisWeek pomodoros esta semana',
-                  style: const TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.darkText,
@@ -396,7 +438,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTasksList() {
-    if (todayTasks.isEmpty) {
+    if (dashboardTasks.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(40),
         decoration: BoxDecoration(
@@ -411,20 +453,39 @@ class _HomeScreenState extends State<HomeScreen> {
               color: AppTheme.greyText.withOpacity(0.5),
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Ninguna tarea para hoy',
-              style: TextStyle(
+            Text(
+              'No tienes tareas activas',
+              style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.greyText,
+                color: AppTheme.darkText,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
-              '¡Disfruta tu día!',
-              style: TextStyle(
+            Text(
+              'No hay pendientes vigentes por mostrar',
+              style: GoogleFonts.inter(
                 fontSize: 14,
-                color: AppTheme.greyText,
+                color: AppTheme.onSurfaceVariant,
+              ),
+            ),
+            const SizedBox(height: 12),
+            ElevatedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const TaskFormScreen(),
+                  ),
+                ).then((_) => _loadDashboardData());
+              },
+              icon: const Icon(Icons.add),
+              label: Text(
+                'Agregar tarea',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ],
@@ -433,121 +494,170 @@ class _HomeScreenState extends State<HomeScreen> {
     }
 
     return Column(
-      children: todayTasks.map((task) => _buildTaskCard(task)).toList(),
+      children: dashboardTasks.map((task) => _buildTaskCard(task)).toList(),
     );
   }
 
   Widget _buildTaskCard(Task task) {
-    final priorityColor = Color(
-        int.parse(task.getPriorityColor().substring(1), radix: 16) +
-            0xFF000000);
+    final isOverdue =
+        task.fechaEntrega.isBefore(
+              DateTime(
+                DateTime.now().year,
+                DateTime.now().month,
+                DateTime.now().day,
+              )) &&
+            !task.completada;
+    final sideColor = _getTaskStatusColor(task, isOverdue);
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppTheme.white,
-        borderRadius: BorderRadius.circular(AppSizes.radiusM),
-        border: Border.all(color: AppTheme.borderGrey, width: 1),
-      ),
-      child: Row(
-        children: [
-          // Checkbox
-          GestureDetector(
-            onTap: () async {
-              try {
-                await _taskService.completeTask(task.id);
-                _loadDashboardData();
-              } catch (e) {
-                print('Error completing task: $e');
-              }
-            },
-            child: Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppTheme.primaryGreen,
-                  width: 2,
-                ),
-              ),
-              child: task.completada
-                  ? const Icon(
-                      Icons.check,
-                      size: 16,
-                      color: AppTheme.primaryGreen,
-                    )
-                  : null,
-            ),
+    return GestureDetector(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (context) => TaskFormScreen(task: task),
           ),
-
-          const SizedBox(width: 12),
-
-          // Info de la tarea
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  task.titulo,
-                  style: const TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.darkText,
+        ).then((_) => _loadDashboardData());
+      },
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 12),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+          border: Border.all(color: AppTheme.outlineVariant, width: 1),
+          boxShadow: AppTheme.softShadow,
+        ),
+        child: Stack(
+          children: [
+            // Sidebar con color de estado
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: 6,
+                decoration: BoxDecoration(
+                  color: sideColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(AppSizes.radiusM),
+                    bottomLeft: Radius.circular(AppSizes.radiusM),
                   ),
                 ),
-                const SizedBox(height: 4),
-                Row(
-                  children: [
-                    if (task.materiaNombre != null) ...[
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppTheme.lightGreen,
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          task.materiaNombre!,
-                          style: const TextStyle(
-                            fontSize: 11,
+              ),
+            ),
+            // Contenido
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 16, 16),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          task.titulo,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.primaryGreen,
+                            color: AppTheme.darkText,
                           ),
                         ),
-                      ),
-                      const SizedBox(width: 8),
-                    ],
-                    Text(
-                      DateFormat('HH:mm').format(task.fechaEntrega),
-                      style: const TextStyle(
-                        fontSize: 13,
-                        color: AppTheme.greyText,
-                      ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            if (task.materiaNombre != null) ...[
+                              Flexible(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    task.materiaNombre!,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            Text(
+                              DateFormat('dd MMM', 'es_ES')
+                                  .format(task.fechaEntrega),
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppTheme.onSurfaceVariant,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ],
+                  ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert,
+                        color: AppTheme.greyText),
+                    onSelected: (value) async {
+                      if (value == 'delete') {
+                        try {
+                          await _taskService.deleteTask(task.id);
+                          if (!mounted) return;
+                          _loadDashboardData();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Tarea eliminada'),
+                              backgroundColor: AppTheme.success,
+                            ),
+                          );
+                        } catch (e) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error: ${e.toString()}'),
+                              backgroundColor: AppTheme.error,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem<String>(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_outline,
+                                size: 18, color: AppTheme.error),
+                            SizedBox(width: 8),
+                            Text('Eliminar'),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
-          ),
-
-          // Icono de menú
-          IconButton(
-            onPressed: () {
-              // TODO: Opciones de tarea
-            },
-            icon: const Icon(Icons.more_vert),
-            iconSize: 20,
-            color: AppTheme.greyText,
-            constraints: const BoxConstraints(),
-            padding: EdgeInsets.zero,
-          ),
-        ],
+          ],
+        ),
       ),
     );
+  }
+
+  Color _getTaskStatusColor(Task task, bool isOverdue) {
+    if (isOverdue) return AppTheme.error;
+    if (task.completada || task.estado == 'completada') {
+      return AppTheme.onSurfaceVariant.withOpacity(0.4);
+    }
+    if (task.estado == 'en_progreso') return AppTheme.info;
+    return AppTheme.primaryGreen;
   }
 
   Widget _buildBottomNav() {
@@ -572,59 +682,53 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
- Widget _buildNavItem(IconData icon, String label, bool isActive) {
-  return InkWell(
-    onTap: () {
-      if (label == 'Tasks') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const TasksScreen(),
+  Widget _buildNavItem(IconData icon, String label, bool isActive) {
+    return InkWell(
+      onTap: () {
+        if (label == 'Tasks') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const TasksScreen(),
+            ),
+          ).then((_) => _loadDashboardData());
+        } else if (label == 'Calendar') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const CalendarScreen(),
+            ),
+          ).then((_) => _loadDashboardData());
+        } else if (label == 'Profile') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ProfileScreen(),
+            ),
+          ).then((_) => _loadDashboardData());
+        }
+      },
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            icon,
+            color: isActive ? AppTheme.primaryGreen : AppTheme.greyText,
+            size: 24,
           ),
-        ).then((_) => _loadDashboardData());
-      } 
-      else if (label == 'Calendar') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const CalendarScreen(),
+          const SizedBox(height: 4),
+          Text(
+            label,
+            style: GoogleFonts.inter(
+              fontSize: 12,
+              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+              color: isActive ? AppTheme.primaryGreen : AppTheme.greyText,
+            ),
           ),
-        ).then((_) => _loadDashboardData());
-      } 
-      else if (label == 'Profile') {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => const ProfileScreen(),
-          ),
-        ).then((_) => _loadDashboardData());
-      }
-    },
-    child: Column(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Icon(
-          icon,
-          color: isActive ? AppTheme.primaryGreen : AppTheme.greyText,
-          size: 24,
-        ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-            color: isActive
-                ? AppTheme.primaryGreen
-                : AppTheme.greyText,
-          ),
-        ),
-      ],
-    ),
-  );
-}
-
-
+        ],
+      ),
+    );
+  }
 }
 
 // ============================================
