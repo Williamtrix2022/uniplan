@@ -7,7 +7,7 @@ class ApiConfig {
   // IMPORTANTE: Elige UNA opción según tu dispositivo
 
   // OPCIÓN 1: Android Emulator (AVD)
-  static const String baseUrl = 'http://172.18.2.158:3000';
+  static const String baseUrl = 'http://192.168.1.76:3000';
 
   // OPCIÓN 2: iOS Simulator
   // static const String baseUrl = 'http://localhost:3000';

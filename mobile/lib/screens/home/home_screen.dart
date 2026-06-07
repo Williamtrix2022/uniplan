@@ -4,6 +4,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/task_service.dart';
@@ -153,9 +154,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'Tareas',
-                            style: TextStyle(
+                            style: GoogleFonts.inter(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
                               color: AppTheme.darkText,
@@ -170,11 +171,12 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                               );
                             },
-                            child: const Text(
+                            child: Text(
                               'Ver todo →',
-                              style: TextStyle(
+                              style: GoogleFonts.inter(
                                 color: AppTheme.primaryGreen,
                                 fontWeight: FontWeight.w600,
+                                fontSize: 13,
                               ),
                             ),
                           ),
@@ -222,7 +224,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Text(
               _getGreeting(),
-              style: const TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
                 color: AppTheme.darkText,
@@ -231,7 +233,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 4),
             Text(
               'Hola, $firstName',
-              style: const TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
                 color: AppTheme.darkText,
@@ -240,9 +242,9 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 4),
             Text(
               _getFormattedDate(),
-              style: const TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 14,
-                color: AppTheme.greyText,
+                color: AppTheme.onSurfaceVariant,
               ),
             ),
           ],
@@ -421,7 +423,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 const SizedBox(height: 2),
                 Text(
                   '$pomodorosThisWeek pomodoros esta semana',
-                  style: const TextStyle(
+                  style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.darkText,
@@ -451,20 +453,20 @@ class _HomeScreenState extends State<HomeScreen> {
               color: AppTheme.greyText.withOpacity(0.5),
             ),
             const SizedBox(height: 16),
-            const Text(
+            Text(
               'No tienes tareas activas',
-              style: TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.greyText,
+                color: AppTheme.darkText,
               ),
             ),
             const SizedBox(height: 8),
-            const Text(
+            Text(
               'No hay pendientes vigentes por mostrar',
-              style: TextStyle(
+              style: GoogleFonts.inter(
                 fontSize: 14,
-                color: AppTheme.greyText,
+                color: AppTheme.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 12),
@@ -478,7 +480,13 @@ class _HomeScreenState extends State<HomeScreen> {
                 ).then((_) => _loadDashboardData());
               },
               icon: const Icon(Icons.add),
-              label: const Text('Agregar tarea'),
+              label: Text(
+                'Agregar tarea',
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
@@ -491,9 +499,15 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Widget _buildTaskCard(Task task) {
-    final priorityColor = Color(
-        int.parse(task.getPriorityColor().substring(1), radix: 16) +
-            0xFF000000);
+    final isOverdue =
+        task.fechaEntrega.isBefore(
+              DateTime(
+                DateTime.now().year,
+                DateTime.now().month,
+                DateTime.now().day,
+              )) &&
+            !task.completada;
+    final sideColor = _getTaskStatusColor(task, isOverdue);
 
     return GestureDetector(
       onTap: () {
@@ -506,95 +520,124 @@ class _HomeScreenState extends State<HomeScreen> {
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
-        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppTheme.white,
+          color: AppTheme.surface,
           borderRadius: BorderRadius.circular(AppSizes.radiusM),
-          border: Border.all(color: AppTheme.borderGrey, width: 1),
+          border: Border.all(color: AppTheme.outlineVariant, width: 1),
+          boxShadow: AppTheme.softShadow,
         ),
-        child: Row(
+        child: Stack(
           children: [
-            // Checkbox
-            Container(
-              width: 24,
-              height: 24,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: AppTheme.primaryGreen,
-                  width: 2,
+            // Sidebar con color de estado
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: 6,
+                decoration: BoxDecoration(
+                  color: sideColor,
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(AppSizes.radiusM),
+                    bottomLeft: Radius.circular(AppSizes.radiusM),
+                  ),
                 ),
               ),
-              child: task.completada
-                  ? const Icon(
-                      Icons.check,
-                      size: 16,
-                      color: AppTheme.primaryGreen,
-                    )
-                  : null,
             ),
-
-            const SizedBox(width: 12),
-
-            // Info de la tarea
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // Contenido
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 16, 16, 16),
+              child: Row(
                 children: [
-                  Text(
-                    task.titulo,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.darkText,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      if (task.materiaNombre != null) ...[
-                        Flexible(
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color: AppTheme.lightGreen,
-                              borderRadius: BorderRadius.circular(4),
-                            ),
-                            child: Text(
-                              task.materiaNombre!,
-                              overflow: TextOverflow.ellipsis,
-                              maxLines: 1,
-                              style: const TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600,
-                                color: AppTheme.primaryGreen,
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          task.titulo,
+                          style: GoogleFonts.inter(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: AppTheme.darkText,
+                          ),
+                        ),
+                        const SizedBox(height: 8),
+                        Row(
+                          children: [
+                            if (task.materiaNombre != null) ...[
+                              Flexible(
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 2,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: AppTheme.surfaceContainerHighest,
+                                    borderRadius: BorderRadius.circular(999),
+                                  ),
+                                  child: Text(
+                                    task.materiaNombre!,
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    style: GoogleFonts.inter(
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                      color: AppTheme.onSurfaceVariant,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                            ],
+                            Text(
+                              DateFormat('dd MMM', 'es_ES')
+                                  .format(task.fechaEntrega),
+                              style: GoogleFonts.inter(
+                                fontSize: 12,
+                                color: AppTheme.onSurfaceVariant,
                               ),
                             ),
-                          ),
+                          ],
                         ),
-                        const SizedBox(width: 8),
                       ],
-                      Container(
-                        width: 8,
-                        height: 8,
-                        decoration: BoxDecoration(
-                          color: priorityColor,
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          '${DateFormat('dd MMM', 'es_ES').format(task.fechaEntrega)} · ${task.prioridad.toUpperCase()}',
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          style: const TextStyle(
-                            fontSize: 13,
-                            color: AppTheme.greyText,
-                          ),
+                    ),
+                  ),
+                  PopupMenuButton<String>(
+                    icon: const Icon(Icons.more_vert,
+                        color: AppTheme.greyText),
+                    onSelected: (value) async {
+                      if (value == 'delete') {
+                        try {
+                          await _taskService.deleteTask(task.id);
+                          if (!mounted) return;
+                          _loadDashboardData();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text('Tarea eliminada'),
+                              backgroundColor: AppTheme.success,
+                            ),
+                          );
+                        } catch (e) {
+                          if (!mounted) return;
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text('Error: ${e.toString()}'),
+                              backgroundColor: AppTheme.error,
+                            ),
+                          );
+                        }
+                      }
+                    },
+                    itemBuilder: (context) => const [
+                      PopupMenuItem<String>(
+                        value: 'delete',
+                        child: Row(
+                          children: [
+                            Icon(Icons.delete_outline,
+                                size: 18, color: AppTheme.error),
+                            SizedBox(width: 8),
+                            Text('Eliminar'),
+                          ],
                         ),
                       ),
                     ],
@@ -602,50 +645,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
-
-            PopupMenuButton<String>(
-              icon: const Icon(Icons.more_vert, color: AppTheme.greyText),
-              onSelected: (value) async {
-                if (value == 'delete') {
-                  try {
-                    await _taskService.deleteTask(task.id);
-                    if (!mounted) return;
-                    _loadDashboardData();
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(
-                        content: Text('Tarea eliminada'),
-                        backgroundColor: AppTheme.success,
-                      ),
-                    );
-                  } catch (e) {
-                    if (!mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('Error: ${e.toString()}'),
-                        backgroundColor: AppTheme.error,
-                      ),
-                    );
-                  }
-                }
-              },
-              itemBuilder: (context) => const [
-                PopupMenuItem<String>(
-                  value: 'delete',
-                  child: Row(
-                    children: [
-                      Icon(Icons.delete_outline,
-                          size: 18, color: AppTheme.error),
-                      SizedBox(width: 8),
-                      Text('Eliminar'),
-                    ],
-                  ),
-                ),
-              ],
-            ),
           ],
         ),
       ),
     );
+  }
+
+  Color _getTaskStatusColor(Task task, bool isOverdue) {
+    if (isOverdue) return AppTheme.error;
+    if (task.completada || task.estado == 'completada') {
+      return AppTheme.onSurfaceVariant.withOpacity(0.4);
+    }
+    if (task.estado == 'en_progreso') return AppTheme.info;
+    return AppTheme.primaryGreen;
   }
 
   Widget _buildBottomNav() {
@@ -707,7 +719,7 @@ class _HomeScreenState extends State<HomeScreen> {
           const SizedBox(height: 4),
           Text(
             label,
-            style: TextStyle(
+            style: GoogleFonts.inter(
               fontSize: 12,
               fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
               color: isActive ? AppTheme.primaryGreen : AppTheme.greyText,
