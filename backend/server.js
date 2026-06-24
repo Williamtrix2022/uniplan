@@ -40,8 +40,12 @@ const startServer = async () => {
   }
 };
 
-// Iniciar servidor
-startServer();
+// Iniciar servidor (local) o exportar app (Vercel serverless)
+if (require.main === module) {
+  startServer();
+} else {
+  module.exports = app;
+}
 
 // Manejar cierre graceful
 process.on('SIGTERM', () => {
