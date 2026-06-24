@@ -8,7 +8,7 @@ class ApiConfig {
   // Prod: flutter build apk --dart-define=API_URL=https://tu-app.vercel.app
   static const String baseUrl = String.fromEnvironment(
     'API_URL',
-    defaultValue: 'http://192.168.1.76:3000',
+    defaultValue: 'https://uniplan-jade.vercel.app',
   );
 
   // Endpoints
