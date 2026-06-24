@@ -4,23 +4,12 @@
 
 class ApiConfig {
   // ========== URL BASE DE LA API ==========
-  // IMPORTANTE: Elige UNA opción según tu dispositivo
-
-  // OPCIÓN 1: Android Emulator (AVD)
-  static const String baseUrl = 'http://192.168.1.76:3000';
-
-  // OPCIÓN 2: iOS Simulator
-  // static const String baseUrl = 'http://localhost:3000';
-
-  // OPCIÓN 3: Dispositivo Físico (WiFi)
-  // Reemplaza X.X.X.X con tu IP local (ver instrucciones abajo)
-  // static const String baseUrl = 'http://192.168.1.5:3000';
-
-  // OPCIÓN 4: Chrome/Edge (Web)
-  // static const String baseUrl = 'http://localhost:3000';
-
-  // PRODUCCIÓN (cuando despliegues):
-  // static const String baseUrl = 'https://tu-api.render.com';
+  // Dev:  flutter run --dart-define=API_URL=http://192.168.1.76:3000
+  // Prod: flutter build apk --dart-define=API_URL=https://tu-app.vercel.app
+  static const String baseUrl = String.fromEnvironment(
+    'API_URL',
+    defaultValue: 'http://192.168.1.76:3000',
+  );
 
   // Endpoints
   static const String apiPrefix = '/api';
