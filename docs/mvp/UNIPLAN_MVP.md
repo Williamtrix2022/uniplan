@@ -21,13 +21,13 @@
 | Sprint | Módulo | Progreso Actual | Estado |
 |--------|--------|----------------|--------|
 | Sprint 1 | Autenticación y UI Base | 71% (25/35) | 🔄 En Progreso |
-| Sprint 2 | Gestión de Tareas | 61% (25/41) | 🔄 En Progreso |
+| Sprint 2 | Gestión de Tareas | 100% (41/41) | ✅ Completado |
 | Sprint 3 | Gestión de Horarios | 0% (0/31) | ⬜ Pendiente |
 | Sprint 4 | Sistema de Calificaciones | 0% (0/33) | ⬜ Pendiente |
 | Sprint 5 | Notificaciones y Sincronización | 0% (0/28) | ⬜ Pendiente |
 | Sprint 6 | UI/UX Avanzado | 0% (0/30) | ⬜ Pendiente |
 | Sprint 7 | Estadísticas, Tests y Docs | 5% (2/39) | 🔄 En Progreso |
-| **TOTAL** | | **22% (51/237)** | 🔄 |
+| **TOTAL** | | **28% (67/237)** | 🔄 |
 
 ---
 
@@ -145,13 +145,13 @@
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
 | ✅ | Lista de Tareas — UI base | Alta | 4h |
-| 🔄 | Lista de Tareas — Filtros (por estado, prioridad) | Alta | 3h |
-| ⬜ | Lista de Tareas — Búsqueda de tareas | Media | 2h |
-| ⬜ | Lista de Tareas — Ordenamiento | Media | 2h |
+| ✅ | Lista de Tareas — Filtros (por estado, prioridad) | Alta | 3h |
+| ✅ | Lista de Tareas — Búsqueda de tareas | Media | 2h |
+| ✅ | Lista de Tareas — Ordenamiento | Media | 2h |
 | ✅ | Detalle de Tarea — Formulario completo | Alta | 4h |
 | ✅ | Detalle de Tarea — Selector de fecha de entrega | Alta | 2h |
 | ✅ | Detalle de Tarea — Selector de prioridad (alta/media/baja) | Alta | 2h |
-| ⬜ | Detalle de Tarea — Selector de materia asociada | Media | 2h |
+| ✅ | Detalle de Tarea — Selector de materia asociada | Media | 2h |
 | ✅ | Modal Crear/Editar Tarea | Alta | 3h |
 | ✅ | Validaciones en formulario de tarea | Alta | 2h |
 
@@ -164,7 +164,7 @@
 | ✅ | TaskCard — Checkbox interactivo | Alta | 2h |
 | ✅ | TaskCard — Swipe actions (deslizar para eliminar/editar) | Media | 3h |
 | ✅ | TaskCard — Indicador visual de prioridad | Media | 1h |
-| ⬜ | TaskFilter widget (filtro de tareas) | Media | 2h |
+| ✅ | TaskFilter widget (filtro de tareas) | Media | 2h |
 | ✅ | DatePicker personalizado | Media | 3h |
 | ✅ | PrioritySelector (selector de prioridad) | Media | 2h |
 
@@ -172,10 +172,10 @@
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Transición entre estados de tarea | Media | 2h |
-| ⬜ | Animación al completar una tarea | Media | 2h |
-| ⬜ | Lista animada al agregar/eliminar elementos | Baja | 3h |
-| ⬜ | Skeleton loading (carga progresiva) | Baja | 2h |
+| ✅ | Transición entre estados de tarea | Media | 2h |
+| ✅ | Animación al completar una tarea | Media | 2h |
+| ✅ | Lista animada al agregar/eliminar elementos | Baja | 3h |
+| ✅ | Skeleton loading (carga progresiva) | Baja | 2h |
 
 ### 🔧 Backend — Task Model
 
@@ -195,7 +195,7 @@
 | ✅ | `updateTask()` — Actualizar tarea | Alta | 2h |
 | ✅ | `deleteTask()` — Eliminar tarea | Alta | 2h |
 | ✅ | `getTasks()` — Obtener todas las tareas | Alta | 2h |
-| ⬜ | `getTasksBySubject()` — Tareas por materia | Media | 2h |
+| ✅ | `getTasksBySubject()` — Tareas por materia | Media | 2h |
 | ✅ | `getTasksByStatus()` — Tareas por estado | Media | 2h |
 | ✅ | `toggleTaskComplete()` — Marcar/desmarcar como completada | Alta | 2h |
 | ✅ | `getUpcomingTasks()` — Tareas próximas a vencer | Media | 2h |
@@ -204,15 +204,15 @@
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Setup Provider base de tareas | Alta | 2h |
-| ⬜ | Gestión de estado reactivo (state management) | Alta | 3h |
-| ⬜ | Caché local de tareas | Media | 3h |
-| ⬜ | Lógica de filtrado y ordenamiento | Media | 2h |
-| ⬜ | Cálculo de estadísticas de tareas | Baja | 2h |
+| ✅ | Setup Provider base de tareas | Alta | 2h |
+| ✅ | Gestión de estado reactivo (state management) | Alta | 3h |
+| ✅ | Caché local de tareas | Media | 3h |
+| ✅ | Lógica de filtrado y ordenamiento | Media | 2h |
+| ✅ | Cálculo de estadísticas de tareas | Baja | 2h |
 
 > **🎯 Objetivo Sprint 2:** Módulo de Gestión de Tareas 100% completo: CRUD, filtros, búsqueda, swipe, animaciones y caché local.
 
-> **Progreso:** 🔄 25/41 tareas (61%)
+> **Progreso:** ✅ 41/41 tareas (100%)
 
 ---
 

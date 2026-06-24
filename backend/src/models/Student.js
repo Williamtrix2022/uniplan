@@ -4,6 +4,33 @@
 
 const { pool } = require('../config/database');
 
+/**
+ * Ejecuta una query con reintento automático si falla por conexión perdida.
+ * Retorna el mismo formato que pool.execute: [rows, fields]
+ * MySQL remoto (alwaysdata) puede cerrar conexiones inactivas → ECONNRESET.
+ */
+async function queryWithRetry(query, params = [], retries = 2) {
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const result = await pool.execute(query, params);
+      return result; // [rows, fields]
+    } catch (error) {
+      const isConnectionError =
+        error.code === 'ECONNRESET' ||
+        error.code === 'PROTOCOL_CONNECTION_LOST' ||
+        error.code === 'ETIMEDOUT' ||
+        error.errno === -4077;
+
+      if (isConnectionError && attempt < retries) {
+        console.log(`🔄 Reintentando query (intento ${attempt}/${retries - 1})...`);
+        await new Promise(r => setTimeout(r, 500));
+        continue;
+      }
+      throw error;
+    }
+  }
+}
+
 class Student {
   
   // Crear un nuevo estudiante
@@ -35,7 +62,7 @@ class Student {
     const query = 'SELECT * FROM estudiantes WHERE correo = ? AND activo = TRUE';
     
     try {
-      const [rows] = await pool.execute(query, [correo]);
+      const [rows] = await queryWithRetry(query, [correo]);
       return rows[0] || null;
     } catch (error) {
       throw error;
@@ -47,7 +74,7 @@ class Student {
     const query = 'SELECT id, nombre, correo, carrera, universidad, fecha_registro FROM estudiantes WHERE id = ? AND activo = TRUE';
     
     try {
-      const [rows] = await pool.execute(query, [id]);
+      const [rows] = await queryWithRetry(query, [id]);
       return rows[0] || null;
     } catch (error) {
       throw error;
@@ -59,7 +86,7 @@ class Student {
     const query = 'SELECT id, nombre, correo, carrera, universidad, fecha_registro FROM estudiantes WHERE activo = TRUE';
     
     try {
-      const [rows] = await pool.execute(query);
+      const [rows] = await queryWithRetry(query);
       return rows;
     } catch (error) {
       throw error;
@@ -77,7 +104,7 @@ class Student {
     `;
     
     try {
-      const [result] = await pool.execute(query, [nombre, carrera, universidad, id]);
+      const [result] = await queryWithRetry(query, [nombre, carrera, universidad, id]);
       return result.affectedRows > 0;
     } catch (error) {
       throw error;
@@ -89,7 +116,7 @@ class Student {
     const query = 'UPDATE estudiantes SET activo = FALSE WHERE id = ?';
     
     try {
-      const [result] = await pool.execute(query, [id]);
+      const [result] = await queryWithRetry(query, [id]);
       return result.affectedRows > 0;
     } catch (error) {
       throw error;
@@ -116,7 +143,7 @@ class Student {
     `;
 
     try {
-      await pool.execute(query);
+      await queryWithRetry(query);
     } catch (error) {
       throw error;
     }
@@ -136,7 +163,7 @@ class Student {
     `;
 
     try {
-      await pool.execute(invalidateQuery, [studentId]);
+      await queryWithRetry(invalidateQuery, [studentId]);
       const [result] = await pool.execute(insertQuery, [studentId, tokenHash, expiresAt]);
       return result.insertId;
     } catch (error) {
@@ -158,7 +185,7 @@ class Student {
     `;
 
     try {
-      const [rows] = await pool.execute(query, [tokenHash]);
+      const [rows] = await queryWithRetry(query, [tokenHash]);
       return rows[0] || null;
     } catch (error) {
       throw error;
@@ -174,7 +201,7 @@ class Student {
     `;
 
     try {
-      const [result] = await pool.execute(query, [resetId]);
+      const [result] = await queryWithRetry(query, [resetId]);
       return result.affectedRows > 0;
     } catch (error) {
       throw error;
@@ -190,7 +217,7 @@ class Student {
     `;
 
     try {
-      const [result] = await pool.execute(query, [hashedPassword, studentId]);
+      const [result] = await queryWithRetry(query, [hashedPassword, studentId]);
       return result.affectedRows > 0;
     } catch (error) {
       throw error;

@@ -10,13 +10,13 @@ class Task {
   static async create(taskData) {
     const { 
       id_estudiante, id_materia, titulo, descripcion, 
-      fecha_entrega, prioridad, estado, recordatorio 
+      fecha_entrega, prioridad, estado, recordatorio, es_proyecto
     } = taskData;
     
     const query = `
       INSERT INTO tareas 
-      (id_estudiante, id_materia, titulo, descripcion, fecha_entrega, prioridad, estado, recordatorio)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+      (id_estudiante, id_materia, titulo, descripcion, fecha_entrega, prioridad, estado, recordatorio, es_proyecto)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
     
     try {
@@ -28,7 +28,8 @@ class Task {
         fecha_entrega,
         prioridad || 'media',
         estado || 'pendiente',
-        recordatorio || false
+        recordatorio || false,
+        es_proyecto || false
       ]);
       
       return result.insertId;
@@ -64,6 +65,11 @@ class Task {
       params.push(filters.id_materia);
     }
 
+    if (filters.es_proyecto !== undefined) {
+      query += ' AND t.es_proyecto = ?';
+      params.push(filters.es_proyecto);
+    }
+
     query += ' ORDER BY t.fecha_entrega ASC, t.prioridad DESC';
     
     try {
@@ -93,18 +99,18 @@ class Task {
 
   // Actualizar tarea
   static async update(id, taskData) {
-    const { titulo, descripcion, fecha_entrega, prioridad, estado, id_materia } = taskData;
+    const { titulo, descripcion, fecha_entrega, prioridad, estado, id_materia, es_proyecto } = taskData;
     
     const query = `
       UPDATE tareas 
       SET titulo = ?, descripcion = ?, fecha_entrega = ?, 
-          prioridad = ?, estado = ?, id_materia = ?
+          prioridad = ?, estado = ?, id_materia = ?, es_proyecto = ?
       WHERE id = ? AND activo = TRUE
     `;
     
     try {
       const [result] = await pool.execute(query, [
-        titulo, descripcion, fecha_entrega, prioridad, estado, id_materia, id
+        titulo, descripcion, fecha_entrega, prioridad, estado, id_materia, es_proyecto || false, id
       ]);
       return result.affectedRows > 0;
     } catch (error) {
@@ -112,16 +118,27 @@ class Task {
     }
   }
 
-  // Marcar como completada
-  static async markAsCompleted(id) {
+  // Marcar/desmarcar tarea como completada
+  static async setCompletion(id, completada) {
     const query = `
-      UPDATE tareas 
-      SET completada = TRUE, estado = 'completada', fecha_completada = NOW()
+      UPDATE tareas
+      SET completada = ?,
+          estado = ?,
+          fecha_completada = ?
       WHERE id = ? AND activo = TRUE
     `;
-    
+
+    const isCompleted = Boolean(completada);
+    const estado = isCompleted ? 'completada' : 'pendiente';
+    const fechaCompletada = isCompleted ? new Date() : null;
+
     try {
-      const [result] = await pool.execute(query, [id]);
+      const [result] = await pool.execute(query, [
+        isCompleted,
+        estado,
+        fechaCompletada,
+        id
+      ]);
       return result.affectedRows > 0;
     } catch (error) {
       throw error;

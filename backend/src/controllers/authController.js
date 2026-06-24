@@ -161,10 +161,23 @@ const login = async (req, res) => {
 
   } catch (error) {
     console.error('Error en login:', error);
+
+    const isConnectionError =
+      error.code === 'ECONNRESET' ||
+      error.code === 'PROTOCOL_CONNECTION_LOST' ||
+      error.code === 'ETIMEDOUT' ||
+      error.errno === -4077;
+
+    if (isConnectionError) {
+      return res.status(503).json({
+        success: false,
+        message: 'El servidor de base de datos está temporalmente desconectado. Por favor, intenta de nuevo en unos segundos.'
+      });
+    }
+
     res.status(500).json({
       success: false,
-      message: 'Error al iniciar sesión',
-      error: error.message
+      message: 'Error al iniciar sesión'
     });
   }
 };
