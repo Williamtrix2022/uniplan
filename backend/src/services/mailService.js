@@ -13,27 +13,35 @@ const sendWithMailerSend = async ({ to, subject, text, html }) => {
     throw new Error('Falta MAILERSEND_FROM en variables de entorno');
   }
 
-  const response = await fetch('https://api.mailersend.com/v1/email', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify({
-      from: { email: fromEmail, name: fromName },
-      to: [{ email: to }],
-      subject,
-      text,
-      html,
-    }),
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Error enviando correo con MailerSend: ${errorBody}`);
+  try {
+    const response = await fetch('https://api.mailersend.com/v1/email', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: { email: fromEmail, name: fromName },
+        to: [{ email: to }],
+        subject,
+        text,
+        html,
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`Error enviando correo con MailerSend: ${errorBody}`);
+    }
+
+    return true;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return true;
 };
 
 const sendWithResend = async ({ to, subject, text, html }) => {
@@ -47,27 +55,35 @@ const sendWithResend = async ({ to, subject, text, html }) => {
     throw new Error('Falta REMITENTE de correo (RESEND_FROM o SMTP_FROM)');
   }
 
-  const response = await fetch('https://api.resend.com/emails', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      from,
-      to: [to],
-      subject,
-      text,
-      html
-    })
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-  if (!response.ok) {
-    const errorBody = await response.text();
-    throw new Error(`Error enviando correo con Resend: ${errorBody}`);
+  try {
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from,
+        to: [to],
+        subject,
+        text,
+        html
+      }),
+      signal: controller.signal,
+    });
+
+    if (!response.ok) {
+      const errorBody = await response.text();
+      throw new Error(`Error enviando correo con Resend: ${errorBody}`);
+    }
+
+    return true;
+  } finally {
+    clearTimeout(timeoutId);
   }
-
-  return true;
 };
 
 const createSmtpTransport = () => {
