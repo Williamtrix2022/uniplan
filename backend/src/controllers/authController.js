@@ -270,27 +270,94 @@ const forgotPassword = async (req, res) => {
       : null;
     const primaryUrl = resetWebUrl || resetUrl;
 
+    const emailHtml = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background-color:#F5F5F5;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F5F5F5;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+          <!-- HEADER -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#00D9A0 0%,#00B386 100%);padding:36px 40px;text-align:center;">
+              <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:50%;width:64px;height:64px;line-height:64px;font-size:32px;margin-bottom:12px;">🎓</div>
+              <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">Uniplan</h1>
+              <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">Tu espacio de enfoque académico</p>
+            </td>
+          </tr>
+
+          <!-- BODY -->
+          <tr>
+            <td style="padding:40px 40px 32px;">
+              <h2 style="margin:0 0 8px;color:#1A1A1A;font-size:20px;font-weight:700;">Recuperación de contraseña</h2>
+              <p style="margin:0 0 24px;color:#6B7280;font-size:14px;line-height:1.6;">
+                Hola <strong style="color:#1A1A1A;">${student.nombre}</strong>, recibimos una solicitud para restablecer tu contraseña.
+              </p>
+
+              <!-- INSTRUCCIÓN -->
+              <p style="margin:0 0 12px;color:#1A1A1A;font-size:14px;font-weight:600;">Tu token de recuperación:</p>
+
+              <!-- TOKEN BOX -->
+              <div style="background:#E0F9F4;border:1.5px dashed #00D9A0;border-radius:10px;padding:18px 24px;text-align:center;margin-bottom:24px;">
+                <p style="margin:0 0 6px;color:#6B7280;font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:600;">Token</p>
+                <code style="color:#00B386;font-size:15px;font-weight:700;word-break:break-all;letter-spacing:1px;">${rawToken}</code>
+              </div>
+
+              <!-- PASOS -->
+              <div style="background:#F5F5F5;border-radius:10px;padding:16px 20px;margin-bottom:24px;">
+                <p style="margin:0 0 8px;color:#1A1A1A;font-size:13px;font-weight:600;">¿Cómo usarlo?</p>
+                <ol style="margin:0;padding-left:18px;color:#6B7280;font-size:13px;line-height:1.8;">
+                  <li>Abrí la app Uniplan</li>
+                  <li>Tocá <strong>"¿Olvidaste tu contraseña?"</strong></li>
+                  <li>Tocá <strong>"Ya tengo token de recuperación"</strong></li>
+                  <li>Pegá el token y elegí una nueva contraseña</li>
+                </ol>
+              </div>
+
+              <!-- EXPIRY WARNING -->
+              <div style="display:flex;align-items:center;background:#FEF3C7;border-radius:8px;padding:12px 16px;margin-bottom:32px;">
+                <span style="font-size:16px;margin-right:10px;">⏱</span>
+                <p style="margin:0;color:#92400E;font-size:13px;">Este token expira en <strong>${expiresMinutes} minutos</strong>. Si no lo usás a tiempo, solicitá uno nuevo.</p>
+              </div>
+
+              <!-- DIVIDER -->
+              <hr style="border:none;border-top:1px solid #E5E7EB;margin:0 0 24px;">
+
+              <!-- SECURITY NOTE -->
+              <p style="margin:0;color:#9CA3AF;font-size:12px;line-height:1.6;text-align:center;">
+                Si no solicitaste este cambio, ignorá este correo — tu cuenta sigue segura.<br>
+                Por seguridad, nunca compartás este token con nadie.
+              </p>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background:#F5F5F5;padding:20px 40px;text-align:center;border-top:1px solid #E5E7EB;">
+              <p style="margin:0;color:#9CA3AF;font-size:12px;">© 2025 Uniplan · Todos los derechos reservados</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    const emailText = `Hola ${student.nombre},\n\nRecibimos una solicitud para restablecer tu contraseña de Uniplan.\n\nTu token de recuperación:\n${rawToken}\n\nCómo usarlo:\n1. Abrí la app Uniplan\n2. Tocá "¿Olvidaste tu contraseña?"\n3. Tocá "Ya tengo token de recuperación"\n4. Pegá el token y elegí una nueva contraseña\n\nEste token expira en ${expiresMinutes} minutos.\n\nSi no solicitaste este cambio, ignorá este correo.\n\n© 2025 Uniplan`;
+
     await sendEmail({
       to: student.correo,
-      subject: 'Uniplan - Recuperación de contraseña',
-      text: `Hola ${student.nombre},\n\nRecibimos una solicitud para restablecer tu contraseña.\n\nAbre este enlace:\n${primaryUrl}\n\nSi tu correo no permite abrir enlaces de app, usa este enlace alterno:\n${resetUrl}\n\nTambién puedes usar este token manualmente en la app:\n${rawToken}\n\nEste enlace/token expira en ${expiresMinutes} minutos.\n\nSi no solicitaste este cambio, ignora este correo.`,
-      html: `
-        <p>Hola <strong>${student.nombre}</strong>,</p>
-        <p>Recibimos una solicitud para restablecer tu contraseña.</p>
-        <p>
-          <a href="${primaryUrl}" target="_blank" rel="noopener noreferrer">
-            Restablecer contraseña
-          </a>
-        </p>
-        <p>Si el botón no funciona, copia y pega este enlace:</p>
-        <p><code>${primaryUrl}</code></p>
-        <p>Enlace alterno de app (deep link):</p>
-        <p><code>${resetUrl}</code></p>
-        <p>Token manual para pegar en la app:</p>
-        <p><code>${rawToken}</code></p>
-        <p>Este enlace expira en ${expiresMinutes} minutos.</p>
-        <p>Si no solicitaste este cambio, ignora este correo.</p>
-      `
+      subject: 'Uniplan · Recuperá tu contraseña',
+      text: emailText,
+      html: emailHtml
     });
 
     res.json({
