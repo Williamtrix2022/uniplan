@@ -22,12 +22,12 @@
 |--------|--------|----------------|--------|
 | Sprint 1 | Autenticación y UI Base | 71% (25/35) | 🔄 En Progreso |
 | Sprint 2 | Gestión de Tareas | 100% (41/41) | ✅ Completado |
-| Sprint 3 | Gestión de Horarios | 0% (0/31) | ⬜ Pendiente |
+| Sprint 3 | Gestión de Horarios | 89% (25/28) | ✅ Completado |
 | Sprint 4 | Sistema de Calificaciones | 0% (0/33) | ⬜ Pendiente |
 | Sprint 5 | Notificaciones y Sincronización | 0% (0/28) | ⬜ Pendiente |
 | Sprint 6 | UI/UX Avanzado | 0% (0/30) | ⬜ Pendiente |
 | Sprint 7 | Estadísticas, Tests y Docs | 5% (2/39) | 🔄 En Progreso |
-| **TOTAL** | | **28% (67/237)** | 🔄 |
+| **TOTAL** | | **39% (92/234)** | 🔄 |
 
 ---
 
@@ -44,7 +44,7 @@
 - ✅ API REST Node.js + Express + JWT implementada
 - ✅ Base de datos MySQL conectada y en uso
 - ✅ Middleware de autenticación JWT aplicado en rutas protegidas
-- ✅ CRUDs principales implementados (students, subjects, tasks, notes, pomodoro, calendar, dashboard)
+- ✅ CRUDs principales implementados (students, subjects, tasks, notes, pomodoro, calendar, dashboard, schedules)
 - ✅ CORS, parseo JSON y health check operativos
 - 🔄 Notificaciones push/locales (pendiente implementación)
 - 🔄 Jobs programados/automatizaciones (pendiente implementación)
@@ -60,6 +60,7 @@
 - ✅ Tabla `notas` (apuntes y favoritos)
 - ✅ Tabla `eventos_calendario` (agenda académica)
 - ✅ Tabla `sesiones_pomodoro` (sesiones de estudio)
+- ✅ Tabla `horarios` (bloques de clase recurrentes con detección de conflictos)
 - 🔄 Tabla/estructura de `progreso_academico` y métricas extendidas
 - ✅ Integración backend-modelos operativa con consultas SQL
 
@@ -222,58 +223,58 @@
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Vista Horario Semanal — Grid principal | Alta | 5h |
-| ⬜ | Vista por día (horario del día actual) | Media | 3h |
-| ⬜ | Vista por semana completa | Media | 3h |
-| ⬜ | Scroll horizontal y vertical en el horario | Media | 2h |
-| ⬜ | Detalle de Clase — UI informativa | Alta | 3h |
-| ⬜ | Formulario Crear/Editar Clase | Alta | 4h |
-| ⬜ | Selector de días de la semana | Alta | 2h |
-| ⬜ | Selector de hora inicio y fin de clase | Alta | 3h |
-| ⬜ | Color picker para identificar materias | Media | 2h |
-| ⬜ | Configuración de recordatorio por clase | Media | 2h |
+| ✅ | Vista Horario Semanal — Grid principal (`ScheduleScreen` + `ScheduleGrid`) | Alta | 5h |
+| ✅ | Vista por día (`ScheduleDayView` — lista de clases con hora/duración) | Media | 3h |
+| ✅ | Vista por semana completa (7 columnas con scroll sincronizado) | Media | 3h |
+| ✅ | Scroll horizontal y vertical en el horario (controladores sincronizados) | Media | 2h |
+| ✅ | Detalle de Clase (`ClassDetailScreen` — AppBar con color, datos e info) | Alta | 3h |
+| ✅ | Formulario Crear/Editar Clase (`ScheduleFormScreen` — completo) | Alta | 4h |
+| ✅ | Selector de días de la semana (`DaySelector` widget reutilizable) | Alta | 2h |
+| ✅ | Selector de hora inicio y fin de clase (`showTimePicker` con ajuste automático) | Alta | 3h |
+| ✅ | Color de materia para identificar bloques (heredado de `Subject.color`) | Media | 2h |
+| ⬜ | Configuración de recordatorio por clase (diferido a Sprint 5 — Notificaciones) | Media | 2h |
 
 ### 🎨 Frontend — Widgets de Horario
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | ScheduleGrid widget (cuadrícula horaria) | Alta | 4h |
-| ⬜ | ClassCard widget (tarjeta de clase) | Alta | 3h |
-| ⬜ | TimeSlot widget (bloque de tiempo) | Media | 2h |
-| ⬜ | DaySelector widget (selector de día) | Media | 2h |
-| ⬜ | WeekView widget (vista semanal) | Media | 3h |
+| ✅ | ScheduleGrid widget (cuadrícula con líneas de hora, columnas por día, indicador de hora actual) | Alta | 4h |
+| ✅ | ClassCard widget (tarjeta adaptativa: modo compacto/normal, borde de conflicto rojo) | Alta | 3h |
+| ✅ | TimeSlot widget (etiqueta de hora lateral, 44 px de ancho) | Media | 2h |
+| ✅ | DaySelector widget (chips animados, punto indicador de día actual) | Media | 2h |
+| ✅ | WeekView widget (encabezado con rango de fechas, badge de conflictos, skeleton) | Media | 3h |
 
 ### 🔧 Backend — Modelos de Horario
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Schedule Model (id, día, hora_inicio, hora_fin, id_materia) | Alta | 2h |
-| ⬜ | Subject Model (nombre, docente, aula, color) | Alta | 2h |
-| ⬜ | Estructura de tabla en MySQL | Alta | 2h |
-| ⬜ | Conversiones `toMap()` / `fromMap()` | Alta | 2h |
+| ✅ | Schedule Model (Node.js — 8 métodos estáticos CRUD + `detectConflicts`) | Alta | 2h |
+| ✅ | Subject Model (pre-existente, validado con campos `color` y `profesor`) | Alta | 2h |
+| ✅ | Tabla `horarios` en MySQL (`dia` ENUM, `hora_inicio`/`hora_fin` TIME, FK a materias) | Alta | 2h |
+| ✅ | Flutter Schedule model — `fromJson` / `toJson` / `copyWith` + getters de conveniencia | Alta | 2h |
 
 ### 🔧 Backend — ScheduleService
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | `createSchedule()` — Crear entrada de horario | Alta | 2h |
-| ⬜ | `updateSchedule()` — Actualizar horario | Alta | 2h |
-| ⬜ | `deleteSchedule()` — Eliminar entrada | Alta | 2h |
-| ⬜ | `getScheduleByDay()` — Horario por día | Alta | 2h |
-| ⬜ | `getWeekSchedule()` — Horario semanal completo | Alta | 2h |
-| ⬜ | `detectConflicts()` — Detectar conflictos de horario | Media | 3h |
+| ✅ | `createSchedule()` — Crear bloque; HTTP 409 con lista de conflictos si hay superposición | Alta | 2h |
+| ✅ | `updateSchedule()` — Actualizar; misma lógica de conflictos; `force:true` para sobreescribir | Alta | 2h |
+| ✅ | `deleteSchedule()` — Soft delete (`activo = FALSE`) | Alta | 2h |
+| ✅ | `getScheduleByDay()` — Filtrar por día de la semana | Alta | 2h |
+| ✅ | `getWeekSchedule()` — Horario completo ordenado `lunes → domingo` con `FIELD()` | Alta | 2h |
+| ✅ | `detectConflicts()` — Detección `horaInicio_A < horaFin_B AND horaFin_A > horaInicio_B` | Media | 3h |
 
 ### 📝 Exportación de Horario
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Exportar horario en formato PDF | Baja | 4h |
-| ⬜ | Exportar horario como imagen | Baja | 3h |
-| ⬜ | Compartir horario con otros | Baja | 2h |
+| ⬜ | Exportar horario en formato PDF (diferido a Sprint 7) | Baja | 4h |
+| ⬜ | Exportar horario como imagen con `RepaintBoundary` (diferido a Sprint 7) | Baja | 3h |
+| ⬜ | Compartir horario con otros (diferido a Sprint 7) | Baja | 2h |
 
-> **🎯 Objetivo Sprint 3:** Módulo de Horarios completo: vistas día/semana, widgets, detección de conflictos y exportación PDF/imagen.
+> **🎯 Objetivo Sprint 3:** Módulo de Horarios completo: vistas día/semana, widgets reutilizables, CRUD con detección de conflictos en frontend y backend, navegación completa y sección "Mi Horario" en el dashboard. Las exportaciones (Baja prioridad) se difieren al Sprint 7.
 
-> **Progreso:** ⬜ 0/31 tareas (0%)
+> **Progreso:** ✅ 25/28 tareas (89%) — núcleo 100% funcional
 
 ---
 
@@ -565,7 +566,16 @@ Resumen de todos los módulos que debe tener Uniplan según la especificación d
 - ✅ Estadísticas de tareas completadas
 - ✅ Estadísticas de horas de estudio (sesiones Pomodoro)
 
-### Módulo 8 — Sistema de Calificaciones *(adicional MVP+)*
+### Módulo 8 — Gestión de Horarios
+- ✅ RF11: Vista semanal (grid 7 columnas con scroll sincronizado y línea de hora actual)
+- ✅ RF12: CRUD de bloques de clase (crear, editar, eliminar con confirmación)
+- ✅ RF13: Detección y visualización de conflictos de horario (HTTP 409 + diálogo `force`)
+- ✅ RF14: Vista por día con lista de clases, duración y aula
+- ✅ RF15: Detalle de clase con acciones Editar y Eliminar
+- ✅ Sección "Mi Horario" en HomeScreen con clases del día actual
+- ⬜ RF16: Recordatorios de clase (Sprint 5 — Notificaciones)
+
+### Módulo 9 — Sistema de Calificaciones *(adicional MVP+)*
 - ⬜ Registro de calificaciones por evaluación
 - ⬜ Cálculo automático de promedio ponderado
 - ⬜ Proyección de nota final
@@ -593,11 +603,11 @@ Resumen de todos los módulos que debe tener Uniplan según la especificación d
 
 | # | Tarea | Sprint | Horas | Estado |
 |---|-------|--------|-------|--------|
-| 1 | Actualizar perfil de usuario (UI + consumo PUT /students/:id) | Sprint 1 | 4h | 🔄 |
-| 2 | Onboarding para usuarios nuevos (primera ejecución) | Sprint 1 | 4h | ⬜ |
-| 3 | Componentes reutilizables faltantes (CustomCard, LoadingIndicator, EmptyState, ErrorState) | Sprint 1 | 7h | ⬜ |
-| 4 | Estandarizar transiciones del flujo principal auth | Sprint 1 | 3h | ⬜ |
-| 5 | Soporte offline base en ApiService | Sprint 1 | 3h | ⬜ |
+| 1 | Deploy backend Sprint 3 (schedule routes) a Vercel producción | Sprint 3 | 0.5h | ⬜ |
+| 2 | Actualizar perfil de usuario (UI + consumo PUT /students/:id) | Sprint 1 | 4h | 🔄 |
+| 3 | Dashboard de Calificaciones — pantalla principal | Sprint 4 | 4h | ⬜ |
+| 4 | Componentes reutilizables faltantes (CustomCard, LoadingIndicator, EmptyState, ErrorState) | Sprint 1 | 7h | ⬜ |
+| 5 | Grade Model + tabla MySQL para Sprint 4 | Sprint 4 | 4h | ⬜ |
 
 ---
 
@@ -606,10 +616,11 @@ Resumen de todos los módulos que debe tener Uniplan según la especificación d
 | Métrica | Valor |
 |---------|-------|
 | ⏱️ Tiempo total estimado | ~550 horas |
-| ✅ Tiempo completado | ~111 horas |
-| 🕐 Tiempo restante | ~439 horas |
+| ✅ Tiempo completado | ~175 horas |
+| 🕐 Tiempo restante | ~375 horas |
 | 📅 Semanas totales | 14 semanas / 7 Sprints |
-| 📅 Semanas restantes | ~13 semanas |
+| 📅 Semanas completadas | ~6 semanas (Sprints 1-3) |
+| 📅 Semanas restantes | ~8 semanas |
 
 ---
 
@@ -632,6 +643,7 @@ Resumen de todos los módulos que debe tener Uniplan según la especificación d
 | 29 Abr 2026 | Copilot CLI | Corrección de estados inconsistentes (hecho/parcial/pendiente), porcentajes por sprint y prioridades inmediatas |
 | 29 Abr 2026 | Copilot CLI | Alineación completa a stack real Node.js + Express + MySQL (sin Firebase), con estados ajustados a código actual |
 | 2 May 2026 | Copilot CLI | Password reset marcado como completo (token funcional), RF10 actualizado y prioridades limpiadas del flujo ya terminado |
+| 26 Jun 2026 | Claude Code | Sprint 3 completado: módulo de Horarios (ScheduleGrid, ClassCard, DaySelector, WeekView, ScheduleFormScreen, ClassDetailScreen, ScheduleDayView, ScheduleProvider, Schedule model, backend CRUD + detección de conflictos). Progreso global actualizado a 39% (92/234). |
 
 ---
 

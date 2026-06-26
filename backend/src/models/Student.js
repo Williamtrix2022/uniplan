@@ -153,7 +153,7 @@ class Student {
   static async savePasswordResetToken(studentId, tokenHash, expiresAt) {
     const invalidateQuery = `
       UPDATE password_resets
-      SET used = 1, used_at = NOW()
+      SET used = 1, used_at = UTC_TIMESTAMP()
       WHERE student_id = ? AND used = 0
     `;
 
@@ -179,7 +179,7 @@ class Student {
       INNER JOIN estudiantes s ON s.id = pr.student_id
       WHERE pr.token_hash = ?
         AND pr.used = 0
-        AND pr.expires_at > NOW()
+        AND pr.expires_at > UTC_TIMESTAMP()
         AND s.activo = TRUE
       LIMIT 1
     `;
@@ -196,7 +196,7 @@ class Student {
   static async markPasswordResetAsUsed(resetId) {
     const query = `
       UPDATE password_resets
-      SET used = 1, used_at = NOW()
+      SET used = 1, used_at = UTC_TIMESTAMP()
       WHERE id = ?
     `;
 

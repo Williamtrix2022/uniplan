@@ -10,6 +10,7 @@ import 'package:intl/date_symbol_data_local.dart';
 import 'package:provider/provider.dart';
 import 'config/theme.dart';
 import 'providers/task_provider.dart';
+import 'providers/schedule_provider.dart';
 import 'screens/auth/reset_password_screen.dart';
 import 'screens/splash_screen.dart';
 
@@ -101,6 +102,7 @@ class _MyAppState extends State<MyApp> {
     return MultiProvider(
       providers: [
         ChangeNotifierProvider(create: (_) => TaskProvider()),
+        ChangeNotifierProvider(create: (_) => ScheduleProvider()),
       ],
       child: MaterialApp(
         navigatorKey: _navigatorKey,

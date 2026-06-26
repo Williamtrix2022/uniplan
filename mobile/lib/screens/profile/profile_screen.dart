@@ -341,7 +341,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
     final totalTareas = tareas['total_tareas'] ?? 0;
     final completadas = tareas['completadas'] ?? 0;
-    final totalSesiones = pomodoro['total_sesiones'] ?? 0;
+    final totalSesiones = pomodoro['sesiones_completadas'] ?? 0;
     final minutosEstudiados = pomodoro['total_minutos'] ?? 0;
 
     return Row(
