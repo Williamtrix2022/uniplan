@@ -365,14 +365,6 @@ ALTER TABLE `sesiones_pomodoro`
   ADD KEY `idx_fecha` (`fecha_inicio`);
 
 --
--- Indexes for table `horarios`
---
-ALTER TABLE `horarios`
-  ADD KEY `idx_estudiante` (`id_estudiante`),
-  ADD KEY `idx_materia` (`id_materia`),
-  ADD KEY `idx_estudiante_dia` (`id_estudiante`,`dia`);
-
---
 -- Indexes for table `tareas`
 --
 ALTER TABLE `tareas`
