@@ -24,6 +24,9 @@ const pool = mysql.createPool({
   // Keepalive para evitar que el servidor cierre conexiones inactivas
   enableKeepAlive: true,
   keepAliveInitialDelay: 10000, // Ping cada 10s de inactividad
+
+  // Forzar UTC para que NOW() y las fechas JS siempre coincidan
+  timezone: '+00:00',
 });
 
 // Manejador de errores del pool — reconexión automática
