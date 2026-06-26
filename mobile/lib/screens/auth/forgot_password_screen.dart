@@ -118,7 +118,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               ),
               const SizedBox(height: 12),
               CustomButton(
-                text: 'Ya tengo token de recuperación',
+                text: 'Ya tengo mi código',
                 onPressed: () {
                   Navigator.push(
                     context,
