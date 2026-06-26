@@ -3,9 +3,9 @@
 -- https://www.phpmyadmin.net/
 --
 -- Host: mysql-osorios-fastfood.alwaysdata.net
--- Generation Time: May 06, 2026 at 11:36 PM
--- Server version: 10.11.15-MariaDB
--- PHP Version: 8.4.19
+-- Generation Time: Jun 24, 2026 at 11:23 PM
+-- Server version: 10.11.18-MariaDB
+-- PHP Version: 8.4.21
 
 SET SQL_MODE = "NO_AUTO_VALUE_ON_ZERO";
 START TRANSACTION;
@@ -50,7 +50,7 @@ INSERT INTO `estudiantes` (`id`, `nombre`, `correo`, `contrasena`, `carrera`, `u
 (5, 'prueba', 'prueba@gmail.com', '$2a$10$tv3nAuyftYJAib.Jzia2ouft9ZPf7P/Id2l5chrrQa70/dYyTjf9C', NULL, 'Universidad de Córdoba', '2026-01-25 01:55:46', 1),
 (6, 'andres', 'andres@gmail.com', '$2a$10$0QBcg1BzZbhXDqTSBfHp9.fGQy7WRDRyOzg5NRWdWPXWVHumQFDbW', NULL, 'Universidad de Córdoba', '2026-02-13 20:39:46', 1),
 (7, 'prueba1', 'prueba1@gmail.com', '$2a$10$HO4/JvF2PF/knH/8iNUMC.AkoozJSPIMcBNfiDFxg9Oz4qKwK09Ci', NULL, 'Universidad de Córdoba', '2026-05-02 05:23:38', 1),
-(8, 'Jhon Quiceno', 'quicenojale@gmail.com', '$2a$10$RMyfCOhqMGCYPP.4k/PSLO401czR6wqn9OUVFP.9KupbKuCA2t22O', NULL, 'Universidad de Córdoba', '2026-05-02 16:47:31', 1);
+(8, 'Jhon Quiceno', 'quicenojale@gmail.com', '$2a$10$ab3mLHHsrzJiKZvqn6lbnOajcxKgqIHGQXANwxWPfDNNq8Iu3twh2', NULL, 'Universidad de Córdoba', '2026-05-02 16:47:31', 1);
 
 -- --------------------------------------------------------
 
@@ -83,7 +83,10 @@ CREATE TABLE `eventos_calendario` (
 
 INSERT INTO `eventos_calendario` (`id`, `id_estudiante`, `id_materia`, `titulo`, `descripcion`, `fecha`, `hora_inicio`, `hora_fin`, `tipo`, `ubicacion`, `recordatorio`, `minutos_antes_recordatorio`, `todo_el_dia`, `color`, `activo`, `fecha_creacion`) VALUES
 (1, 1, 1, 'Examen Final - Programación Web', 'Examen práctico de desarrollo web', '2025-02-20', '10:00:00', '12:00:00', 'examen', 'Aula 301', 1, 60, 0, '#F44336', 1, '2026-01-20 23:54:21'),
-(2, 5, NULL, 'Clase de Fisica', NULL, '2026-01-29', '10:00:00', '00:00:00', 'clase', 'Salon 301', 0, 30, 0, '#2196F3', 0, '2026-01-28 22:32:05');
+(2, 5, NULL, 'Clase de Fisica', NULL, '2026-01-29', '10:00:00', '00:00:00', 'clase', 'Salon 301', 0, 30, 0, '#2196F3', 0, '2026-01-28 22:32:05'),
+(3, 8, NULL, 'parcial de métodos numéricos', 'todos los fundamentos', '2026-05-14', NULL, NULL, 'evento', NULL, 0, 30, 1, '#F44336', 1, '2026-05-07 15:08:48'),
+(4, 8, NULL, 'clase de calculo', NULL, '2026-06-06', NULL, NULL, 'examen', 'Aula 203', 0, 30, 1, '#4CAF50', 1, '2026-06-07 02:37:15'),
+(5, 8, NULL, 'examen de programación', 'bucles', '2026-06-17', '19:00:00', '20:00:00', 'examen', 'salón 203', 0, 30, 0, '#4CAF50', 1, '2026-06-07 02:49:53');
 
 -- --------------------------------------------------------
 
@@ -111,11 +114,10 @@ CREATE TABLE `materias` (
 
 INSERT INTO `materias` (`id`, `id_estudiante`, `nombre`, `codigo`, `profesor`, `semestre`, `creditos`, `horario`, `color`, `activo`, `fecha_creacion`) VALUES
 (1, 1, 'Programación Web', 'SIS-301', 'Dr. García', 5, 4, 'Lunes y Miércoles 10:00-12:00', '#2196F3', 1, '2026-01-20 22:46:49'),
-(2, 8, 'matemáticas', '25666', NULL, NULL, 3, NULL, '#4CAF50', 1, '2026-05-05 22:51:02'),
-(3, 8, 'español', '99999', NULL, NULL, 3, NULL, '#4CAF50', 1, '2026-05-05 22:52:58'),
 (4, 8, 'Inglés', '1234', NULL, NULL, 3, NULL, '#4CAF50', 1, '2026-05-05 23:19:16'),
-(5, 8, 'sociales', '1227', NULL, NULL, 3, NULL, '#4CAF50', 1, '2026-05-05 23:31:23'),
-(6, 8, 'religion', '9876', NULL, NULL, 3, NULL, '#4CAF50', 1, '2026-05-05 23:41:52');
+(7, 8, 'sociales', '9999', NULL, NULL, 3, NULL, '#4CAF50', 1, '2026-05-06 22:43:48'),
+(10, 8, 'matemáticas', NULL, NULL, NULL, 3, NULL, '#4CAF50', 1, '2026-05-07 04:38:54'),
+(11, 8, 'prueba', '1234', NULL, NULL, 3, NULL, '#4CAF50', 1, '2026-06-07 05:32:54');
 
 -- --------------------------------------------------------
 
@@ -165,7 +167,11 @@ CREATE TABLE `password_resets` (
 
 INSERT INTO `password_resets` (`id`, `student_id`, `token_hash`, `expires_at`, `used`, `created_at`, `used_at`) VALUES
 (1, 8, '381db8702d8ed57cbb97c224a5e80a9624c0e0cee365b4d31630218c011a863a', '2026-05-02 12:17:56', 1, '2026-05-02 16:47:56', '2026-05-02 12:02:59'),
-(2, 8, 'e739a2bd2bc8674ceec6ad099d324a44b40c8dfbdceb25cda26546b502c72921', '2026-05-02 12:33:00', 1, '2026-05-02 17:02:59', '2026-05-02 12:06:20');
+(2, 8, 'e739a2bd2bc8674ceec6ad099d324a44b40c8dfbdceb25cda26546b502c72921', '2026-05-02 12:33:00', 1, '2026-05-02 17:02:59', '2026-05-02 12:06:20'),
+(3, 8, '5ee1fbf612d33575f03331b09a3490e8c44f1ceaca00696babb59036b368b72a', '2026-05-06 19:16:44', 1, '2026-05-06 23:46:46', '2026-05-07 01:46:51'),
+(4, 8, '6253c8cfbb17b114c34ddbceb8e8a24e44c22f261f9ff095202739d630193d23', '2026-05-06 19:16:50', 1, '2026-05-06 23:46:51', '2026-05-07 02:09:12'),
+(5, 8, '754e870de3e65f342a0e7c6d671af7e889238b195444c87576e1cdea6a798fe7', '2026-05-06 19:39:12', 1, '2026-05-07 00:09:13', '2026-05-07 02:10:41'),
+(6, 8, '6472c4fd3f011d5ddb3953567f3e542f2e76488c819410e7bec61d5408151e67', '2026-05-06 19:40:40', 0, '2026-05-07 00:10:41', NULL);
 
 -- --------------------------------------------------------
 
@@ -220,7 +226,12 @@ INSERT INTO `sesiones_pomodoro` (`id`, `id_estudiante`, `id_materia`, `duracion_
 (8, 5, NULL, 25, 5, 0, 0, '2026-01-27 23:38:46', NULL, 0, NULL, '2026-01-28 04:38:46'),
 (9, 7, NULL, 25, 5, 0, 0, '2026-05-02 00:23:45', '2026-05-02 00:24:11', 1, NULL, '2026-05-02 05:23:45'),
 (10, 8, NULL, 25, 5, 0, 0, '2026-05-05 16:57:37', NULL, 0, NULL, '2026-05-05 21:57:36'),
-(11, 8, NULL, 25, 5, 0, 0, '2026-05-05 16:57:50', NULL, 0, NULL, '2026-05-05 21:57:49');
+(11, 8, NULL, 25, 5, 0, 0, '2026-05-05 16:57:50', NULL, 0, NULL, '2026-05-05 21:57:49'),
+(12, 8, NULL, 25, 5, 0, 0, '2026-05-06 18:52:29', NULL, 0, NULL, '2026-05-06 23:52:30'),
+(13, 8, NULL, 25, 5, 0, 0, '2026-05-06 19:20:18', NULL, 0, NULL, '2026-05-07 00:20:19'),
+(14, 8, 7, 25, 5, 0, 0, '2026-06-16 15:25:37', NULL, 0, NULL, '2026-06-16 20:25:35'),
+(15, 8, 7, 25, 5, 0, 0, '2026-06-16 15:25:38', NULL, 0, NULL, '2026-06-16 20:25:36'),
+(16, 8, 7, 25, 5, 0, 0, '2026-06-16 15:26:26', '2026-06-16 22:26:30', 1, NULL, '2026-06-16 20:26:23');
 
 -- --------------------------------------------------------
 
@@ -260,8 +271,14 @@ INSERT INTO `tareas` (`id`, `id_estudiante`, `id_materia`, `titulo`, `descripcio
 (7, 5, NULL, 'Proyecto de Base de Datos', 'Diseñar modelo ER', '2026-01-30', 'media', 0, 'pendiente', 0, NULL, 0, NULL, 1, '2026-01-27 01:07:49'),
 (8, 5, NULL, 'Lectura Capítulo 8', NULL, '2026-02-05', 'media', 0, 'pendiente', 0, NULL, 0, NULL, 1, '2026-01-27 01:08:53'),
 (9, 7, NULL, 'repasar programación', 'puro excel', '2026-05-09', 'media', 0, 'pendiente', 0, NULL, 0, NULL, 1, '2026-05-02 05:24:57'),
-(10, 8, 6, 'examen de metodologia', 'próxima semana', '2026-05-08', 'media', 0, 'en_progreso', 0, NULL, 0, NULL, 1, '2026-05-05 21:52:40'),
-(11, 8, 4, 'prueba', 'prueba', '2026-05-05', 'media', 0, 'completada', 0, NULL, 1, '2026-05-05 18:18:53', 1, '2026-05-05 21:56:34');
+(10, 8, 4, 'examen de metodologia', 'próxima semana', '2026-05-08', 'media', 0, 'completada', 0, NULL, 1, '2026-06-06 20:20:27', 0, '2026-05-05 21:52:40'),
+(11, 8, 4, 'prueba', 'prueba', '2026-05-05', 'alta', 0, 'completada', 0, NULL, 1, '2026-06-06 20:20:26', 0, '2026-05-05 21:56:34'),
+(12, 8, 4, 'Estudiar parcial', 'los objetivos', '2026-05-08', 'baja', 1, 'completada', 0, NULL, 0, NULL, 0, '2026-05-06 23:48:57'),
+(13, 8, NULL, 'Taller emprendimiento', 'toca hacerla antes del jueves 26 de mayo.', '2026-05-06', 'media', 0, 'pendiente', 0, NULL, 0, NULL, 0, '2026-05-07 00:22:53'),
+(14, 8, 7, 'prueba técnica', 'todos los conceptos', '2026-05-28', 'alta', 0, 'pendiente', 0, NULL, 0, NULL, 0, '2026-05-07 21:37:00'),
+(15, 8, NULL, 'aprendizaje computacional', 'taller en weka', '2026-05-09', 'alta', 0, 'completada', 0, NULL, 1, '2026-06-06 20:20:34', 0, '2026-05-08 16:26:31'),
+(16, 8, 7, 'hacer trabajo de For y Eva', 'todo el trabajo final', '2026-06-13', 'baja', 0, 'pendiente', 0, NULL, 0, NULL, 1, '2026-06-07 02:38:52'),
+(17, 8, 11, 'hjkk', 'dufhc', '2026-06-07', 'baja', 0, 'pendiente', 0, NULL, 0, NULL, 0, '2026-06-07 05:33:10');
 
 --
 -- Indexes for dumped tables
@@ -348,13 +365,13 @@ ALTER TABLE `estudiantes`
 -- AUTO_INCREMENT for table `eventos_calendario`
 --
 ALTER TABLE `eventos_calendario`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT for table `materias`
 --
 ALTER TABLE `materias`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT for table `notas`
@@ -366,7 +383,7 @@ ALTER TABLE `notas`
 -- AUTO_INCREMENT for table `password_resets`
 --
 ALTER TABLE `password_resets`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=7;
 
 --
 -- AUTO_INCREMENT for table `progreso_academico`
@@ -378,13 +395,13 @@ ALTER TABLE `progreso_academico`
 -- AUTO_INCREMENT for table `sesiones_pomodoro`
 --
 ALTER TABLE `sesiones_pomodoro`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
 -- AUTO_INCREMENT for table `tareas`
 --
 ALTER TABLE `tareas`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=18;
 
 --
 -- Constraints for dumped tables
