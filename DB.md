@@ -368,7 +368,6 @@ ALTER TABLE `sesiones_pomodoro`
 -- Indexes for table `horarios`
 --
 ALTER TABLE `horarios`
-  ADD PRIMARY KEY (`id`),
   ADD KEY `idx_estudiante` (`id_estudiante`),
   ADD KEY `idx_materia` (`id_materia`),
   ADD KEY `idx_estudiante_dia` (`id_estudiante`,`dia`);
