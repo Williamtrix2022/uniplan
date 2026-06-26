@@ -94,3 +94,6 @@ skills-lock.json
 # Mantén los docs pero ignora archivos temporales
 docs/*.tmp
 docs/~$*
+
+# ========== DB ========== 
+DB.md

@@ -31,6 +31,7 @@ const noteRoutes = require('./routes/noteRoutes');
 const pomodoroRoutes = require('./routes/pomodoroRoutes');
 const calendarRoutes = require('./routes/calendarRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
+const scheduleRoutes = require('./routes/scheduleRoutes');
 
 
 // 4. Logger simple de peticiones
@@ -73,6 +74,7 @@ app.use('/api/notes', noteRoutes);
 app.use('/api/pomodoro', pomodoroRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/dashboard', dashboardRoutes);
+app.use('/api/schedules', scheduleRoutes);
 
 // Health check - Para verificar que el servidor funciona
 app.get('/api/health', (req, res) => {

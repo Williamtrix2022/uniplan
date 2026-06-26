@@ -256,41 +256,99 @@ const forgotPassword = async (req, res) => {
 
     await Student.ensurePasswordResetTable();
 
-    const rawToken = crypto.randomBytes(32).toString('hex');
-    const tokenHash = crypto.createHash('sha256').update(rawToken).digest('hex');
-    const expiresMinutes = parseInt(process.env.RESET_TOKEN_EXPIRE_MINUTES || '30', 10);
+    const otp = crypto.randomInt(100000, 1000000).toString();
+    const tokenHash = crypto.createHash('sha256').update(otp).digest('hex');
+    const expiresMinutes = parseInt(process.env.RESET_TOKEN_EXPIRE_MINUTES || '10', 10);
     const expiresAt = new Date(Date.now() + expiresMinutes * 60 * 1000);
 
     await Student.savePasswordResetToken(student.id, tokenHash, expiresAt);
 
-    const resetUrl = `${resetBaseUrl}${resetBaseUrl.includes('?') ? '&' : '?'}token=${rawToken}`;
-    const resetWebBaseUrl = process.env.RESET_PASSWORD_WEB_URL;
-    const resetWebUrl = resetWebBaseUrl
-      ? `${resetWebBaseUrl}${resetWebBaseUrl.includes('?') ? '&' : '?'}token=${rawToken}&email=${encodeURIComponent(student.correo)}`
-      : null;
-    const primaryUrl = resetWebUrl || resetUrl;
+    const otpDigits = otp.split('').join('  ');
+
+    const emailHtml = `
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin:0;padding:0;background-color:#F5F5F5;font-family:'Segoe UI',Arial,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#F5F5F5;padding:40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(0,0,0,0.08);">
+
+          <!-- HEADER -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#00D9A0 0%,#00B386 100%);padding:36px 40px;text-align:center;">
+              <div style="display:inline-block;background:rgba(255,255,255,0.15);border-radius:50%;width:64px;height:64px;line-height:64px;font-size:32px;margin-bottom:12px;">🎓</div>
+              <h1 style="margin:0;color:#ffffff;font-size:26px;font-weight:700;letter-spacing:-0.5px;">Uniplan</h1>
+              <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">Tu espacio de enfoque académico</p>
+            </td>
+          </tr>
+
+          <!-- BODY -->
+          <tr>
+            <td style="padding:40px 40px 32px;">
+              <h2 style="margin:0 0 8px;color:#1A1A1A;font-size:20px;font-weight:700;">Recuperación de contraseña</h2>
+              <p style="margin:0 0 28px;color:#6B7280;font-size:14px;line-height:1.6;">
+                Hola <strong style="color:#1A1A1A;">${student.nombre}</strong>, recibimos una solicitud para restablecer tu contraseña. Usá el siguiente código en la app.
+              </p>
+
+              <!-- OTP BOX -->
+              <div style="background:#E0F9F4;border-radius:14px;padding:28px 24px;text-align:center;margin-bottom:24px;">
+                <p style="margin:0 0 12px;color:#6B7280;font-size:11px;text-transform:uppercase;letter-spacing:1.5px;font-weight:600;">Tu código de recuperación</p>
+                <p style="margin:0;color:#00B386;font-size:42px;font-weight:800;letter-spacing:12px;font-family:monospace;">${otp}</p>
+              </div>
+
+              <!-- PASOS -->
+              <div style="background:#F9FAFB;border-radius:10px;padding:16px 20px;margin-bottom:24px;">
+                <p style="margin:0 0 8px;color:#1A1A1A;font-size:13px;font-weight:600;">¿Cómo usarlo?</p>
+                <ol style="margin:0;padding-left:18px;color:#6B7280;font-size:13px;line-height:1.9;">
+                  <li>Abrí la app Uniplan</li>
+                  <li>Tocá <strong>"¿Olvidaste tu contraseña?"</strong></li>
+                  <li>Tocá <strong>"Ya tengo mi código"</strong></li>
+                  <li>Ingresá el código de 6 dígitos y elegí tu nueva contraseña</li>
+                </ol>
+              </div>
+
+              <!-- EXPIRY WARNING -->
+              <div style="background:#FEF3C7;border-radius:8px;padding:12px 16px;margin-bottom:32px;">
+                <p style="margin:0;color:#92400E;font-size:13px;">⏱ Este código expira en <strong>${expiresMinutes} minutos</strong>. Si no lo usás a tiempo, solicitá uno nuevo.</p>
+              </div>
+
+              <!-- DIVIDER -->
+              <hr style="border:none;border-top:1px solid #E5E7EB;margin:0 0 24px;">
+
+              <!-- SECURITY NOTE -->
+              <p style="margin:0;color:#9CA3AF;font-size:12px;line-height:1.6;text-align:center;">
+                Si no solicitaste este cambio, ignorá este correo — tu cuenta sigue segura.<br>
+                Nunca compartás este código con nadie.
+              </p>
+            </td>
+          </tr>
+
+          <!-- FOOTER -->
+          <tr>
+            <td style="background:#F5F5F5;padding:20px 40px;text-align:center;border-top:1px solid #E5E7EB;">
+              <p style="margin:0;color:#9CA3AF;font-size:12px;">© 2025 Uniplan · Todos los derechos reservados</p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`;
+
+    const emailText = `Hola ${student.nombre},\n\nTu código de recuperación de contraseña es:\n\n${otpDigits}\n\nExpira en ${expiresMinutes} minutos.\n\nCómo usarlo:\n1. Abrí la app Uniplan\n2. Tocá "¿Olvidaste tu contraseña?"\n3. Tocá "Ya tengo mi código"\n4. Ingresá el código y elegí tu nueva contraseña\n\nSi no solicitaste este cambio, ignorá este correo.\n\n© 2025 Uniplan`;
 
     await sendEmail({
       to: student.correo,
-      subject: 'Uniplan - Recuperación de contraseña',
-      text: `Hola ${student.nombre},\n\nRecibimos una solicitud para restablecer tu contraseña.\n\nAbre este enlace:\n${primaryUrl}\n\nSi tu correo no permite abrir enlaces de app, usa este enlace alterno:\n${resetUrl}\n\nTambién puedes usar este token manualmente en la app:\n${rawToken}\n\nEste enlace/token expira en ${expiresMinutes} minutos.\n\nSi no solicitaste este cambio, ignora este correo.`,
-      html: `
-        <p>Hola <strong>${student.nombre}</strong>,</p>
-        <p>Recibimos una solicitud para restablecer tu contraseña.</p>
-        <p>
-          <a href="${primaryUrl}" target="_blank" rel="noopener noreferrer">
-            Restablecer contraseña
-          </a>
-        </p>
-        <p>Si el botón no funciona, copia y pega este enlace:</p>
-        <p><code>${primaryUrl}</code></p>
-        <p>Enlace alterno de app (deep link):</p>
-        <p><code>${resetUrl}</code></p>
-        <p>Token manual para pegar en la app:</p>
-        <p><code>${rawToken}</code></p>
-        <p>Este enlace expira en ${expiresMinutes} minutos.</p>
-        <p>Si no solicitaste este cambio, ignora este correo.</p>
-      `
+      subject: 'Uniplan · Recuperá tu contraseña',
+      text: emailText,
+      html: emailHtml
     });
 
     res.json({
@@ -316,7 +374,15 @@ const resetPassword = async (req, res) => {
     if (!token || !nuevaContrasena || !correo) {
       return res.status(400).json({
         success: false,
-        message: 'Correo, token y nueva contraseña son obligatorios'
+        message: 'Correo, código y nueva contraseña son obligatorios'
+      });
+
+    }
+
+    if (!/^\d{6}$/.test(token.trim())) {
+      return res.status(400).json({
+        success: false,
+        message: 'El código debe ser de 6 dígitos'
       });
     }
 
@@ -336,7 +402,7 @@ const resetPassword = async (req, res) => {
 
     await Student.ensurePasswordResetTable();
 
-    const tokenHash = crypto.createHash('sha256').update(token).digest('hex');
+    const tokenHash = crypto.createHash('sha256').update(token.trim()).digest('hex');
     const resetRecord = await Student.findValidPasswordResetByHash(tokenHash);
 
     if (!resetRecord) {

@@ -91,7 +91,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             children: [
               const SizedBox(height: 20),
               const Text(
-                'Ingresa tu token y nueva contraseña',
+                'Ingresá tu código y nueva contraseña',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
@@ -100,7 +100,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               ),
               const SizedBox(height: 8),
               const Text(
-                'El token llega al correo que registraste en Uniplan.',
+                'Revisá tu correo — te enviamos un código de 6 dígitos.',
                 style: TextStyle(
                   fontSize: 14,
                   color: AppTheme.greyText,
@@ -127,16 +127,18 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
               ),
               const SizedBox(height: 20),
               CustomTextField(
-                label: 'Token de recuperación',
-                hintText: 'Pega aquí tu token',
+                label: 'Código de recuperación',
+                hintText: '000000',
                 controller: _tokenController,
-                prefixIcon: Icons.vpn_key_outlined,
+                prefixIcon: Icons.dialpad_outlined,
+                keyboardType: TextInputType.number,
                 validator: (value) {
                   if (value == null || value.trim().isEmpty) {
-                    return 'El token es obligatorio';
+                    return 'El código es obligatorio';
                   }
-                  if (value.trim().length < 20) {
-                    return 'El token no parece válido';
+                  final code = value.trim();
+                  if (!RegExp(r'^\d{6}$').hasMatch(code)) {
+                    return 'El código debe ser de 6 dígitos';
                   }
                   return null;
                 },

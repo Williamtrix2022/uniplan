@@ -90,6 +90,16 @@ class _PomodoroScreenState extends State<PomodoroScreen>
 
   void _startTimer() async {
     if (currentState == PomodoroState.idle) {
+      if (selectedTask == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Seleccioná una tarea antes de iniciar el Pomodoro'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
       // Crear sesión en el backend
       try {
         final session = PomodoroSession(

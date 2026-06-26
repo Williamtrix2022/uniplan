@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "332912986350",
+    "project_id": "uniplan-23f02",
+    "storage_bucket": "uniplan-23f02.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:332912986350:android:03107aba69a0cab3528bff",
+        "android_client_info": {
+          "package_name": "com.uniplan.app"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCbrEjSho1ojozw6iUVd4bUt3lIKIds7-k"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

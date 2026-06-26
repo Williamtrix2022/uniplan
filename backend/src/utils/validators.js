@@ -23,7 +23,10 @@ const blockedDomains = new Set([
 
 const hasMailExchange = async (domain) => {
   try {
-    const mxRecords = await dns.resolveMx(domain);
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('dns_timeout')), 5000)
+    );
+    const mxRecords = await Promise.race([dns.resolveMx(domain), timeout]);
     return Array.isArray(mxRecords) && mxRecords.length > 0;
   } catch (error) {
     return false;
