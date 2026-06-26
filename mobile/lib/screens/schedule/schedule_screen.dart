@@ -7,8 +7,11 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/theme.dart';
+import '../../models/schedule.dart';
 import '../../providers/schedule_provider.dart';
 import '../../widgets/schedule/week_view.dart';
+import 'class_detail_screen.dart';
+import 'schedule_day_view.dart';
 import 'schedule_form_screen.dart';
 
 class ScheduleScreen extends StatefulWidget {
@@ -183,32 +186,33 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   // ── Navegación ───────────────────────────────────────────────────────────
 
   Future<void> _navigateToForm(BuildContext context, {schedule}) async {
+    final provider = context.read<ScheduleProvider>();
     final result = await Navigator.push<bool>(
       context,
       MaterialPageRoute(
         builder: (_) => ScheduleFormScreen(schedule: schedule),
       ),
     );
-    if (result == true && mounted) {
-      context.read<ScheduleProvider>().refresh();
-    }
+    if (!mounted) return;
+    if (result == true) provider.refresh();
   }
 
-  void _navigateToDetail(schedule) {
-    // T12: reemplazar con navegación a ClassDetailScreen
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          schedule.materiaNombre ?? 'Clase',
-          style: GoogleFonts.inter(color: AppTheme.white),
-        ),
-        backgroundColor: AppTheme.primaryGreen,
-        duration: const Duration(seconds: 1),
+  Future<void> _navigateToDetail(Schedule schedule) async {
+    final provider = context.read<ScheduleProvider>();
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ClassDetailScreen(schedule: schedule),
       ),
     );
+    if (!mounted) return;
+    if (result == true) provider.refresh();
   }
 
-  void _navigateToDayView(String day) {
-    // T12: reemplazar con navegación a ScheduleDayView
+  Future<void> _navigateToDayView(String day) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ScheduleDayView(dia: day)),
+    );
   }
 }
