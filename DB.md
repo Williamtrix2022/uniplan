@@ -91,6 +91,29 @@ INSERT INTO `eventos_calendario` (`id`, `id_estudiante`, `id_materia`, `titulo`,
 -- --------------------------------------------------------
 
 --
+-- Table structure for table `horarios`
+--
+
+CREATE TABLE `horarios` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `id_estudiante` int(11) NOT NULL,
+  `id_materia` int(11) NOT NULL,
+  `dia` enum('lunes','martes','miercoles','jueves','viernes','sabado','domingo') NOT NULL,
+  `hora_inicio` time NOT NULL,
+  `hora_fin` time NOT NULL,
+  `aula` varchar(100) DEFAULT NULL,
+  `activo` tinyint(1) DEFAULT 1,
+  `fecha_creacion` timestamp NOT NULL DEFAULT current_timestamp(),
+  `fecha_actualizacion` timestamp NOT NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  KEY `idx_estudiante` (`id_estudiante`),
+  KEY `idx_materia` (`id_materia`),
+  KEY `idx_estudiante_dia` (`id_estudiante`,`dia`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- --------------------------------------------------------
+
+--
 -- Table structure for table `materias`
 --
 
@@ -342,6 +365,15 @@ ALTER TABLE `sesiones_pomodoro`
   ADD KEY `idx_fecha` (`fecha_inicio`);
 
 --
+-- Indexes for table `horarios`
+--
+ALTER TABLE `horarios`
+  ADD PRIMARY KEY (`id`),
+  ADD KEY `idx_estudiante` (`id_estudiante`),
+  ADD KEY `idx_materia` (`id_materia`),
+  ADD KEY `idx_estudiante_dia` (`id_estudiante`,`dia`);
+
+--
 -- Indexes for table `tareas`
 --
 ALTER TABLE `tareas`
@@ -398,6 +430,12 @@ ALTER TABLE `sesiones_pomodoro`
   MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=17;
 
 --
+-- AUTO_INCREMENT for table `horarios`
+--
+ALTER TABLE `horarios`
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT;
+
+--
 -- AUTO_INCREMENT for table `tareas`
 --
 ALTER TABLE `tareas`
@@ -445,6 +483,13 @@ ALTER TABLE `progreso_academico`
 ALTER TABLE `sesiones_pomodoro`
   ADD CONSTRAINT `sesiones_pomodoro_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiantes` (`id`) ON DELETE CASCADE,
   ADD CONSTRAINT `sesiones_pomodoro_ibfk_2` FOREIGN KEY (`id_materia`) REFERENCES `materias` (`id`) ON DELETE SET NULL;
+
+--
+-- Constraints for table `horarios`
+--
+ALTER TABLE `horarios`
+  ADD CONSTRAINT `horarios_ibfk_1` FOREIGN KEY (`id_estudiante`) REFERENCES `estudiantes` (`id`) ON DELETE CASCADE,
+  ADD CONSTRAINT `horarios_ibfk_2` FOREIGN KEY (`id_materia`) REFERENCES `materias` (`id`) ON DELETE CASCADE;
 
 --
 -- Constraints for table `tareas`
