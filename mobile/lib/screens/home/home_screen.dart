@@ -5,16 +5,20 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 import '../../config/theme.dart';
+import '../../providers/schedule_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/task_service.dart';
 import '../../services/dashboard_service.dart';
 import '../../models/task.dart';
+import '../../models/schedule.dart';
 import '../tasks/tasks_screen.dart';
 import '../tasks/task_form_screen.dart';
 import '../pomodoro/pomodoro_screen.dart';
 import '../calendar/calendar_screen.dart';
 import '../profile/profile_screen.dart';
+import '../schedule/schedule_screen.dart';
 
 import 'dart:math' as math;
 
@@ -39,6 +43,9 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadDashboardData();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ScheduleProvider>().initialize();
+    });
   }
 
   Future<void> _loadDashboardData() async {
@@ -187,6 +194,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
                       // Lista de tareas
                       _buildTasksList(),
+
+                      const SizedBox(height: 32),
+
+                      // Sección Mi Horario
+                      _buildScheduleSection(),
 
                       const SizedBox(height: 24),
                     ],
@@ -658,6 +670,180 @@ class _HomeScreenState extends State<HomeScreen> {
     }
     if (task.estado == 'en_progreso') return AppTheme.info;
     return AppTheme.primaryGreen;
+  }
+
+  // ── Sección Mi Horario ──────────────────────────────────────────────────
+
+  static const Map<int, String> _weekdayKeys = {
+    1: 'lunes', 2: 'martes', 3: 'miercoles',
+    4: 'jueves', 5: 'viernes', 6: 'sabado', 7: 'domingo',
+  };
+
+  Widget _buildScheduleSection() {
+    final provider   = context.watch<ScheduleProvider>();
+    final todayKey   = _weekdayKeys[DateTime.now().weekday];
+    final todayList  = todayKey != null
+        ? provider.schedulesForDay(todayKey)
+        : <Schedule>[];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Mi Horario',
+              style: GoogleFonts.inter(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.darkText,
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ScheduleScreen()),
+              ),
+              child: Text(
+                'Ver todo →',
+                style: GoogleFonts.inter(
+                  color: AppTheme.primaryGreen,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (provider.isLoading)
+          _buildScheduleSkeleton()
+        else if (todayList.isEmpty)
+          _buildScheduleEmpty()
+        else
+          _buildScheduleList(todayList),
+      ],
+    );
+  }
+
+  Widget _buildScheduleSkeleton() {
+    return Container(
+      height: 70,
+      decoration: BoxDecoration(
+        color: AppTheme.lightGrey,
+        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+      ),
+    );
+  }
+
+  Widget _buildScheduleEmpty() {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ScheduleScreen()),
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSizes.paddingM),
+        decoration: BoxDecoration(
+          color: AppTheme.lightGreen,
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+          border: Border.all(
+            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.calendar_today_outlined,
+              color: AppTheme.primaryGreen,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'No tienes clases hoy',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppTheme.primaryGreen,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScheduleList(List<Schedule> schedules) {
+    final visible = schedules.take(3).toList();
+    return Column(
+      children: visible.map((s) => _buildScheduleItem(s)).toList(),
+    );
+  }
+
+  Widget _buildScheduleItem(Schedule schedule) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const ScheduleScreen()),
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.paddingM,
+          vertical: 12,
+        ),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+          border: Border.all(color: AppTheme.outlineVariant),
+          boxShadow: AppTheme.softShadow,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: 36,
+              decoration: BoxDecoration(
+                color: schedule.colorMateria,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    schedule.materiaNombre ?? 'Sin materia',
+                    style: GoogleFonts.inter(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: AppTheme.darkText,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    schedule.rangoHorario +
+                        (schedule.aula != null ? ' · ${schedule.aula}' : ''),
+                    style: GoogleFonts.inter(
+                      fontSize: 12,
+                      color: AppTheme.greyText,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: AppTheme.greyText,
+              size: 18,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildBottomNav() {
