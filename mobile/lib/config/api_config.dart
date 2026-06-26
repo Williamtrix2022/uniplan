@@ -51,6 +51,11 @@ class ApiConfig {
   static const String calendarWeek = '$apiPrefix/calendar/week';
   static const String calendarMonth = '$apiPrefix/calendar/month';
 
+  // Schedules
+  static const String schedules = '$apiPrefix/schedules';
+  static const String schedulesWeek = '$apiPrefix/schedules/week';
+  static const String schedulesConflicts = '$apiPrefix/schedules/conflicts';
+
   // Dashboard
   static const String dashboard = '$apiPrefix/dashboard';
   static const String dashboardWeekly = '$apiPrefix/dashboard/weekly';
