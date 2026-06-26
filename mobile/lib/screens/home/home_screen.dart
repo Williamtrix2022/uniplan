@@ -87,7 +87,7 @@ class _HomeScreenState extends State<HomeScreen> {
         final dashboardData = await _dashboardService.getDashboard();
         final pomodoroData = dashboardData['pomodoro'];
         if (pomodoroData != null && pomodoroData['semana'] != null) {
-          pomodorosThisWeek = pomodoroData['semana']['total_sesiones'] ?? 0;
+          pomodorosThisWeek = pomodoroData['semana']['sesiones_completadas'] ?? 0;
         }
       } catch (e) {
         pomodorosThisWeek = 0;
