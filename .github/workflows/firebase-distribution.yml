@@ -29,9 +29,22 @@ jobs:
         working-directory: mobile
         run: flutter pub get
 
+      - name: Resolve version
+        id: version
+        run: |
+          BASE_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
+          BUILD_NUMBER=${{ github.run_number }}
+          echo "name=$BASE_VERSION" >> "$GITHUB_OUTPUT"
+          echo "number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "tag=v$BASE_VERSION+$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+        working-directory: mobile
+
       - name: Build APK
         working-directory: mobile
-        run: flutter build apk --release
+        run: |
+          flutter build apk --release \
+            --build-name=${{ steps.version.outputs.name }} \
+            --build-number=${{ steps.version.outputs.number }}
 
       - name: Upload to Firebase App Distribution
         uses: wzieba/Firebase-Distribution-Github-Action@v1
@@ -40,3 +53,4 @@ jobs:
           token: ${{ secrets.FIREBASE_TOKEN }}
           groups: public-uniplan
           file: mobile/build/app/outputs/flutter-apk/app-release.apk
+          releaseNotes: "Build automático desde main (${{ steps.version.outputs.tag }})"
