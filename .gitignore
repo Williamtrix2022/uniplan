@@ -96,5 +96,4 @@ docs/*.tmp
 docs/~$*
 
 # ========== DB ==========
-DB.md
 docs/DB/base-de-datos.md
