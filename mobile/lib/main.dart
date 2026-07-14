@@ -11,6 +11,7 @@ import 'package:provider/provider.dart';
 import 'config/theme.dart';
 import 'providers/task_provider.dart';
 import 'providers/schedule_provider.dart';
+import 'providers/grade_provider.dart';
 import 'screens/auth/reset_password_screen.dart';
 import 'screens/splash_screen.dart';
 
@@ -103,6 +104,7 @@ class _MyAppState extends State<MyApp> {
       providers: [
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => ScheduleProvider()),
+        ChangeNotifierProvider(create: (_) => GradeProvider()),
       ],
       child: MaterialApp(
         navigatorKey: _navigatorKey,

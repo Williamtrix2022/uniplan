@@ -239,6 +239,32 @@ backend/
 | GET | `/api/dashboard/weekly` | Resumen semanal |
 | GET | `/api/dashboard/today` | Resumen de hoy |
 
+### Horarios
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/schedules` | Crear bloque de horario |
+| GET | `/api/schedules` | Listar horarios (filtros: `?dia=` `?id_materia=`) |
+| GET | `/api/schedules/week` | Horario semanal completo |
+| GET | `/api/schedules/conflicts` | Listar conflictos de horario |
+| GET | `/api/schedules/day/:dia` | Horario de un día específico |
+| GET | `/api/schedules/:id` | Obtener bloque de horario |
+| PUT | `/api/schedules/:id` | Actualizar bloque de horario |
+| DELETE | `/api/schedules/:id` | Eliminar bloque de horario |
+
+### Calificaciones
+
+| Método | Ruta | Descripción |
+|--------|------|-------------|
+| POST | `/api/grades` | Crear calificación |
+| GET | `/api/grades` | Listar calificaciones |
+| GET | `/api/grades/summary` | Resumen general y por materia (dashboard) |
+| GET | `/api/grades/subject/:id` | Calificaciones de una materia |
+| GET | `/api/grades/subject/:id/projection` | Nota necesaria para aprobar la materia |
+| GET | `/api/grades/:id` | Obtener calificación |
+| PUT | `/api/grades/:id` | Actualizar calificación |
+| DELETE | `/api/grades/:id` | Eliminar calificación |
+
 ---
 
 ## 🗄️ Base de Datos
@@ -252,6 +278,8 @@ backend/
 - `sesiones_pomodoro` - Registro de estudio
 - `eventos_calendario` - Calendario académico
 - `progreso_academico` - Estadísticas
+- `horarios` - Bloques de horario semanal
+- `calificaciones` - Notas y evaluaciones por materia
 
 ### Diagrama ER
 

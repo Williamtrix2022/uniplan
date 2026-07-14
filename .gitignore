@@ -95,5 +95,6 @@ skills-lock.json
 docs/*.tmp
 docs/~$*
 
-# ========== DB ========== 
+# ========== DB ==========
 DB.md
+docs/DB/base-de-datos.md
