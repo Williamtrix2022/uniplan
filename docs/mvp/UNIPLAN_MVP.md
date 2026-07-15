@@ -23,11 +23,11 @@
 | Sprint 1 | Autenticación y UI Base | 71% (25/35) | 🔄 En Progreso |
 | Sprint 2 | Gestión de Tareas | 100% (41/41) | ✅ Completado |
 | Sprint 3 | Gestión de Horarios | 89% (25/28) | ✅ Completado |
-| Sprint 4 | Sistema de Calificaciones | 0% (0/33) | ⬜ Pendiente |
+| Sprint 4 | Sistema de Calificaciones | 91% (30/33) | ✅ Completado (núcleo) |
 | Sprint 5 | Notificaciones y Sincronización | 0% (0/28) | ⬜ Pendiente |
 | Sprint 6 | UI/UX Avanzado | 0% (0/30) | ⬜ Pendiente |
 | Sprint 7 | Estadísticas, Tests y Docs | 5% (2/39) | 🔄 En Progreso |
-| **TOTAL** | | **39% (92/234)** | 🔄 |
+| **TOTAL** | | **52% (122/234)** | 🔄 |
 
 ---
 
@@ -284,60 +284,60 @@
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Dashboard de Calificaciones (pantalla principal) | Alta | 4h |
-| ⬜ | Visualización de promedio general | Alta | 2h |
-| ⬜ | Visualización de promedio por materia | Alta | 3h |
-| ⬜ | Gráficas de rendimiento académico | Media | 4h |
-| ⬜ | Tendencias y análisis de notas | Media | 3h |
-| ⬜ | Detalle de calificaciones por materia | Alta | 3h |
-| ⬜ | Lista de evaluaciones (parciales, talleres, etc.) | Alta | 3h |
-| ⬜ | Formulario para agregar calificación | Alta | 3h |
-| ⬜ | Selector de tipo de evaluación | Media | 2h |
-| ⬜ | Input de nota numérica y porcentaje de peso | Alta | 2h |
+| ✅ | Dashboard de Calificaciones (pantalla principal) | Alta | 4h |
+| ✅ | Visualización de promedio general | Alta | 2h |
+| ✅ | Visualización de promedio por materia | Alta | 3h |
+| ✅ | Gráficas de rendimiento académico | Media | 4h |
+| ✅ | Tendencias y análisis de notas | Media | 3h |
+| ✅ | Detalle de calificaciones por materia | Alta | 3h |
+| ✅ | Lista de evaluaciones (parciales, talleres, etc.) | Alta | 3h |
+| ✅ | Formulario para agregar calificación | Alta | 3h |
+| ✅ | Selector de tipo de evaluación | Media | 2h |
+| ✅ | Input de nota numérica y porcentaje de peso | Alta | 2h |
 
 ### 🎨 Frontend — Widgets de Calificaciones
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | GradeCard widget (tarjeta de nota) | Alta | 3h |
-| ⬜ | GradeChart — LineChart (gráfica de líneas) | Media | 4h |
-| ⬜ | GradeChart — BarChart (gráfica de barras) | Media | 4h |
-| ⬜ | SubjectGradesList widget (lista de notas por materia) | Alta | 3h |
-| ⬜ | AverageIndicator widget (indicador de promedio) | Media | 2h |
-| ⬜ | ProgressRing widget (anillo de progreso) | Media | 3h |
+| ✅ | GradeCard widget (tarjeta de nota) | Alta | 3h |
+| ✅ | GradeChart — LineChart (gráfica de líneas) | Media | 4h |
+| ✅ | GradeChart — BarChart (gráfica de barras) | Media | 4h |
+| ✅ | SubjectGradesList widget (lista de notas por materia) | Alta | 3h |
+| ✅ | AverageIndicator widget (indicador de promedio) | Media | 2h |
+| ✅ | ProgressRing widget (anillo de progreso) | Media | 3h |
 
 ### 🔧 Backend — Modelos de Calificaciones
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Grade Model (id, tipo, valor, porcentaje, id_materia) | Alta | 2h |
-| ⬜ | SubjectGrade Model (promedio, notas[], id_materia) | Alta | 2h |
-| ⬜ | Estructura de tabla en MySQL | Alta | 2h |
-| ⬜ | Conversiones `toMap()` / `fromMap()` | Alta | 2h |
+| ✅ | Grade Model (`Grade.js` — id, tipo, valor, porcentaje, id_materia) | Alta | 2h |
+| ✅ | SubjectGrade (promedio ponderado por materia vía `getSubjectAverage`) | Alta | 2h |
+| ✅ | Estructura de tabla `calificaciones` en MySQL (DDL entregado) | Alta | 2h |
+| ✅ | Conversiones `fromJson()` / `toJson()` (mobile) | Alta | 2h |
 
 ### 🔧 Backend — GradeService
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | `addGrade()` — Registrar calificación | Alta | 2h |
-| ⬜ | `updateGrade()` — Actualizar calificación | Alta | 2h |
-| ⬜ | `deleteGrade()` — Eliminar calificación | Alta | 2h |
-| ⬜ | `calculateAverage()` — Calcular promedio ponderado | Alta | 3h |
-| ⬜ | `calculateProjectedGrade()` — Nota proyectada para aprobar | Media | 3h |
-| ⬜ | `getGradesBySubject()` — Notas filtradas por materia | Alta | 2h |
-| ⬜ | `generateReport()` — Generar reporte de calificaciones | Media | 4h |
+| ✅ | `createGrade()` — Registrar calificación | Alta | 2h |
+| ✅ | `updateGrade()` — Actualizar calificación | Alta | 2h |
+| ✅ | `deleteGrade()` — Eliminar calificación | Alta | 2h |
+| ✅ | `getSubjectAverage()` / `getGeneralAverage()` — Promedio ponderado | Alta | 3h |
+| ✅ | `getProjectedGrade()` — Nota proyectada para aprobar | Media | 3h |
+| ✅ | `getGradesBySubject()` — Notas filtradas por materia | Alta | 2h |
+| ✅ | `getSummary()` — Resumen/reporte de calificaciones (dashboard) | Media | 4h |
 
 ### 📝 Exportación de Calificaciones
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Exportar reporte de notas en PDF | Media | 4h |
-| ⬜ | Exportar reporte de notas en Excel | Media | 4h |
-| ⬜ | Gráficas interactivas de rendimiento | Baja | 3h |
+| ⬜ | Exportar reporte de notas en PDF (diferido a Sprint 7) | Media | 4h |
+| ⬜ | Exportar reporte de notas en Excel (diferido a Sprint 7) | Media | 4h |
+| ⬜ | Gráficas interactivas de rendimiento (diferido a Sprint 7) | Baja | 3h |
 
-> **🎯 Objetivo Sprint 4:** Backend de calificaciones 100% funcional; dashboard con promedios visibles; formulario de registro de notas operativo; exportación PDF/Excel.
+> **🎯 Objetivo Sprint 4:** Backend de calificaciones 100% funcional; dashboard con promedios visibles; formulario de registro de notas operativo. Exportación PDF/Excel diferida a Sprint 7 (mismo criterio aplicado en Sprint 3 con la exportación de horarios).
 
-> **Progreso:** ⬜ 0/33 tareas (0%)
+> **Progreso:** ✅ 30/33 tareas (91%) — núcleo 100% funcional
 
 ---
 
@@ -576,9 +576,10 @@ Resumen de todos los módulos que debe tener Uniplan según la especificación d
 - ⬜ RF16: Recordatorios de clase (Sprint 5 — Notificaciones)
 
 ### Módulo 9 — Sistema de Calificaciones *(adicional MVP+)*
-- ⬜ Registro de calificaciones por evaluación
-- ⬜ Cálculo automático de promedio ponderado
-- ⬜ Proyección de nota final
+- ✅ Registro de calificaciones por evaluación (tipo, valor, porcentaje, materia)
+- ✅ Cálculo automático de promedio ponderado (por materia y general)
+- ✅ Proyección de nota final (nota necesaria en el % restante para aprobar)
+- ⬜ Exportación de reporte de calificaciones en PDF/Excel (diferido a Sprint 7)
 
 ---
 
@@ -605,9 +606,9 @@ Resumen de todos los módulos que debe tener Uniplan según la especificación d
 |---|-------|--------|-------|--------|
 | 1 | Deploy backend Sprint 3 (schedule routes) a Vercel producción | Sprint 3 | 0.5h | ⬜ |
 | 2 | Actualizar perfil de usuario (UI + consumo PUT /students/:id) | Sprint 1 | 4h | 🔄 |
-| 3 | Dashboard de Calificaciones — pantalla principal | Sprint 4 | 4h | ⬜ |
-| 4 | Componentes reutilizables faltantes (CustomCard, LoadingIndicator, EmptyState, ErrorState) | Sprint 1 | 7h | ⬜ |
-| 5 | Grade Model + tabla MySQL para Sprint 4 | Sprint 4 | 4h | ⬜ |
+| 3 | Componentes reutilizables faltantes (CustomCard, LoadingIndicator, EmptyState, ErrorState) | Sprint 1 | 7h | ⬜ |
+| 4 | Ejecutar DDL `calificaciones` + seed demo en AlwaysData y validar con el equipo | Sprint 4 | 1h | ⬜ |
+| 5 | Exportación de calificaciones en PDF/Excel | Sprint 7 | 8h | ⬜ |
 
 ---
 
@@ -644,6 +645,7 @@ Resumen de todos los módulos que debe tener Uniplan según la especificación d
 | 29 Abr 2026 | Copilot CLI | Alineación completa a stack real Node.js + Express + MySQL (sin Firebase), con estados ajustados a código actual |
 | 2 May 2026 | Copilot CLI | Password reset marcado como completo (token funcional), RF10 actualizado y prioridades limpiadas del flujo ya terminado |
 | 26 Jun 2026 | Claude Code | Sprint 3 completado: módulo de Horarios (ScheduleGrid, ClassCard, DaySelector, WeekView, ScheduleFormScreen, ClassDetailScreen, ScheduleDayView, ScheduleProvider, Schedule model, backend CRUD + detección de conflictos). Progreso global actualizado a 39% (92/234). |
+| 14 Jul 2026 | Claude Code | Sprint 4 completado (núcleo): módulo de Calificaciones — tabla `calificaciones`, `Grade` model, `gradeController`, `gradeRoutes` (backend); `GradeProvider`, `GradeService`, dashboard, detalle por materia, formulario, gráficas `fl_chart` y entrada desde Home (mobile). Promedio ponderado, promedio general y proyección de nota implementados y verificados. Exportación PDF/Excel diferida a Sprint 7. Progreso global actualizado a 52% (122/234). |
 
 ---
 

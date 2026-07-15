@@ -32,6 +32,7 @@ const pomodoroRoutes = require('./routes/pomodoroRoutes');
 const calendarRoutes = require('./routes/calendarRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
+const gradeRoutes = require('./routes/gradeRoutes');
 
 
 // 4. Logger simple de peticiones
@@ -59,7 +60,9 @@ app.get('/', (req, res) => {
       notes: '/api/notes',
       pomodoro: '/api/pomodoro',
       calendar: '/api/calendar',
-      dashboard: '/api/dashboard'
+      dashboard: '/api/dashboard',
+      schedules: '/api/schedules',
+      grades: '/api/grades'
     },
     documentation: 'Ver README.md para más información'
   });
@@ -75,6 +78,7 @@ app.use('/api/pomodoro', pomodoroRoutes);
 app.use('/api/calendar', calendarRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/schedules', scheduleRoutes);
+app.use('/api/grades', gradeRoutes);
 
 // Health check - Para verificar que el servidor funciona
 app.get('/api/health', (req, res) => {
