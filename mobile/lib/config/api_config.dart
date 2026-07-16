@@ -64,6 +64,17 @@ class ApiConfig {
   static String gradesProjection(int idMateria) =>
       '$apiPrefix/grades/subject/$idMateria/projection';
 
+  // Notifications
+  static const String notifications = '$apiPrefix/notifications';
+  static const String notificationsUnreadCount =
+      '$apiPrefix/notifications/unread-count';
+  static const String notificationsPreferences =
+      '$apiPrefix/notifications/preferences';
+  static const String notificationsReadAll =
+      '$apiPrefix/notifications/read-all';
+  static String notificationRead(int id) =>
+      '$apiPrefix/notifications/$id/read';
+
   // Dashboard
   static const String dashboard = '$apiPrefix/dashboard';
   static const String dashboardWeekly = '$apiPrefix/dashboard/weekly';

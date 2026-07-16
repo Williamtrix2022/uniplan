@@ -2,6 +2,8 @@
 // MODELO DE TAREA
 // ============================================
 
+import '../utils/date_parsing.dart';
+
 class Task {
   final int id;
   final int idEstudiante;
@@ -38,7 +40,7 @@ class Task {
       idMateria: json['id_materia'],
       titulo: json['titulo'] ?? '',
       descripcion: json['descripcion'],
-      fechaEntrega: DateTime.parse(json['fecha_entrega']),
+      fechaEntrega: parseDateOnly(json['fecha_entrega']),
       prioridad: json['prioridad'] ?? 'media',
       estado: json['estado'] ?? 'pendiente',
       completada: json['completada'] == 1 || json['completada'] == true,

@@ -24,10 +24,10 @@
 | Sprint 2 | Gestión de Tareas | 100% (41/41) | ✅ Completado |
 | Sprint 3 | Gestión de Horarios | 89% (25/28) | ✅ Completado |
 | Sprint 4 | Sistema de Calificaciones | 91% (30/33) | ✅ Completado (núcleo) |
-| Sprint 5 | Notificaciones y Sincronización | 0% (0/28) | ⬜ Pendiente |
+| Sprint 5 | Notificaciones y Sincronización | 61% (17/28) | ✅ Completado (núcleo) |
 | Sprint 6 | UI/UX Avanzado | 0% (0/30) | ⬜ Pendiente |
 | Sprint 7 | Estadísticas, Tests y Docs | 5% (2/39) | 🔄 En Progreso |
-| **TOTAL** | | **52% (122/234)** | 🔄 |
+| **TOTAL** | | **59% (139/234)** | 🔄 |
 
 ---
 
@@ -347,50 +347,52 @@
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Centro de Notificaciones — UI principal | Alta | 4h |
-| ⬜ | Lista de notificaciones recibidas | Alta | 3h |
-| ⬜ | Marcar notificación como leída | Alta | 2h |
-| ⬜ | Filtros por tipo de notificación | Media | 2h |
-| ⬜ | Pantalla de Configuración de Notificaciones | Alta | 3h |
-| ⬜ | Configurar notificaciones por tipo | Media | 2h |
-| ⬜ | Configurar horarios de notificación | Media | 2h |
-| ⬜ | Configurar sonidos de notificación | Baja | 2h |
+| ✅ | Centro de Notificaciones — UI principal | Alta | 4h |
+| ✅ | Lista de notificaciones recibidas | Alta | 3h |
+| ✅ | Marcar notificación como leída | Alta | 2h |
+| ✅ | Filtros por tipo de notificación | Media | 2h |
+| ✅ | Pantalla de Configuración de Notificaciones | Alta | 3h |
+| ✅ | Configurar notificaciones por tipo | Media | 2h |
+| ✅ | Configurar horarios de notificación (minutos de antelación + horas de silencio) | Media | 2h |
+| ⬜ | Configurar sonidos de notificación (personalizados, más allá de on/off) | Baja | 2h |
 
-### 🔧 Backend — NotificationService
-
-| Estado | Tarea | Prioridad | Horas |
-|--------|-------|-----------|-------|
-| ⬜ | `scheduleNotification()` — Programar notificación local | Alta | 3h |
-| ⬜ | `cancelNotification()` — Cancelar notificación | Alta | 2h |
-| ⬜ | `sendPushNotification()` — Enviar push notification | Alta | 3h |
-| ⬜ | `notifyTaskDue()` — Notificar tarea próxima a vencer | Alta | 2h |
-| ⬜ | `notifyClassStarting()` — Notificar inicio de clase | Alta | 2h |
-| ⬜ | Setup de notificaciones locales (flutter_local_notifications) | Alta | 3h |
-| ⬜ | Implementar badges en icono de la app | Media | 2h |
-
-### 🔧 Backend — Push Notifications (FCM opcional)
+### 🔧 Backend — NotificationService (motor local, mobile)
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Proveedor push configurado (FCM opcional) | Alta | 2h |
-| ⬜ | Topics/canales por tipo de notificación | Media | 2h |
+| ✅ | `scheduleAt()` — Programar notificación local (equivalente a `scheduleNotification()`) | Alta | 3h |
+| ✅ | `cancel()`/`cancelAll()` — Cancelar notificación | Alta | 2h |
+| ⬜ | `sendPushNotification()` — Enviar push notification (diferido, ver Push FCM) | Alta | 3h |
+| ✅ | `notifyTaskDue()` — Notificar tarea próxima a vencer (vía `rescheduleAll` + `computeReminderTime`) | Alta | 2h |
+| ✅ | `notifyClassStarting()` — Notificar inicio de clase (próxima ocurrencia semanal + `computeReminderTime`) | Alta | 2h |
+| ✅ | Setup de notificaciones locales (flutter_local_notifications) | Alta | 3h |
+| ⬜ | Implementar badges en icono de la app (nativo del launcher, limitado por plataforma; se implementó badge in-app sobre la campanita) | Media | 2h |
+
+### 🔧 Backend — Push Notifications (FCM opcional) — DIFERIDO
+
+| Estado | Tarea | Prioridad | Horas |
+|--------|-------|-----------|-------|
+| ⬜ | Proveedor push configurado (FCM opcional) — diferido, ver nota de arquitectura | Alta | 2h |
+| ⬜ | Topics/canales por tipo de notificación (push remoto) | Media | 2h |
 | ⬜ | Gestión de tokens de dispositivo | Alta | 2h |
-| ⬜ | Sincronización de notificaciones con backend Node.js | Alta | 4h |
+| ⬜ | Sincronización de notificaciones con backend Node.js — implementado como feed CRUD (`/api/notifications`), sin push | Alta | 4h |
 
-### 🔧 Backend — Jobs programados (cron/worker)
+> **Nota de arquitectura (15 Jul 2026):** el backend corre en **Vercel serverless** (sin proceso de larga duración entre requests), por lo que un disparador push server-side no es viable sin infraestructura adicional (Vercel Cron / GitHub Actions + service account de Firebase). Se decidió con el usuario resolver el sprint con notificaciones **100% locales** (`flutter_local_notifications`), gratis y funcionales offline, dejando FCM explícitamente diferido — mismo criterio que la exportación PDF/Excel diferida en Sprints 3 y 4.
+
+### 🔧 Backend — Jobs programados (cron/worker) — DIFERIDO
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Setup de scheduler/worker en backend | Alta | 2h |
-| ⬜ | Job `sendDailyReminders` — Recordatorios diarios | Alta | 4h |
-| ⬜ | Job `sendClassNotifications` — Alertas de clase | Alta | 4h |
+| ⬜ | Setup de scheduler/worker en backend — no viable en Vercel serverless sin disparador externo | Alta | 2h |
+| ⬜ | Job `sendDailyReminders` — Recordatorios diarios (resuelto en cliente vía `rescheduleAll`) | Alta | 4h |
+| ⬜ | Job `sendClassNotifications` — Alertas de clase (resuelto en cliente vía `rescheduleAll`) | Alta | 4h |
 | ⬜ | Job `cleanupOldTasks` — Limpiar tareas antiguas | Media | 3h |
-| ⬜ | Job `calculateAverageOnGrade` — Recalcular promedios | Media | 3h |
+| ⬜ | Job `calculateAverageOnGrade` — Recalcular promedios (ya ocurre al escribir notas en `Grade.js`, no requiere job aparte) | Media | 3h |
 | ⬜ | Deploy de jobs en entorno de producción | Alta | 1h |
 
-> **🎯 Objetivo Sprint 5:** Sistema de notificaciones 100% operativo: push, locales, configuración por tipo/horario, sincronización en tiempo real.
+> **🎯 Objetivo Sprint 5:** Sistema de notificaciones locales 100% operativo: centro de notificaciones, configuración por tipo/horario/silencio, recordatorios de tareas y clases programados en el dispositivo, feed persistido y sincronizable vía backend. Push FCM y jobs cron server-side quedan diferidos por incompatibilidad con el hosting serverless actual.
 
-> **Progreso:** ⬜ 0/28 tareas (0%)
+> **Progreso:** ✅ 17/28 tareas (61%) — núcleo 100% funcional
 
 ---
 
@@ -551,7 +553,7 @@ Resumen de todos los módulos que debe tener Uniplan según la especificación d
 
 ### Módulo 4 — Calendario Académico
 - ✅ RF5: Visualización del calendario con actividades por fecha
-- 🔄 Recordatorios de fechas de entrega y exámenes (datos listos, falta motor de notificación)
+- ✅ Recordatorios de fechas de entrega y exámenes (motor de notificaciones locales implementado en Sprint 5; recordatorios de tareas cubiertos, extensión a eventos de calendario pendiente de UI dedicada)
 
 ### Módulo 5 — Temporizador Pomodoro
 - 🔄 RF6: Temporizador Pomodoro configurable
@@ -573,7 +575,7 @@ Resumen de todos los módulos que debe tener Uniplan según la especificación d
 - ✅ RF14: Vista por día con lista de clases, duración y aula
 - ✅ RF15: Detalle de clase con acciones Editar y Eliminar
 - ✅ Sección "Mi Horario" en HomeScreen con clases del día actual
-- ⬜ RF16: Recordatorios de clase (Sprint 5 — Notificaciones)
+- ✅ RF16: Recordatorios de clase (notificación local antes de cada bloque, calculada sobre la próxima ocurrencia semanal — Sprint 5)
 
 ### Módulo 9 — Sistema de Calificaciones *(adicional MVP+)*
 - ✅ Registro de calificaciones por evaluación (tipo, valor, porcentaje, materia)
@@ -646,6 +648,7 @@ Resumen de todos los módulos que debe tener Uniplan según la especificación d
 | 2 May 2026 | Copilot CLI | Password reset marcado como completo (token funcional), RF10 actualizado y prioridades limpiadas del flujo ya terminado |
 | 26 Jun 2026 | Claude Code | Sprint 3 completado: módulo de Horarios (ScheduleGrid, ClassCard, DaySelector, WeekView, ScheduleFormScreen, ClassDetailScreen, ScheduleDayView, ScheduleProvider, Schedule model, backend CRUD + detección de conflictos). Progreso global actualizado a 39% (92/234). |
 | 14 Jul 2026 | Claude Code | Sprint 4 completado (núcleo): módulo de Calificaciones — tabla `calificaciones`, `Grade` model, `gradeController`, `gradeRoutes` (backend); `GradeProvider`, `GradeService`, dashboard, detalle por materia, formulario, gráficas `fl_chart` y entrada desde Home (mobile). Promedio ponderado, promedio general y proyección de nota implementados y verificados. Exportación PDF/Excel diferida a Sprint 7. Progreso global actualizado a 52% (122/234). |
+| 15 Jul 2026 | Claude Code | Sprint 5 completado (núcleo): módulo de Notificaciones con motor 100% local (`flutter_local_notifications`, sin proveedor push) — decisión de arquitectura justificada por el hosting serverless de Vercel. Backend: tablas `notificaciones`/`preferencias_notificacion`, `Notification` model, `notificationController`, `notificationRoutes` + suite Jest (primera del backend). Mobile: `NotificationProvider`, `LocalNotificationService`, función pura `computeReminderTime` (con horas de silencio y cruce de medianoche), Centro de Notificaciones y pantalla de Ajustes cableados a los stubs existentes (campanita del Home, ítem del Perfil) + suite de tests nueva. Push FCM y jobs cron server-side diferidos y documentados. Progreso global actualizado a 59% (139/234). |
 
 ---
 

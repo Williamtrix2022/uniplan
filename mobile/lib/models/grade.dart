@@ -5,6 +5,7 @@
 import 'package:flutter/material.dart';
 
 import '../config/theme.dart';
+import '../utils/date_parsing.dart';
 
 class Grade {
   final int id;
@@ -104,9 +105,12 @@ class Grade {
       valorInvalido:      rawValor != null && parsedValor == null,
       porcentaje:         parsedPorcentaje ?? 0.0,
       porcentajeInvalido: rawPorcentaje != null && parsedPorcentaje == null,
-      fechaEvaluacion: json['fecha_evaluacion'] != null
-          ? DateTime.tryParse(json['fecha_evaluacion'].toString())
-          : null,
+      // `fecha_evaluacion` es una columna DATE (fecha de calendario, sin
+      // hora) — se parsea con `tryParseDateOnly` para no desplazarla por
+      // zona horaria (ver comentario en utils/date_parsing.dart). A
+      // diferencia de `fecha_creacion`/`fecha_actualizacion` (TIMESTAMP,
+      // instante real), acá la hora no tiene significado de negocio.
+      fechaEvaluacion: tryParseDateOnly(json['fecha_evaluacion']),
       activo:             json['activo'] == 1 || json['activo'] == true,
       fechaCreacion:      json['fecha_creacion'] != null
           ? DateTime.tryParse(json['fecha_creacion'].toString())
