@@ -135,6 +135,8 @@ Todas protegidas con `authMiddleware`; rutas literales (`/unread-count`, `/prefe
 
 ### Fase 7 — Cierre de sprint y documentación
 - Actualizar `UNIPLAN_MVP.md`: Sprint 5 a núcleo funcional completo (Push FCM y Jobs cron server-side diferidos, documentados con la justificación del serverless).
+- `cleanupOldTasks` implementado como **utilitario CLI one-off invokable manualmente** (`backend/scripts/cleanup-old-tasks.js` + script npm `cleanup:tasks`) — no como job programado en el worker, porque el hosting serverless no sostiene un scheduler.
+- Fuera de alcance del Sprint 5: **sonidos personalizados de notificación** — `flutter_local_notifications` en iOS requiere assets plugados fuera del alcance del MVP; Android lo permite sin un valor claro. Decisión de no hacerlo.
 - Sin commit/push hasta que el usuario pruebe manualmente la app (restricción explícita de esta sesión).
 
 ## Orden y dependencias

@@ -163,13 +163,13 @@ class Task {
       SELECT t.*, m.nombre as materia_nombre, m.color as materia_color
       FROM tareas t
       LEFT JOIN materias m ON t.id_materia = m.id
-      WHERE t.id_estudiante = ? 
-        AND t.activo = TRUE 
+      WHERE t.id_estudiante = ?
+        AND t.activo = TRUE
         AND t.completada = FALSE
         AND t.fecha_entrega BETWEEN CURDATE() AND DATE_ADD(CURDATE(), INTERVAL 7 DAY)
       ORDER BY t.fecha_entrega ASC
     `;
-    
+
     try {
       const [rows] = await pool.execute(query, [id_estudiante]);
       return rows;
@@ -181,21 +181,81 @@ class Task {
   // Estadísticas de tareas
   static async getStats(id_estudiante) {
     const query = `
-      SELECT 
+      SELECT
         COUNT(*) as total_tareas,
         SUM(CASE WHEN completada = TRUE THEN 1 ELSE 0 END) as completadas,
         SUM(CASE WHEN estado = 'pendiente' THEN 1 ELSE 0 END) as pendientes,
         SUM(CASE WHEN prioridad = 'alta' THEN 1 ELSE 0 END) as alta_prioridad
-      FROM tareas 
+      FROM tareas
       WHERE id_estudiante = ? AND activo = TRUE
     `;
-    
+
     try {
       const [rows] = await pool.execute(query, [id_estudiante]);
       return rows[0];
     } catch (error) {
       throw error;
     }
+  }
+
+  /**
+   * Soft-delete de tareas antiguas (anteriores a N días respecto a hoy).
+   * Diseñado para invocarse manualmente desde el script CLI `backend/scripts/cleanup-old-tasks.js`
+   * porque el backend corre en hosting serverless (Vercel) y no soporta un worker/cron de larga vida.
+   *
+   *   - Solo tareas con `completada = TRUE` son elegibles (no tocamos pendientes).
+   *   - Solo soft-delete (activo = FALSE); nunca hard-delete.
+   *   - Acepta `dryRun: true` para contar candidatas sin mutar.
+   *
+   * @param {Object} opts
+   *   - daysOld {number} obligatorio (>0). Antigüedad en días respecto a `fecha_entrega`.
+   *   - dryRun {boolean} opcional. Si true, cuenta sin escribir.
+   * @returns {Promise<{candidates: number, softDeleted: number, dryRun: boolean, daysOld: number}>}
+   */
+  static async cleanupOld(opts = {}) {
+    const { daysOld, dryRun = false } = opts;
+
+    if (!Number.isFinite(daysOld) || daysOld <= 0) {
+      throw new Error('cleanupOld: daysOld debe ser un número positivo');
+    }
+
+    // MySQL DATE_ADD firma: DATE_ADD(NOW(), INTERVAL <días> DAY), con días negativos restando.
+    // Lo negamos para apuntar a "hace N días" desde hoy.
+    const sqlDays = -Math.trunc(daysOld);
+
+    // 1) Conteo de candidatas (separado para reporte claro)
+    const countQuery = `
+      SELECT COUNT(*) AS total
+      FROM tareas
+      WHERE activo = TRUE
+        AND completada = TRUE
+        AND fecha_entrega <= DATE_ADD(CURDATE(), INTERVAL ? DAY)
+    `;
+
+    const [countRows] = await pool.execute(countQuery, [sqlDays]);
+    const candidates = Number(countRows[0].total) || 0;
+
+    if (dryRun || candidates === 0) {
+      return { candidates, softDeleted: 0, dryRun: Boolean(dryRun), daysOld };
+    }
+
+    // 2) Soft-delete de esas candidatas
+    const updateQuery = `
+      UPDATE tareas
+      SET activo = FALSE
+      WHERE activo = TRUE
+        AND completada = TRUE
+        AND fecha_entrega <= DATE_ADD(CURDATE(), INTERVAL ? DAY)
+    `;
+
+    const [result] = await pool.execute(updateQuery, [sqlDays]);
+
+    return {
+      candidates,
+      softDeleted: Number(result.affectedRows) || 0,
+      dryRun: false,
+      daysOld
+    };
   }
 }
 

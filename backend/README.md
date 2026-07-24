@@ -124,6 +124,38 @@ El servidor estará disponible en: `http://localhost:3000`
 
 ---
 
+## 🧹 Utilitarios CLI
+
+### `cleanup:tasks` — Soft-delete de tareas antiguas (Sprint 5)
+
+El backend corre en **hosting serverless** (Vercel), que no soporta workers ni cron entre requests. Por eso el job `cleanupOldTasks` del MVP se expone como **utilitario CLI invocable manualmente** (cron externo, GitHub Actions, trigger manual, etc.).
+
+Hace **soft-delete** (`activo = FALSE`) de las tareas que cumplen:
+- `completada = TRUE`
+- `fecha_entrega ≤ hoy − N días`
+
+```bash
+# Dry-run: cuenta candidatas sin modificar la DB. Default: 90 días
+npm run cleanup:tasks:dry-run
+
+# Limpieza real con default (90 días)
+npm run cleanup:tasks
+
+# Limpieza con umbral distinto
+npm run cleanup:tasks -- --days 30
+
+# Script directo (también acepta --days y --dry-run)
+node scripts/cleanup-old-tasks.js --days 30 --dry-run
+
+node scripts/cleanup-old-tasks.js --help
+```
+
+> **Importante:** sólo se eliminan tareas *completadas* — las pendientes
+> jamás se tocan. La operación es **soft-delete** y se puede revertir
+> re-estableciendo `activo = TRUE` en la tabla tareas.
+
+---
+
 ## 📁 Estructura del Proyecto
 
 ```
