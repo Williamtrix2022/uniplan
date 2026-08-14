@@ -44,10 +44,10 @@ class ClassCard extends StatelessWidget {
         ),
         child: LayoutBuilder(
           builder: (context, constraints) {
-            final isCompact = constraints.maxHeight < 52;
+            final density = _CardDensity.fromHeight(constraints.maxHeight);
             return _CardContent(
               schedule: schedule,
-              isCompact: isCompact,
+              density: density,
               isConflict: isConflict,
               accentColor: baseColor,
             );
@@ -58,25 +58,52 @@ class ClassCard extends StatelessWidget {
   }
 }
 
+/// Nivel de detalle que puede mostrar la tarjeta según el alto disponible
+/// (el alto lo fija el padre —`ScheduleGrid`— en función de la duración de
+/// la clase para que el bloque se alinee con las líneas de hora; por eso acá
+/// se adapta el CONTENIDO en vez de pedir más espacio).
+///
+/// Los umbrales incluyen margen de seguridad sobre el contenido real que
+/// cada nivel necesita (medido con `GoogleFonts.inter`, `height: 1.2`):
+/// - [onlyTitle]: título 1 línea + padding compacto ≈ 20px necesarios.
+/// - [titleAndTime]: título 1 línea + horario + padding ≈ 42px necesarios.
+/// - [full]: título HASTA 2 líneas + aula + horario + padding ≈ 73px
+///   necesarios (el caso que producía el overflow: un título largo que
+///   ocupaba 2 líneas no entraba en el umbral anterior de 52px).
+enum _CardDensity {
+  onlyTitle,
+  titleAndTime,
+  full;
+
+  static _CardDensity fromHeight(double height) {
+    if (height >= 78) return _CardDensity.full;
+    if (height >= 44) return _CardDensity.titleAndTime;
+    return _CardDensity.onlyTitle;
+  }
+}
+
 class _CardContent extends StatelessWidget {
   final Schedule schedule;
-  final bool isCompact;
+  final _CardDensity density;
   final bool isConflict;
   final Color accentColor;
 
   const _CardContent({
     required this.schedule,
-    required this.isCompact,
+    required this.density,
     required this.isConflict,
     required this.accentColor,
   });
 
   @override
   Widget build(BuildContext context) {
+    final isOnlyTitle = density == _CardDensity.onlyTitle;
+    final isFull = density == _CardDensity.full;
+
     return Padding(
       padding: EdgeInsets.symmetric(
         horizontal: 8,
-        vertical: isCompact ? 4 : 6,
+        vertical: isOnlyTitle ? 4 : 6,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -89,12 +116,15 @@ class _CardContent extends StatelessWidget {
                 child: Text(
                   schedule.materiaNombre ?? 'Sin materia',
                   style: GoogleFonts.inter(
-                    fontSize: isCompact ? 10 : 12,
+                    fontSize: isOnlyTitle ? 10 : 12,
                     fontWeight: FontWeight.w700,
                     color: AppTheme.darkText,
                     height: 1.2,
                   ),
-                  maxLines: isCompact ? 1 : 2,
+                  // Solo el nivel "full" tiene espacio garantizado para un
+                  // título de 2 líneas — en los demás niveles se fuerza a 1
+                  // línea (con ellipsis) para no exceder la altura del bloque.
+                  maxLines: isFull ? 2 : 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
@@ -107,13 +137,16 @@ class _CardContent extends StatelessWidget {
             ],
           ),
 
-          if (!isCompact) ...[
-            // Aula
-            if (schedule.aula != null && schedule.aula!.isNotEmpty) ...[
+          if (!isOnlyTitle) ...[
+            // Aula — solo en el nivel "full", donde hay espacio garantizado
+            // para el título (hasta 2 líneas) + aula + horario.
+            if (isFull &&
+                schedule.aula != null &&
+                schedule.aula!.isNotEmpty) ...[
               const SizedBox(height: 2),
               Row(
                 children: [
-                  Icon(
+                  const Icon(
                     Icons.room_outlined,
                     size: 10,
                     color: AppTheme.greyText,

@@ -5,19 +5,33 @@
 require('dotenv').config();
 const app = require('./src/app');
 const { testConnection } = require('./src/config/database');
+const Notification = require('./src/models/Notification');
 
 const PORT = process.env.PORT || 3000;
+
+// Asegura que existan las tablas de notificaciones (no debe tumbar el server si falla)
+const ensureNotificationTables = async () => {
+  try {
+    await Notification.ensureTables();
+    console.log('✅ Tablas de notificaciones verificadas/creadas');
+  } catch (error) {
+    console.error('⚠️ No se pudieron verificar/crear las tablas de notificaciones:', error.message);
+  }
+};
 
 // Función para iniciar el servidor
 const startServer = async () => {
   try {
     // 1. Probar conexión a la base de datos
     const dbConnected = await testConnection();
-    
+
     if (!dbConnected) {
       console.error('❌ No se pudo conectar a la base de datos. Servidor detenido.');
       process.exit(1);
     }
+
+    // 1.1 Verificar/crear tablas del módulo de notificaciones
+    await ensureNotificationTables();
 
     // 2. Iniciar el servidor Express
     app.listen(PORT, () => {
@@ -44,6 +58,10 @@ const startServer = async () => {
 if (require.main === module) {
   startServer();
 } else {
+  // Entorno serverless (Vercel): no hay app.listen, pero igual verificamos
+  // las tablas de notificaciones de forma perezosa (fire-and-forget, no
+  // debe bloquear ni tumbar el cold start del handler).
+  ensureNotificationTables();
   module.exports = app;
 }
 

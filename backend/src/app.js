@@ -33,6 +33,7 @@ const calendarRoutes = require('./routes/calendarRoutes');
 const dashboardRoutes = require('./routes/dashboardRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const gradeRoutes = require('./routes/gradeRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 
 // 4. Logger simple de peticiones
@@ -62,7 +63,8 @@ app.get('/', (req, res) => {
       calendar: '/api/calendar',
       dashboard: '/api/dashboard',
       schedules: '/api/schedules',
-      grades: '/api/grades'
+      grades: '/api/grades',
+      notifications: '/api/notifications'
     },
     documentation: 'Ver README.md para más información'
   });
@@ -79,6 +81,7 @@ app.use('/api/calendar', calendarRoutes);
 app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/grades', gradeRoutes);
+app.use('/api/notifications', notificationRoutes);
 
 // Health check - Para verificar que el servidor funciona
 app.get('/api/health', (req, res) => {

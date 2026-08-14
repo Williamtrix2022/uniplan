@@ -4,6 +4,8 @@
 
 import 'package:flutter/material.dart';
 
+import '../utils/date_parsing.dart';
+
 class CalendarEvent {
   final int? id;
   final int? idEstudiante;
@@ -60,7 +62,11 @@ class CalendarEvent {
       idMateria: json['id_materia'],
       titulo: json['titulo'] ?? '',
       descripcion: json['descripcion'],
-      fecha: DateTime.parse(json['fecha']),
+      // `fecha` es una columna DATE (fecha de calendario, sin hora) — se
+      // parsea con `parseDateOnly` para no desplazarla por zona horaria
+      // (ver comentario en utils/date_parsing.dart). `hora_inicio`/`hora_fin`
+      // son columnas TIME separadas, no forman parte de este DateTime.
+      fecha: parseDateOnly(json['fecha']),
       horaInicio: parseTime(json['hora_inicio']),
       horaFin: parseTime(json['hora_fin']),
       tipo: json['tipo'] ?? 'evento',

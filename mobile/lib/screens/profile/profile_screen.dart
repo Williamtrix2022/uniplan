@@ -14,6 +14,7 @@ import 'pomodoro_settings_screen.dart';
 import '../home/home_screen.dart';
 import '../tasks/tasks_screen.dart';
 import '../calendar/calendar_screen.dart';
+import '../notifications/notification_settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -469,10 +470,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: 'Notificaciones',
             subtitle: 'Gestiona tus notificaciones',
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Próximamente'),
-                  backgroundColor: AppTheme.info,
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationSettingsScreen(),
                 ),
               );
             },
