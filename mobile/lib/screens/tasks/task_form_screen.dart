@@ -852,7 +852,11 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                           ),
                           Switch.adaptive(
                             value: selectedIsProject,
-                            activeTrackColor: AppTheme.primaryGreen,
+                            trackColor: WidgetStateProperty.resolveWith(
+                              (states) => states.contains(WidgetState.selected)
+                                  ? AppTheme.primaryGreen
+                                  : null,
+                            ),
                             onChanged: (value) =>
                                 setState(() => selectedIsProject = value),
                           ),
