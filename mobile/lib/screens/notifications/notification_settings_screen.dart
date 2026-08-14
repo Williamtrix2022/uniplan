@@ -199,7 +199,11 @@ class _NotificationSettingsScreenState
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: AppTheme.primaryGreen,
+            thumbColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.selected)
+                  ? AppTheme.primaryGreen
+                  : null,
+            ),
           ),
         ],
       ),
