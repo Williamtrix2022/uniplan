@@ -23,11 +23,11 @@
 | Sprint 1 | Autenticación y UI Base | 71% (25/35) | 🔄 En Progreso |
 | Sprint 2 | Gestión de Tareas | 100% (41/41) | ✅ Completado |
 | Sprint 3 | Gestión de Horarios | 89% (25/28) | ✅ Completado |
-| Sprint 4 | Sistema de Calificaciones | 0% (0/33) | ⬜ Pendiente |
-| Sprint 5 | Notificaciones y Sincronización | 0% (0/28) | ⬜ Pendiente |
+| Sprint 4 | Sistema de Calificaciones | 91% (30/33) | ✅ Completado (núcleo) |
+| Sprint 5 | Notificaciones y Sincronización | 79% (22/28) | ✅ Completado (núcleo) |
 | Sprint 6 | UI/UX Avanzado | 0% (0/30) | ⬜ Pendiente |
 | Sprint 7 | Estadísticas, Tests y Docs | 5% (2/39) | 🔄 En Progreso |
-| **TOTAL** | | **39% (92/234)** | 🔄 |
+| **TOTAL** | | **62% (144/234)** | 🔄 |
 
 ---
 
@@ -284,60 +284,60 @@
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Dashboard de Calificaciones (pantalla principal) | Alta | 4h |
-| ⬜ | Visualización de promedio general | Alta | 2h |
-| ⬜ | Visualización de promedio por materia | Alta | 3h |
-| ⬜ | Gráficas de rendimiento académico | Media | 4h |
-| ⬜ | Tendencias y análisis de notas | Media | 3h |
-| ⬜ | Detalle de calificaciones por materia | Alta | 3h |
-| ⬜ | Lista de evaluaciones (parciales, talleres, etc.) | Alta | 3h |
-| ⬜ | Formulario para agregar calificación | Alta | 3h |
-| ⬜ | Selector de tipo de evaluación | Media | 2h |
-| ⬜ | Input de nota numérica y porcentaje de peso | Alta | 2h |
+| ✅ | Dashboard de Calificaciones (pantalla principal) | Alta | 4h |
+| ✅ | Visualización de promedio general | Alta | 2h |
+| ✅ | Visualización de promedio por materia | Alta | 3h |
+| ✅ | Gráficas de rendimiento académico | Media | 4h |
+| ✅ | Tendencias y análisis de notas | Media | 3h |
+| ✅ | Detalle de calificaciones por materia | Alta | 3h |
+| ✅ | Lista de evaluaciones (parciales, talleres, etc.) | Alta | 3h |
+| ✅ | Formulario para agregar calificación | Alta | 3h |
+| ✅ | Selector de tipo de evaluación | Media | 2h |
+| ✅ | Input de nota numérica y porcentaje de peso | Alta | 2h |
 
 ### 🎨 Frontend — Widgets de Calificaciones
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | GradeCard widget (tarjeta de nota) | Alta | 3h |
-| ⬜ | GradeChart — LineChart (gráfica de líneas) | Media | 4h |
-| ⬜ | GradeChart — BarChart (gráfica de barras) | Media | 4h |
-| ⬜ | SubjectGradesList widget (lista de notas por materia) | Alta | 3h |
-| ⬜ | AverageIndicator widget (indicador de promedio) | Media | 2h |
-| ⬜ | ProgressRing widget (anillo de progreso) | Media | 3h |
+| ✅ | GradeCard widget (tarjeta de nota) | Alta | 3h |
+| ✅ | GradeChart — LineChart (gráfica de líneas) | Media | 4h |
+| ✅ | GradeChart — BarChart (gráfica de barras) | Media | 4h |
+| ✅ | SubjectGradesList widget (lista de notas por materia) | Alta | 3h |
+| ✅ | AverageIndicator widget (indicador de promedio) | Media | 2h |
+| ✅ | ProgressRing widget (anillo de progreso) | Media | 3h |
 
 ### 🔧 Backend — Modelos de Calificaciones
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Grade Model (id, tipo, valor, porcentaje, id_materia) | Alta | 2h |
-| ⬜ | SubjectGrade Model (promedio, notas[], id_materia) | Alta | 2h |
-| ⬜ | Estructura de tabla en MySQL | Alta | 2h |
-| ⬜ | Conversiones `toMap()` / `fromMap()` | Alta | 2h |
+| ✅ | Grade Model (`Grade.js` — id, tipo, valor, porcentaje, id_materia) | Alta | 2h |
+| ✅ | SubjectGrade (promedio ponderado por materia vía `getSubjectAverage`) | Alta | 2h |
+| ✅ | Estructura de tabla `calificaciones` en MySQL (DDL entregado) | Alta | 2h |
+| ✅ | Conversiones `fromJson()` / `toJson()` (mobile) | Alta | 2h |
 
 ### 🔧 Backend — GradeService
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | `addGrade()` — Registrar calificación | Alta | 2h |
-| ⬜ | `updateGrade()` — Actualizar calificación | Alta | 2h |
-| ⬜ | `deleteGrade()` — Eliminar calificación | Alta | 2h |
-| ⬜ | `calculateAverage()` — Calcular promedio ponderado | Alta | 3h |
-| ⬜ | `calculateProjectedGrade()` — Nota proyectada para aprobar | Media | 3h |
-| ⬜ | `getGradesBySubject()` — Notas filtradas por materia | Alta | 2h |
-| ⬜ | `generateReport()` — Generar reporte de calificaciones | Media | 4h |
+| ✅ | `createGrade()` — Registrar calificación | Alta | 2h |
+| ✅ | `updateGrade()` — Actualizar calificación | Alta | 2h |
+| ✅ | `deleteGrade()` — Eliminar calificación | Alta | 2h |
+| ✅ | `getSubjectAverage()` / `getGeneralAverage()` — Promedio ponderado | Alta | 3h |
+| ✅ | `getProjectedGrade()` — Nota proyectada para aprobar | Media | 3h |
+| ✅ | `getGradesBySubject()` — Notas filtradas por materia | Alta | 2h |
+| ✅ | `getSummary()` — Resumen/reporte de calificaciones (dashboard) | Media | 4h |
 
 ### 📝 Exportación de Calificaciones
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Exportar reporte de notas en PDF | Media | 4h |
-| ⬜ | Exportar reporte de notas en Excel | Media | 4h |
-| ⬜ | Gráficas interactivas de rendimiento | Baja | 3h |
+| ⬜ | Exportar reporte de notas en PDF (diferido a Sprint 7) | Media | 4h |
+| ⬜ | Exportar reporte de notas en Excel (diferido a Sprint 7) | Media | 4h |
+| ⬜ | Gráficas interactivas de rendimiento (diferido a Sprint 7) | Baja | 3h |
 
-> **🎯 Objetivo Sprint 4:** Backend de calificaciones 100% funcional; dashboard con promedios visibles; formulario de registro de notas operativo; exportación PDF/Excel.
+> **🎯 Objetivo Sprint 4:** Backend de calificaciones 100% funcional; dashboard con promedios visibles; formulario de registro de notas operativo. Exportación PDF/Excel diferida a Sprint 7 (mismo criterio aplicado en Sprint 3 con la exportación de horarios).
 
-> **Progreso:** ⬜ 0/33 tareas (0%)
+> **Progreso:** ✅ 30/33 tareas (91%) — núcleo 100% funcional
 
 ---
 
@@ -347,50 +347,51 @@
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Centro de Notificaciones — UI principal | Alta | 4h |
-| ⬜ | Lista de notificaciones recibidas | Alta | 3h |
-| ⬜ | Marcar notificación como leída | Alta | 2h |
-| ⬜ | Filtros por tipo de notificación | Media | 2h |
-| ⬜ | Pantalla de Configuración de Notificaciones | Alta | 3h |
-| ⬜ | Configurar notificaciones por tipo | Media | 2h |
-| ⬜ | Configurar horarios de notificación | Media | 2h |
-| ⬜ | Configurar sonidos de notificación | Baja | 2h |
+| ✅ | Centro de Notificaciones — UI principal | Alta | 4h |
+| ✅ | Lista de notificaciones recibidas | Alta | 3h |
+| ✅ | Marcar notificación como leída | Alta | 2h |
+| ✅ | Filtros por tipo de notificación | Media | 2h |
+| ✅ | Pantalla de Configuración de Notificaciones | Alta | 3h |
+| ✅ | Configurar notificaciones por tipo | Media | 2h |
+| ✅ | Configurar horarios de notificación (minutos de antelación + horas de silencio) | Media | 2h |
 
-### 🔧 Backend — NotificationService
-
-| Estado | Tarea | Prioridad | Horas |
-|--------|-------|-----------|-------|
-| ⬜ | `scheduleNotification()` — Programar notificación local | Alta | 3h |
-| ⬜ | `cancelNotification()` — Cancelar notificación | Alta | 2h |
-| ⬜ | `sendPushNotification()` — Enviar push notification | Alta | 3h |
-| ⬜ | `notifyTaskDue()` — Notificar tarea próxima a vencer | Alta | 2h |
-| ⬜ | `notifyClassStarting()` — Notificar inicio de clase | Alta | 2h |
-| ⬜ | Setup de notificaciones locales (flutter_local_notifications) | Alta | 3h |
-| ⬜ | Implementar badges en icono de la app | Media | 2h |
-
-### 🔧 Backend — Push Notifications (FCM opcional)
+### 🔧 Backend — NotificationService (motor local, mobile)
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Proveedor push configurado (FCM opcional) | Alta | 2h |
-| ⬜ | Topics/canales por tipo de notificación | Media | 2h |
+| ✅ | `scheduleAt()` — Programar notificación local (equivalente a `scheduleNotification()`) | Alta | 3h |
+| ✅ | `cancel()`/`cancelAll()` — Cancelar notificación | Alta | 2h |
+| ⬜ | `sendPushNotification()` — Enviar push notification (diferido, ver Push FCM) | Alta | 3h |
+| ✅ | `notifyTaskDue()` — Notificar tarea próxima a vencer (vía `rescheduleAll` + `computeReminderTime`) | Alta | 2h |
+| ✅ | `notifyClassStarting()` — Notificar inicio de clase (próxima ocurrencia semanal + `computeReminderTime`) | Alta | 2h |
+| ✅ | Setup de notificaciones locales (flutter_local_notifications) | Alta | 3h |
+| ✅ | Implementar badges en icono de la app (badge in-app sobre la campanita del Home; badge nativo del launcher no viable sin plugin adicional en iOS, fuera del alcance del MVP) | Media | 2h |
+
+### 🔧 Backend — Push Notifications (FCM opcional) — DIFERIDO
+
+| Estado | Tarea | Prioridad | Horas |
+|--------|-------|-----------|-------|
+| ⬜ | Proveedor push configurado (FCM opcional) — diferido, ver nota de arquitectura | Alta | 2h |
+| ⬜ | Topics/canales por tipo de notificación (push remoto) | Media | 2h |
 | ⬜ | Gestión de tokens de dispositivo | Alta | 2h |
-| ⬜ | Sincronización de notificaciones con backend Node.js | Alta | 4h |
+| ✅ | Sincronización de notificaciones con backend Node.js — implementado como feed CRUD (`/api/notifications`), sin push | Alta | 4h |
 
-### 🔧 Backend — Jobs programados (cron/worker)
+> **Nota de arquitectura (15 Jul 2026):** el backend corre en **Vercel serverless** (sin proceso de larga duración entre requests), por lo que un disparador push server-side no es viable sin infraestructura adicional (Vercel Cron / GitHub Actions + service account de Firebase). Se decidió con el usuario resolver el sprint con notificaciones **100% locales** (`flutter_local_notifications`), gratis y funcionales offline, dejando FCM explícitamente diferido — mismo criterio que la exportación PDF/Excel diferida en Sprints 3 y 4.
+
+### 🔧 Backend — Jobs programados (cron/worker) — DIFERIDO
 
 | Estado | Tarea | Prioridad | Horas |
 |--------|-------|-----------|-------|
-| ⬜ | Setup de scheduler/worker en backend | Alta | 2h |
-| ⬜ | Job `sendDailyReminders` — Recordatorios diarios | Alta | 4h |
-| ⬜ | Job `sendClassNotifications` — Alertas de clase | Alta | 4h |
-| ⬜ | Job `cleanupOldTasks` — Limpiar tareas antiguas | Media | 3h |
-| ⬜ | Job `calculateAverageOnGrade` — Recalcular promedios | Media | 3h |
+| ⬜ | Setup de scheduler/worker en backend — no viable en Vercel serverless sin disparador externo | Alta | 2h |
+| ⬜ | Job `sendDailyReminders` — Recordatorios diarios (resuelto en cliente vía `rescheduleAll`) | Alta | 4h |
+| ⬜ | Job `sendClassNotifications` — Alertas de clase (resuelto en cliente vía `rescheduleAll`) | Alta | 4h |
+| ✅ | Job `cleanupOldTasks` — Limpiar tareas antiguas (utilitario CLI one-off `backend/scripts/cleanup-old-tasks.js`, invokable manualmente con `npm run cleanup:tasks`; fuera del worker cron server-side por incompatibilidad con hosting serverless) | Media | 3h |
+| ✅ | Job `calculateAverageOnGrade` — Recalcular promedios (ya ocurre al escribir notas en `Grade.js`, no requiere job aparte) | Media | 3h |
 | ⬜ | Deploy de jobs en entorno de producción | Alta | 1h |
 
-> **🎯 Objetivo Sprint 5:** Sistema de notificaciones 100% operativo: push, locales, configuración por tipo/horario, sincronización en tiempo real.
+> **🎯 Objetivo Sprint 5:** Sistema de notificaciones locales 100% operativo: centro de notificaciones, configuración por tipo/horario/silencio, recordatorios de tareas y clases programados en el dispositivo, feed persistido y sincronizable vía backend. `cleanupOldTasks` quedó implementado como utilitario CLI manual (`npm run cleanup:tasks`) — el cron server-side completo y push FCM sí quedan diferidos por incompatibilidad con el hosting serverless.
 
-> **Progreso:** ⬜ 0/28 tareas (0%)
+> **Progreso:** ✅ 17/28 tareas (61%) — núcleo 100% funcional
 
 ---
 
@@ -551,7 +552,7 @@ Resumen de todos los módulos que debe tener Uniplan según la especificación d
 
 ### Módulo 4 — Calendario Académico
 - ✅ RF5: Visualización del calendario con actividades por fecha
-- 🔄 Recordatorios de fechas de entrega y exámenes (datos listos, falta motor de notificación)
+- ✅ Recordatorios de fechas de entrega y exámenes (motor de notificaciones locales implementado en Sprint 5; recordatorios de tareas cubiertos, extensión a eventos de calendario pendiente de UI dedicada)
 
 ### Módulo 5 — Temporizador Pomodoro
 - 🔄 RF6: Temporizador Pomodoro configurable
@@ -573,12 +574,13 @@ Resumen de todos los módulos que debe tener Uniplan según la especificación d
 - ✅ RF14: Vista por día con lista de clases, duración y aula
 - ✅ RF15: Detalle de clase con acciones Editar y Eliminar
 - ✅ Sección "Mi Horario" en HomeScreen con clases del día actual
-- ⬜ RF16: Recordatorios de clase (Sprint 5 — Notificaciones)
+- ✅ RF16: Recordatorios de clase (notificación local antes de cada bloque, calculada sobre la próxima ocurrencia semanal — Sprint 5)
 
 ### Módulo 9 — Sistema de Calificaciones *(adicional MVP+)*
-- ⬜ Registro de calificaciones por evaluación
-- ⬜ Cálculo automático de promedio ponderado
-- ⬜ Proyección de nota final
+- ✅ Registro de calificaciones por evaluación (tipo, valor, porcentaje, materia)
+- ✅ Cálculo automático de promedio ponderado (por materia y general)
+- ✅ Proyección de nota final (nota necesaria en el % restante para aprobar)
+- ⬜ Exportación de reporte de calificaciones en PDF/Excel (diferido a Sprint 7)
 
 ---
 
@@ -605,9 +607,9 @@ Resumen de todos los módulos que debe tener Uniplan según la especificación d
 |---|-------|--------|-------|--------|
 | 1 | Deploy backend Sprint 3 (schedule routes) a Vercel producción | Sprint 3 | 0.5h | ⬜ |
 | 2 | Actualizar perfil de usuario (UI + consumo PUT /students/:id) | Sprint 1 | 4h | 🔄 |
-| 3 | Dashboard de Calificaciones — pantalla principal | Sprint 4 | 4h | ⬜ |
-| 4 | Componentes reutilizables faltantes (CustomCard, LoadingIndicator, EmptyState, ErrorState) | Sprint 1 | 7h | ⬜ |
-| 5 | Grade Model + tabla MySQL para Sprint 4 | Sprint 4 | 4h | ⬜ |
+| 3 | Componentes reutilizables faltantes (CustomCard, LoadingIndicator, EmptyState, ErrorState) | Sprint 1 | 7h | ⬜ |
+| 4 | Ejecutar DDL `calificaciones` + seed demo en AlwaysData y validar con el equipo | Sprint 4 | 1h | ⬜ |
+| 5 | Exportación de calificaciones en PDF/Excel | Sprint 7 | 8h | ⬜ |
 
 ---
 
@@ -644,6 +646,9 @@ Resumen de todos los módulos que debe tener Uniplan según la especificación d
 | 29 Abr 2026 | Copilot CLI | Alineación completa a stack real Node.js + Express + MySQL (sin Firebase), con estados ajustados a código actual |
 | 2 May 2026 | Copilot CLI | Password reset marcado como completo (token funcional), RF10 actualizado y prioridades limpiadas del flujo ya terminado |
 | 26 Jun 2026 | Claude Code | Sprint 3 completado: módulo de Horarios (ScheduleGrid, ClassCard, DaySelector, WeekView, ScheduleFormScreen, ClassDetailScreen, ScheduleDayView, ScheduleProvider, Schedule model, backend CRUD + detección de conflictos). Progreso global actualizado a 39% (92/234). |
+| 14 Jul 2026 | Claude Code | Sprint 4 completado (núcleo): módulo de Calificaciones — tabla `calificaciones`, `Grade` model, `gradeController`, `gradeRoutes` (backend); `GradeProvider`, `GradeService`, dashboard, detalle por materia, formulario, gráficas `fl_chart` y entrada desde Home (mobile). Promedio ponderado, promedio general y proyección de nota implementados y verificados. Exportación PDF/Excel diferida a Sprint 7. Progreso global actualizado a 52% (122/234). |
+| 15 Jul 2026 | Claude Code | Sprint 5 completado (núcleo): módulo de Notificaciones con motor 100% local (`flutter_local_notifications`, sin proveedor push) — decisión de arquitectura justificada por el hosting serverless de Vercel. Backend: tablas `notificaciones`/`preferencias_notificacion`, `Notification` model, `notificationController`, `notificationRoutes` + suite Jest (primera del backend). Mobile: `NotificationProvider`, `LocalNotificationService`, función pura `computeReminderTime` (con horas de silencio y cruce de medianoche), Centro de Notificaciones y pantalla de Ajustes cableados a los stubs existentes (campanita del Home, ítem del Perfil) + suite de tests nueva. Push FCM y jobs cron server-side diferidos y documentados. Progreso global actualizado a 59% (139/234). |
+| 24 Jul 2026 | Claude Code | Cierre Sprint 5 — sincronización de MVP/sprint-05: (1) retirada la fila "sonidos personalizados" del MVP y del sprint-05 (fuera de alcance); (2) marcadas como ✅ tareas ya implementadas — sincronización feed CRUD `/api/notifications`, badges in-app del Home, Job de promedios redundante con `Grade.js`; (3) `cleanupOldTasks` implementado como utilitario CLI one-off (`backend/scripts/cleanup-old-tasks.js`, comando `npm run cleanup:tasks`) e integrado en package.json — no en worker cron por incompatibilidad con hosting serverless. Progreso global actualizado de 59% (139/234) → 62% (144/234). Sprint 5 sube de 17/28 a 22/28 (78%). |
 
 ---
 

@@ -8,17 +8,23 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../providers/schedule_provider.dart';
+import '../../providers/grade_provider.dart';
+import '../../providers/notification_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/task_service.dart';
 import '../../services/dashboard_service.dart';
+import '../../services/local_notification_service.dart';
 import '../../models/task.dart';
 import '../../models/schedule.dart';
+import '../../models/grade.dart';
 import '../tasks/tasks_screen.dart';
 import '../tasks/task_form_screen.dart';
 import '../pomodoro/pomodoro_screen.dart';
 import '../calendar/calendar_screen.dart';
 import '../profile/profile_screen.dart';
 import '../schedule/schedule_screen.dart';
+import '../grades/grades_screen.dart';
+import '../notifications/notifications_screen.dart';
 
 import 'dart:math' as math;
 
@@ -36,16 +42,51 @@ class _HomeScreenState extends State<HomeScreen> {
 
   String userName = '';
   List<Task> dashboardTasks = [];
+  List<Task> _allTasks = [];
   int pomodorosThisWeek = 0;
   bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadDashboardData();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<ScheduleProvider>().initialize();
+    final dashboardLoad = _loadDashboardData();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      await Future.wait([
+        dashboardLoad,
+        context.read<ScheduleProvider>().initialize(),
+        context.read<GradeProvider>().initialize(),
+        context.read<NotificationProvider>().initialize(),
+      ]);
+      await _scheduleNotificationReminders();
     });
+  }
+
+  /// Recalcula y reprograma los recordatorios locales (tareas y clases) con
+  /// las tareas/horario/preferencias más recientes. Se llama al abrir el
+  /// dashboard (antes SOLO se recalculaba si el usuario entraba a Ajustes de
+  /// Notificaciones y presionaba "Guardar" — si nunca lo hacía, nunca se
+  /// programaba ningún recordatorio) y también al hacer pull-to-refresh, para
+  /// que una tarea/clase recién creada o editada quede reflejada sin tener
+  /// que reiniciar la app. El permiso se pide aquí, en el momento en que ya
+  /// sabemos que hay tareas/clases reales para recordar — es "contexto
+  /// claro", no a ciegas en el arranque.
+  Future<void> _scheduleNotificationReminders() async {
+    if (!mounted) return;
+    final scheduleProvider = context.read<ScheduleProvider>();
+    final notificationProvider = context.read<NotificationProvider>();
+
+    await LocalNotificationService.requestPermission();
+    if (!mounted) return;
+    await notificationProvider.rescheduleAll(
+      tasks: _allTasks,
+      schedules: scheduleProvider.schedules,
+    );
+  }
+
+  Future<void> _onPullToRefresh() async {
+    await _loadDashboardData();
+    await _scheduleNotificationReminders();
   }
 
   Future<void> _loadDashboardData() async {
@@ -57,6 +98,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // Cargar tareas ordenadas por fecha y prioridad
       final allTasks = await _taskService.getTasks();
+      _allTasks = allTasks;
       allTasks.sort((a, b) {
         final dateCompare = a.fechaEntrega.compareTo(b.fechaEntrega);
         if (dateCompare != 0) return dateCompare;
@@ -132,7 +174,7 @@ class _HomeScreenState extends State<HomeScreen> {
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
-                onRefresh: _loadDashboardData,
+                onRefresh: _onPullToRefresh,
                 color: AppTheme.primaryGreen,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(
@@ -200,6 +242,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Sección Mi Horario
                       _buildScheduleSection(),
 
+                      const SizedBox(height: 32),
+
+                      // Sección Mis Calificaciones
+                      _buildGradesSection(),
+
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -261,14 +308,50 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ],
         ),
+        _buildNotificationsButton(),
+      ],
+    );
+  }
+
+  Widget _buildNotificationsButton() {
+    final unreadCount = context.watch<NotificationProvider>().unreadCount;
+
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
         IconButton(
           onPressed: () {
-            // TODO: Notificaciones
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const NotificationsScreen()),
+            ).then((_) => context.read<NotificationProvider>().refresh());
           },
           icon: const Icon(Icons.notifications_outlined),
           iconSize: 28,
           color: AppTheme.darkText,
         ),
+        if (unreadCount > 0)
+          Positioned(
+            right: 6,
+            top: 6,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
+              decoration: const BoxDecoration(
+                color: AppTheme.error,
+                shape: BoxShape.circle,
+              ),
+              child: Text(
+                unreadCount > 99 ? '99+' : '$unreadCount',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  color: AppTheme.white,
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -835,6 +918,205 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
             ),
+            const Icon(
+              Icons.chevron_right,
+              color: AppTheme.greyText,
+              size: 18,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Sección Mis Calificaciones ───────────────────────────────────────────
+
+  Widget _buildGradesSection() {
+    final provider = context.watch<GradeProvider>();
+    final summary  = provider.summary;
+    final materias = summary?.materias.take(3).toList() ?? [];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Mis Calificaciones',
+              style: GoogleFonts.inter(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: AppTheme.darkText,
+              ),
+            ),
+            TextButton(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const GradesScreen()),
+              ),
+              child: Text(
+                'Ver todo →',
+                style: GoogleFonts.inter(
+                  color: AppTheme.primaryGreen,
+                  fontWeight: FontWeight.w600,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (provider.isLoading && !provider.isInitialized)
+          _buildGradesSkeleton()
+        else if (materias.isEmpty)
+          _buildGradesEmpty()
+        else ...[
+          if (summary?.promedioGeneral != null) _buildGradesAverageBanner(summary!),
+          ...materias.map((m) => _buildGradeItem(m)),
+        ],
+      ],
+    );
+  }
+
+  Widget _buildGradesSkeleton() {
+    return Container(
+      height: 70,
+      decoration: BoxDecoration(
+        color: AppTheme.lightGrey,
+        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+      ),
+    );
+  }
+
+  Widget _buildGradesEmpty() {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const GradesScreen()),
+      ),
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(AppSizes.paddingM),
+        decoration: BoxDecoration(
+          color: AppTheme.lightGreen,
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+          border: Border.all(
+            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.grade_outlined,
+              color: AppTheme.primaryGreen,
+              size: 20,
+            ),
+            const SizedBox(width: 12),
+            Text(
+              'Aún no tienes calificaciones',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                color: AppTheme.primaryGreen,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGradesAverageBanner(GradesSummary summary) {
+    final promedio = summary.promedioGeneral!;
+    final color = Grade.colorForValor(promedio);
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: AppTheme.lightGreen.withValues(alpha: 0.3),
+        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+      ),
+      child: Row(
+        children: [
+          Text(
+            promedio.toStringAsFixed(2),
+            style: GoogleFonts.inter(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: color,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              'Promedio general',
+              style: GoogleFonts.inter(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.darkText,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGradeItem(SubjectAverage materia) {
+    final promedio = materia.promedio;
+    final color = promedio != null ? Grade.colorForValor(promedio) : AppTheme.greyText;
+
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const GradesScreen()),
+      ),
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSizes.paddingM,
+          vertical: 12,
+        ),
+        decoration: BoxDecoration(
+          color: AppTheme.surface,
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+          border: Border.all(color: AppTheme.outlineVariant),
+          boxShadow: AppTheme.softShadow,
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 4,
+              height: 36,
+              decoration: BoxDecoration(
+                color: materia.colorMateria,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                materia.materiaNombre,
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.darkText,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Text(
+              promedio != null ? promedio.toStringAsFixed(2) : '--',
+              style: GoogleFonts.inter(
+                fontSize: 14,
+                fontWeight: FontWeight.bold,
+                color: color,
+              ),
+            ),
+            const SizedBox(width: 4),
             const Icon(
               Icons.chevron_right,
               color: AppTheme.greyText,

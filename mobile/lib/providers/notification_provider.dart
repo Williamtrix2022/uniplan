@@ -1,0 +1,475 @@
+// ============================================
+// PROVIDER DE NOTIFICACIONES
+// ============================================
+
+import 'dart:convert';
+
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+import '../models/app_notification.dart';
+import '../models/notification_preferences.dart';
+import '../models/schedule.dart';
+import '../models/task.dart';
+import '../services/local_notification_service.dart';
+import '../services/notification_scheduler.dart';
+import '../services/notification_service.dart';
+
+/// Firma de `LocalNotificationService.cancel`, extraída para poder inyectar
+/// un fake en tests (ver comentario en el constructor de [NotificationProvider]).
+typedef CancelNotificationFn = Future<void> Function(int id);
+
+/// Firma de `LocalNotificationService.scheduleAt`, extraída por el mismo
+/// motivo que [CancelNotificationFn].
+typedef ScheduleNotificationFn = Future<void> Function({
+  required int id,
+  required String title,
+  required String body,
+  required DateTime scheduledDate,
+  required String channel,
+});
+
+class NotificationProvider extends ChangeNotifier {
+  static const _cacheKey = 'cached_notifications';
+  static const _preferencesCacheKey = 'cached_notification_preferences';
+
+  // El servicio (y las dos llamadas de programación local que usa
+  // `rescheduleAll`) son inyectables — a diferencia de otros providers del
+  // proyecto, que instancian/llaman su servicio directamente — para poder
+  // reemplazarlos por fakes/mocks en tests unitarios sin tocar disco/red ni
+  // el plugin real de notificaciones (`flutter_local_notifications`, que no
+  // tiene handler de canal de plataforma en un entorno de test unitario).
+  NotificationProvider({
+    NotificationService? service,
+    CancelNotificationFn? cancelNotification,
+    ScheduleNotificationFn? scheduleNotification,
+  })  : _service = service ?? NotificationService(),
+        _cancelNotification =
+            cancelNotification ?? LocalNotificationService.cancel,
+        _scheduleNotification =
+            scheduleNotification ?? LocalNotificationService.scheduleAt;
+
+  final NotificationService _service;
+  final CancelNotificationFn _cancelNotification;
+  final ScheduleNotificationFn _scheduleNotification;
+
+  List<AppNotification> _notifications = [];
+  int _unreadCount = 0;
+  NotificationPreferences _preferences = NotificationPreferences.defaults();
+
+  bool _isLoading = false;
+  bool _isPreferencesLoading = false;
+  String? _error;
+  bool _isInitialized = false;
+
+  // ── Getters ──────────────────────────────────────────────────────────────
+
+  List<AppNotification> get notifications => _notifications;
+  int get unreadCount => _unreadCount;
+  NotificationPreferences get preferences => _preferences;
+  bool get isLoading => _isLoading;
+  bool get isPreferencesLoading => _isPreferencesLoading;
+  String? get error => _error;
+  bool get isInitialized => _isInitialized;
+
+  /// Notificaciones de un tipo específico ('tarea' | 'clase' | 'sistema' |
+  /// 'general'), más recientes primero.
+  List<AppNotification> notificationsByTipo(String? tipo) {
+    final list = tipo == null || tipo.isEmpty
+        ? List<AppNotification>.from(_notifications)
+        : _notifications.where((n) => n.tipo == tipo).toList();
+    list.sort((a, b) => b.fechaCreacion.compareTo(a.fechaCreacion));
+    return list;
+  }
+
+  // ── Inicialización ───────────────────────────────────────────────────────
+
+  Future<void> initialize() async {
+    if (_isInitialized) return;
+    _isLoading = true;
+    notifyListeners();
+
+    await load(useCache: true);
+    await loadUnreadCount();
+    await loadPreferences();
+
+    _isInitialized = true;
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  // ── Carga de datos ───────────────────────────────────────────────────────
+
+  Future<void> load({bool useCache = false}) async {
+    if (!useCache) {
+      _isLoading = true;
+      notifyListeners();
+    }
+
+    try {
+      if (useCache) {
+        final cached = await _loadCache();
+        if (cached.isNotEmpty) {
+          _notifications = _filterByPreferences(cached);
+          notifyListeners();
+        }
+      }
+
+      _notifications = _filterByPreferences(await _service.getNotifications());
+      _error = null;
+      await _saveCache();
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadUnreadCount() async {
+    try {
+      _unreadCount = await _service.getUnreadCount();
+      _error = null;
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  Future<void> loadPreferences() async {
+    _isPreferencesLoading = true;
+    notifyListeners();
+
+    try {
+      final cached = await _loadPreferencesCache();
+      if (cached != null) {
+        _preferences = cached;
+        notifyListeners();
+      }
+
+      _preferences = await _service.getPreferences();
+      _error = null;
+      await _savePreferencesCache();
+    } catch (e) {
+      _error = e.toString();
+    } finally {
+      _isPreferencesLoading = false;
+      notifyListeners();
+    }
+  }
+
+  /// Filtra las notificaciones de tipo 'general'/'sistema' del listado
+  /// mostrado al usuario cuando `preferences.notifGenerales` está apagado.
+  /// Filtro puramente de presentación (client-side): las notificaciones
+  /// siguen existiendo en el backend, solo se ocultan de la UI mientras el
+  /// toggle esté en `false`.
+  List<AppNotification> _filterByPreferences(List<AppNotification> source) {
+    if (_preferences.notifGenerales) return source;
+    return source
+        .where((n) => n.tipo != 'general' && n.tipo != 'sistema')
+        .toList();
+  }
+
+  Future<void> refresh() async {
+    await load(useCache: false);
+    await loadUnreadCount();
+  }
+
+  // ── Acciones sobre notificaciones ────────────────────────────────────────
+
+  Future<void> markRead(int id) async {
+    final index = _notifications.indexWhere((n) => n.id == id);
+    if (index < 0) return;
+
+    final original = _notifications[index];
+    if (original.leida) return;
+
+    _notifications[index] = original.copyWith(leida: true);
+    if (_unreadCount > 0) _unreadCount--;
+    notifyListeners();
+
+    try {
+      await _service.markAsRead(id);
+      _error = null;
+      await _saveCache();
+    } catch (e) {
+      _notifications[index] = original;
+      _unreadCount++;
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<void> markAllRead() async {
+    final previousNotifications = List<AppNotification>.from(_notifications);
+    final previousUnreadCount = _unreadCount;
+
+    _notifications =
+        _notifications.map((n) => n.copyWith(leida: true)).toList();
+    _unreadCount = 0;
+    notifyListeners();
+
+    try {
+      await _service.markAllAsRead();
+      _error = null;
+      await _saveCache();
+    } catch (e) {
+      _notifications = previousNotifications;
+      _unreadCount = previousUnreadCount;
+      _error = e.toString();
+      notifyListeners();
+    }
+  }
+
+  Future<void> delete(int id) async {
+    await _service.deleteNotification(id);
+
+    final wasUnread =
+        _notifications.any((n) => n.id == id && !n.leida);
+    _notifications.removeWhere((n) => n.id == id);
+    if (wasUnread && _unreadCount > 0) _unreadCount--;
+
+    await _saveCache();
+    notifyListeners();
+  }
+
+  void clearError() {
+    _error = null;
+    notifyListeners();
+  }
+
+  // ── Preferencias ─────────────────────────────────────────────────────────
+
+  /// Persiste [preferences] en el backend y actualiza el estado local.
+  /// Si se proveen [tasks] y [schedules] (típicamente leídos desde
+  /// `TaskProvider`/`ScheduleProvider` por la pantalla que llama a este
+  /// método), reprograma todos los recordatorios locales para reflejar las
+  /// nuevas preferencias (minutos de anticipación, horario de silencio,
+  /// toggles por tipo).
+  Future<void> updatePreferences(
+    NotificationPreferences preferences, {
+    List<Task>? tasks,
+    List<Schedule>? schedules,
+  }) async {
+    final previous = _preferences;
+    _preferences = preferences;
+    notifyListeners();
+
+    try {
+      _preferences = await _service.updatePreferences(preferences);
+      _error = null;
+      await _savePreferencesCache();
+
+      if (tasks != null && schedules != null) {
+        await rescheduleAll(tasks: tasks, schedules: schedules);
+      }
+    } catch (e) {
+      _preferences = previous;
+      _error = e.toString();
+      notifyListeners();
+      rethrow;
+    } finally {
+      notifyListeners();
+    }
+  }
+
+  // ── Orquestación de recordatorios locales ───────────────────────────────
+
+  /// Recalcula y reprograma TODOS los recordatorios locales (tareas y
+  /// clases) a partir de las preferencias actuales. Segura de llamar
+  /// repetidamente: cada recordatorio usa un id determinístico
+  /// (`LocalNotificationService.idFor`), por lo que reprogramar cancela y
+  /// reemplaza en vez de duplicar.
+  ///
+  /// Nota: el modelo `Task` actual no expone un flag `recordatorio` por
+  /// tarea (solo `preferences.notifTareas` a nivel global), así que toda
+  /// tarea pendiente (no completada) con fecha de entrega es candidata a
+  /// recordatorio mientras el toggle esté activo.
+  ///
+  /// [now] es inyectable para permitir tests deterministas (mismo motivo que
+  /// `computeReminderTime`/`nextWeeklyOccurrence` en `notification_scheduler.dart`
+  /// lo aceptan como parámetro). Si no se provee, se usa `DateTime.now()` —
+  /// el comportamiento para callers existentes no cambia.
+  Future<void> rescheduleAll({
+    required List<Task> tasks,
+    required List<Schedule> schedules,
+    DateTime? now,
+  }) async {
+    final prefs = _preferences;
+    final effectiveNow = now ?? DateTime.now();
+    var feedChanged = false;
+
+    for (final task in tasks) {
+      final id = LocalNotificationService.idFor('tarea_${task.id}');
+      await _cancelNotification(id);
+
+      if (!prefs.notifTareas || task.completada) continue;
+
+      final reminder = computeReminderTime(
+        targetDateTime: task.fechaEntrega,
+        minutesBefore: prefs.minutosAntesTarea,
+        now: effectiveNow,
+        quietHoursStart: prefs.horaSilencioInicio,
+        quietHoursEnd: prefs.horaSilencioFin,
+      );
+      if (reminder == null) continue;
+
+      await _scheduleNotification(
+        id: id,
+        title: 'Tarea próxima a vencer',
+        body: task.titulo,
+        scheduledDate: reminder,
+        channel: LocalNotificationService.channelTareas,
+      );
+
+      if (await _ensureFeedEntry(
+        tipo: 'tarea',
+        titulo: 'Tarea próxima a vencer',
+        mensaje: task.titulo,
+        referenciaTipo: 'tarea',
+        referenciaId: task.id,
+        fechaProgramada: reminder,
+      )) {
+        feedChanged = true;
+      }
+    }
+
+    for (final schedule in schedules) {
+      final id = LocalNotificationService.idFor('clase_${schedule.id}');
+      await _cancelNotification(id);
+
+      if (!prefs.notifClases) continue;
+
+      final occurrence = nextWeeklyOccurrence(
+        dia: schedule.dia,
+        horaInicio: schedule.horaInicio,
+        now: effectiveNow,
+      );
+      if (occurrence == null) continue;
+
+      final reminder = computeReminderTime(
+        targetDateTime: occurrence,
+        minutesBefore: prefs.minutosAntesClase,
+        now: effectiveNow,
+        quietHoursStart: prefs.horaSilencioInicio,
+        quietHoursEnd: prefs.horaSilencioFin,
+      );
+      if (reminder == null) continue;
+
+      final body = schedule.materiaNombre != null
+          ? '${schedule.materiaNombre} · ${schedule.rangoHorario}'
+          : 'Tienes una clase pronto';
+
+      await _scheduleNotification(
+        id: id,
+        title: 'Clase próxima a iniciar',
+        body: body,
+        scheduledDate: reminder,
+        channel: LocalNotificationService.channelClases,
+      );
+
+      if (await _ensureFeedEntry(
+        tipo: 'clase',
+        titulo: 'Clase próxima a iniciar',
+        mensaje: body,
+        referenciaTipo: 'clase',
+        referenciaId: schedule.id,
+        fechaProgramada: reminder,
+      )) {
+        feedChanged = true;
+      }
+    }
+
+    if (feedChanged) notifyListeners();
+  }
+
+  /// Refleja un recordatorio recién programado en el feed persistido (para
+  /// que la campanita / Centro de Notificaciones lo muestren) — antes de
+  /// esto, el recordatorio SOLO existía como notificación local del sistema
+  /// operativo y nunca aparecía dentro de la app.
+  ///
+  /// No crea una entrada duplicada si ya existe una para la misma
+  /// referencia (`referenciaTipo` + `referenciaId`) — no se actualiza si los
+  /// datos cambiaron (p.ej. nuevo horario de anticipación), solo se evita
+  /// duplicar; ver nota de diseño en el historial del cambio.
+  ///
+  /// Es best-effort: si la creación falla (p.ej. sin conexión), no interrumpe
+  /// `rescheduleAll` — el recordatorio local ya quedó programado, que es lo
+  /// que realmente importa para que el usuario reciba el aviso.
+  ///
+  /// Devuelve `true` si se agregó una notificación nueva al estado en
+  /// memoria (para que el caller sepa si debe notificar a los listeners).
+  Future<bool> _ensureFeedEntry({
+    required String tipo,
+    required String titulo,
+    required String mensaje,
+    required String referenciaTipo,
+    required int referenciaId,
+    required DateTime fechaProgramada,
+  }) async {
+    final alreadyExists = _notifications.any((n) =>
+        n.referenciaTipo == referenciaTipo && n.referenciaId == referenciaId);
+    if (alreadyExists) return false;
+
+    try {
+      final created = await _service.createNotification(
+        tipo: tipo,
+        titulo: titulo,
+        mensaje: mensaje,
+        referenciaTipo: referenciaTipo,
+        referenciaId: referenciaId,
+        fechaProgramada: fechaProgramada,
+      );
+      _notifications = [created, ..._notifications];
+      if (!created.leida) _unreadCount++;
+      await _saveCache();
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ── Caché ─────────────────────────────────────────────────────────────────
+
+  Future<void> _saveCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final list = _notifications.map((n) => n.toJson()).toList();
+    await prefs.setString(_cacheKey, jsonEncode(list));
+  }
+
+  Future<List<AppNotification>> _loadCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final encoded = prefs.getString(_cacheKey);
+    if (encoded == null || encoded.isEmpty) return [];
+    try {
+      final decoded = jsonDecode(encoded) as List<dynamic>;
+      return decoded
+          .map((json) =>
+              AppNotification.fromJson(Map<String, dynamic>.from(json)))
+          .toList();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  Future<void> _savePreferencesCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString(
+      _preferencesCacheKey,
+      jsonEncode(_preferences.toJson()),
+    );
+  }
+
+  Future<NotificationPreferences?> _loadPreferencesCache() async {
+    final prefs = await SharedPreferences.getInstance();
+    final encoded = prefs.getString(_preferencesCacheKey);
+    if (encoded == null || encoded.isEmpty) return null;
+    try {
+      final decoded = jsonDecode(encoded) as Map<String, dynamic>;
+      return NotificationPreferences.fromJson(decoded);
+    } catch (_) {
+      return null;
+    }
+  }
+}
