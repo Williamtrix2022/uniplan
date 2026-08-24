@@ -4,27 +4,6 @@
 
 const Student = require('../models/Student');
 
-// ========== OBTENER TODOS LOS ESTUDIANTES ==========
-const getAllStudents = async (req, res) => {
-  try {
-    const students = await Student.findAll();
-
-    res.json({
-      success: true,
-      count: students.length,
-      data: students
-    });
-
-  } catch (error) {
-    console.error('Error en getAllStudents:', error);
-    res.status(500).json({
-      success: false,
-      message: 'Error al obtener estudiantes',
-      error: error.message
-    });
-  }
-};
-
 // ========== OBTENER UN ESTUDIANTE POR ID ==========
 const getStudentById = async (req, res) => {
   try {
@@ -36,6 +15,14 @@ const getStudentById = async (req, res) => {
       return res.status(404).json({
         success: false,
         message: 'Estudiante no encontrado'
+      });
+    }
+
+    // Validar que solo puede ver su propio perfil
+    if (req.user.id !== parseInt(id)) {
+      return res.status(403).json({
+        success: false,
+        message: 'No tienes permiso para ver este perfil'
       });
     }
 
@@ -158,7 +145,6 @@ const deleteStudent = async (req, res) => {
 };
 
 module.exports = {
-  getAllStudents,
   getStudentById,
   updateStudent,
   deleteStudent
