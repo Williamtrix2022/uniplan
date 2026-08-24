@@ -199,10 +199,23 @@ class _NotificationSettingsScreenState
           Switch(
             value: value,
             onChanged: onChanged,
+            // El track queda en un verde suave (solo el thumb usa el verde
+            // saturado de marca) para que la fila no "explote" en verde
+            // cuando varios switches están activos a la vez.
             thumbColor: WidgetStateProperty.resolveWith(
               (states) => states.contains(WidgetState.selected)
                   ? AppTheme.primaryGreen
                   : null,
+            ),
+            trackColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.selected)
+                  ? AppTheme.lightGreen
+                  : AppTheme.surfaceContainer,
+            ),
+            trackOutlineColor: WidgetStateProperty.resolveWith(
+              (states) => states.contains(WidgetState.selected)
+                  ? Colors.transparent
+                  : AppTheme.outlineVariant,
             ),
           ),
         ],
@@ -210,68 +223,132 @@ class _NotificationSettingsScreenState
     );
   }
 
+  static const List<int> _leadTimePresets = [10, 15, 30, 60, 1440];
+
+  String _formatLeadTime(int minutes) {
+    if (minutes == 60) return '1 h';
+    if (minutes == 1440) return '1 día';
+    return '$minutes min';
+  }
+
   Widget _buildLeadTimeSection() {
     return _card([
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 4),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Antes de una tarea',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            ),
-            Text(
-              '${_draft.minutosAntesTarea} min',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                color: AppTheme.primaryGreen,
-              ),
-            ),
-          ],
+      const Padding(
+        padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: Text(
+          'Antes de una tarea',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
         ),
       ),
-      Slider(
-        value: _draft.minutosAntesTarea.toDouble(),
-        min: 0,
-        max: 1440,
-        divisions: 96,
-        activeColor: AppTheme.primaryGreen,
-        label: '${_draft.minutosAntesTarea} min',
-        onChanged: (v) =>
-            setState(() => _draft = _draft.copyWith(minutosAntesTarea: v.round())),
-      ),
       Padding(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            const Text(
-              'Antes de una clase',
-              style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-            ),
-            Text(
-              '${_draft.minutosAntesClase} min',
-              style: const TextStyle(
-                fontWeight: FontWeight.w700,
-                color: AppTheme.primaryGreen,
-              ),
-            ),
-          ],
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: _buildLeadTimeChips(
+          value: _draft.minutosAntesTarea,
+          onChanged: (v) =>
+              setState(() => _draft = _draft.copyWith(minutosAntesTarea: v)),
         ),
       ),
-      Slider(
-        value: _draft.minutosAntesClase.toDouble(),
-        min: 0,
-        max: 180,
-        divisions: 36,
-        activeColor: AppTheme.primaryGreen,
-        label: '${_draft.minutosAntesClase} min',
-        onChanged: (v) =>
-            setState(() => _draft = _draft.copyWith(minutosAntesClase: v.round())),
+      const Divider(height: 1, color: AppTheme.surfaceContainerHighest),
+      const Padding(
+        padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: Text(
+          'Antes de una clase',
+          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
+        ),
       ),
-      const SizedBox(height: 8),
+      Padding(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+        child: _buildLeadTimeChips(
+          value: _draft.minutosAntesClase,
+          onChanged: (v) =>
+              setState(() => _draft = _draft.copyWith(minutosAntesClase: v)),
+        ),
+      ),
     ]);
+  }
+
+  Widget _buildLeadTimeChips({
+    required int value,
+    required ValueChanged<int> onChanged,
+  }) {
+    final isPreset = _leadTimePresets.contains(value);
+
+    Widget chip({
+      required String label,
+      required bool selected,
+      required VoidCallback onSelected,
+    }) {
+      return ChoiceChip(
+        label: Text(label),
+        selected: selected,
+        onSelected: (_) => onSelected(),
+        showCheckmark: false,
+        selectedColor: AppTheme.lightGreen,
+        backgroundColor: AppTheme.surfaceContainer,
+        labelStyle: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: selected ? AppTheme.primaryGreen : AppTheme.darkText,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSizes.radiusS),
+          side: BorderSide(
+            color: selected ? AppTheme.primaryGreen : AppTheme.outlineVariant,
+          ),
+        ),
+      );
+    }
+
+    return Wrap(
+      spacing: 8,
+      runSpacing: 8,
+      children: [
+        for (final preset in _leadTimePresets)
+          chip(
+            label: _formatLeadTime(preset),
+            selected: value == preset,
+            onSelected: () => onChanged(preset),
+          ),
+        chip(
+          label: isPreset ? 'Personalizado' : '${_formatLeadTime(value)} (personalizado)',
+          selected: !isPreset,
+          onSelected: () => _pickCustomLeadTime(current: value, onChanged: onChanged),
+        ),
+      ],
+    );
+  }
+
+  Future<void> _pickCustomLeadTime({
+    required int current,
+    required ValueChanged<int> onChanged,
+  }) async {
+    final controller = TextEditingController(text: current.toString());
+    final result = await showDialog<int>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Minutos personalizados'),
+        content: TextField(
+          controller: controller,
+          autofocus: true,
+          keyboardType: TextInputType.number,
+          decoration: const InputDecoration(suffixText: 'min'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancelar'),
+          ),
+          TextButton(
+            onPressed: () =>
+                Navigator.of(dialogContext).pop(int.tryParse(controller.text)),
+            child: const Text('Guardar'),
+          ),
+        ],
+      ),
+    );
+
+    if (result != null && result >= 0) {
+      onChanged(result);
+    }
   }
 
   Widget _buildQuietHoursSection() {

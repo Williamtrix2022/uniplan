@@ -25,6 +25,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   bool isLoading = true;
   bool isSaving = false;
+  int? _studentId;
 
   @override
   void initState() {
@@ -51,6 +52,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       final data = profile['data'];
 
       setState(() {
+        _studentId = data['id'];
         _nameController.text = data['nombre'] ?? '';
         _careerController.text = data['carrera'] ?? '';
         _universityController.text = data['universidad'] ?? '';
@@ -68,10 +70,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() => isSaving = true);
 
     try {
-      // TODO: Implementar actualización de perfil en el backend
-      // Por ahora solo mostramos mensaje de éxito
-      
-      await Future.delayed(const Duration(seconds: 1));
+      await _authService.updateProfile(
+        id: _studentId!,
+        name: _nameController.text,
+        career: _careerController.text,
+        university: _universityController.text,
+      );
 
       if (mounted) {
         Navigator.pop(context);

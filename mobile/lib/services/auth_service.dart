@@ -153,6 +153,33 @@ class AuthService {
     }
   }
 
+  // ========== ACTUALIZAR PERFIL ==========
+  Future<Map<String, dynamic>> updateProfile({
+    required int id,
+    required String name,
+    required String career,
+    required String university,
+  }) async {
+    try {
+      final response = await _apiService.put(
+        '${ApiConfig.students}/$id',
+        {
+          'nombre': name,
+          'carrera': career,
+          'universidad': university,
+        },
+      );
+
+      if (response['success'] == true) {
+        return response;
+      }
+
+      throw Exception(response['message'] ?? 'Error al actualizar perfil');
+    } catch (e) {
+      rethrow;
+    }
+  }
+
   // ========== LOGOUT ==========
   Future<void> logout() async {
     await _removeToken();

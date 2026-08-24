@@ -11,6 +11,7 @@ import '../../models/pomodoro.dart';
 import '../../models/task.dart';
 import '../../services/pomodoro_service.dart';
 import '../../services/task_service.dart';
+import '../profile/pomodoro_settings_screen.dart';
 
 enum PomodoroState { idle, working, resting, paused }
 
@@ -280,47 +281,6 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     );
   }
 
-  void _showSettingsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Configuración Pomodoro'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            ListTile(
-              title: const Text('Tiempo de trabajo'),
-              trailing: Text('$workDuration min'),
-              onTap: () {
-                // TODO: Selector de tiempo
-              },
-            ),
-            ListTile(
-              title: const Text('Descanso corto'),
-              trailing: Text('$breakDuration min'),
-              onTap: () {
-                // TODO: Selector de tiempo
-              },
-            ),
-            ListTile(
-              title: const Text('Descanso largo'),
-              trailing: Text('$longBreakDuration min'),
-              onTap: () {
-                // TODO: Selector de tiempo
-              },
-            ),
-          ],
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context),
-            child: const Text('Cerrar'),
-          ),
-        ],
-      ),
-    );
-  }
-
   String _formatTime(int seconds) {
     final minutes = seconds ~/ 60;
     final secs = seconds % 60;
@@ -364,7 +324,14 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         actions: [
           IconButton(
             icon: const Icon(Icons.settings_outlined),
-            onPressed: _showSettingsDialog,
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const PomodoroSettingsScreen(),
+                ),
+              );
+            },
           ),
         ],
       ),
