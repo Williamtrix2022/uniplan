@@ -9,8 +9,10 @@ import '../../models/task.dart';
 import '../../services/auth_service.dart';
 import '../../services/task_service.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/user_avatar.dart';
 import '../home/home_screen.dart';
 import '../calendar/calendar_screen.dart';
+import '../grades/grades_screen.dart';
 import '../profile/profile_screen.dart';
 import 'task_form_screen.dart';
 
@@ -432,7 +434,7 @@ class _TasksScreenState extends State<TasksScreen> {
       case 3:
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const ProfileScreen()),
+          MaterialPageRoute(builder: (context) => const GradesScreen()),
           (route) => false,
         );
         break;
@@ -468,34 +470,13 @@ class _TasksScreenState extends State<TasksScreen> {
             FutureBuilder<String>(
               future: _userNameFuture,
               builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return Container(
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: AppTheme.surfaceContainerHigh,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const SizedBox.shrink(),
-                  );
-                }
-                final name = snapshot.data!;
-                return Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppTheme.surfaceContainerHigh,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Center(
-                    child: Text(
-                      name[0].toUpperCase(),
-                      style: const TextStyle(
-                        color: AppTheme.darkText,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                return UserAvatar(
+                  name: snapshot.data ?? '',
+                  backgroundColor: AppTheme.surfaceContainerHigh,
+                  foregroundColor: AppTheme.darkText,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
                   ),
                 );
               },
