@@ -267,6 +267,67 @@ void main() {
     });
   });
 
+  group('notificationsByFilterGroup', () {
+    List<AppNotification> filterableNotifications() => [
+          AppNotification(
+            id: 1,
+            tipo: 'tarea',
+            titulo: 'Tarea 1',
+            mensaje: 'Mensaje 1',
+            fechaCreacion: DateTime(2026, 7, 15, 9, 0),
+          ),
+          AppNotification(
+            id: 2,
+            tipo: 'clase',
+            titulo: 'Clase 1',
+            mensaje: 'Mensaje 2',
+            fechaCreacion: DateTime(2026, 7, 15, 8, 0),
+          ),
+          AppNotification(
+            id: 3,
+            tipo: 'sistema',
+            titulo: 'Sistema 1',
+            mensaje: 'Mensaje 3',
+            fechaCreacion: DateTime(2026, 7, 15, 7, 0),
+          ),
+          AppNotification(
+            id: 4,
+            tipo: 'general',
+            titulo: 'General 1',
+            mensaje: 'Mensaje 4',
+            fechaCreacion: DateTime(2026, 7, 15, 6, 0),
+          ),
+        ];
+
+    setUp(() async {
+      when(() => mockService.getNotifications())
+          .thenAnswer((_) async => filterableNotifications());
+      await provider.load();
+    });
+
+    test('null group returns every notification', () {
+      final result = provider.notificationsByFilterGroup(null);
+      expect(result.map((n) => n.id).toSet(), {1, 2, 3, 4});
+    });
+
+    test('"clase" group returns only clase notifications', () {
+      final result = provider.notificationsByFilterGroup('clase');
+      expect(result.map((n) => n.id).toList(), [2]);
+    });
+
+    test('"eventos" group returns tarea + sistema + general combined, '
+        'excluding clase', () {
+      final result = provider.notificationsByFilterGroup('eventos');
+      expect(result.map((n) => n.id).toSet(), {1, 3, 4});
+      expect(result.any((n) => n.tipo == 'clase'), isFalse);
+    });
+
+    test('results are sorted most-recent-first', () {
+      final result = provider.notificationsByFilterGroup('eventos');
+      expect(result.map((n) => n.id).toList(), [1, 3, 4]);
+    });
+  });
+
   group('rescheduleAll', () {
     final fixedNow = DateTime(2026, 7, 15, 8, 0); // miércoles 08:00
 
@@ -311,29 +372,81 @@ void main() {
       );
 
       // Cancel-antes-de-reprogramar: se cancela SIEMPRE, sin importar si
-      // luego se reprograma o no.
+      // luego se reprograma o no. Las clases cancelan las 4 ids posibles
+      // (una por ocurrencia semanal), no solo una.
       expect(
         scheduler.cancelledIds,
         containsAll([
           LocalNotificationService.idFor('tarea_10'),
           LocalNotificationService.idFor('tarea_11'),
           LocalNotificationService.idFor('tarea_12'),
-          LocalNotificationService.idFor('clase_20'),
+          LocalNotificationService.idFor('clase_20_0'),
+          LocalNotificationService.idFor('clase_20_1'),
+          LocalNotificationService.idFor('clase_20_2'),
+          LocalNotificationService.idFor('clase_20_3'),
         ]),
       );
 
-      // Solo la tarea próxima a vencer y la clase deberían reprogramarse.
-      expect(scheduler.scheduled.length, 2);
+      // La tarea próxima a vencer (1) + las 4 ocurrencias semanales de la
+      // clase deberían reprogramarse.
+      expect(scheduler.scheduled.length, 5);
 
       final taskEntry = scheduler.scheduled
           .firstWhere((s) => s['id'] == LocalNotificationService.idFor('tarea_10'));
       expect(taskEntry['scheduledDate'], DateTime(2026, 7, 15, 9, 0));
       expect(taskEntry['channel'], LocalNotificationService.channelTareas);
 
-      final classEntry = scheduler.scheduled.firstWhere(
-          (s) => s['id'] == LocalNotificationService.idFor('clase_20'));
-      expect(classEntry['scheduledDate'], DateTime(2026, 7, 15, 8, 30));
-      expect(classEntry['channel'], LocalNotificationService.channelClases);
+      final classEntries = [0, 1, 2, 3]
+          .map((i) => scheduler.scheduled.firstWhere((s) =>
+              s['id'] == LocalNotificationService.idFor('clase_20_$i')))
+          .toList();
+      final expectedDates = [
+        DateTime(2026, 7, 15, 8, 30),
+        DateTime(2026, 7, 22, 8, 30),
+        DateTime(2026, 7, 29, 8, 30),
+        DateTime(2026, 8, 5, 8, 30),
+      ];
+      for (var i = 0; i < 4; i++) {
+        expect(classEntries[i]['scheduledDate'], expectedDates[i]);
+        expect(classEntries[i]['channel'], LocalNotificationService.channelClases);
+      }
+    });
+
+    test(
+        'schedules 4 distinct-id weekly occurrences per class but only creates '
+        'one feed entry (for the nearest occurrence)', () async {
+      await schedulingProvider.load(); // sin notificaciones previas en el feed
+      final classSchedule = _schedule(
+        id: 70,
+        dia: 'miercoles',
+        horaInicio: '09:00:00',
+      );
+
+      await schedulingProvider.rescheduleAll(
+        tasks: const [],
+        schedules: [classSchedule],
+        now: fixedNow,
+      );
+
+      expect(scheduler.scheduled.length, 4);
+      expect(
+        scheduler.scheduled.map((s) => s['id']).toSet(),
+        {
+          LocalNotificationService.idFor('clase_70_0'),
+          LocalNotificationService.idFor('clase_70_1'),
+          LocalNotificationService.idFor('clase_70_2'),
+          LocalNotificationService.idFor('clase_70_3'),
+        },
+      );
+
+      verify(() => mockService.createNotification(
+            tipo: 'clase',
+            titulo: any(named: 'titulo'),
+            mensaje: any(named: 'mensaje'),
+            referenciaTipo: 'clase',
+            referenciaId: 70,
+            fechaProgramada: any(named: 'fechaProgramada'),
+          )).called(1);
     });
 
     test(
@@ -380,11 +493,13 @@ void main() {
         now: fixedNow,
       );
 
-      expect(scheduler.scheduled.length, 1);
-      // 08:30 cae dentro de la ventana de silencio [08:00, 09:00) -> se
-      // empuja al final de la ventana en vez de cancelarse.
-      expect(scheduler.scheduled.first['scheduledDate'],
-          DateTime(2026, 7, 15, 9, 0));
+      // Las 4 ocurrencias semanales caen a las 08:30 de su respectivo día,
+      // dentro de la ventana de silencio [08:00, 09:00) -> las 4 se empujan
+      // al final de la ventana en vez de cancelarse.
+      expect(scheduler.scheduled.length, 4);
+      final nearest = scheduler.scheduled.firstWhere(
+          (s) => s['id'] == LocalNotificationService.idFor('clase_40_0'));
+      expect(nearest['scheduledDate'], DateTime(2026, 7, 15, 9, 0));
     });
 
     test(

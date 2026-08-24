@@ -161,3 +161,29 @@ DateTime? nextWeeklyOccurrence({
 
   return candidate;
 }
+
+/// Calcula las próximas [count] ocurrencias semanales de un bloque de
+/// horario, espaciadas 7 días entre sí a partir de la primera ocurrencia
+/// (la que devolvería `nextWeeklyOccurrence`).
+///
+/// Existe para que `rescheduleAll` pueda programar varias semanas de
+/// recordatorios de una sola vez — así la cobertura no depende de que el
+/// usuario abra la app cada semana (ver comentario en `rescheduleAll`).
+///
+/// Mismo contrato de entrada inválida que `nextWeeklyOccurrence`: si [dia]
+/// u [horaInicio] no son reconocibles, devuelve una lista vacía (aquí no
+/// hay un único valor ausente que representar con `null`).
+List<DateTime> nextWeeklyOccurrences({
+  required String dia,
+  required String horaInicio,
+  required DateTime now,
+  int count = 4,
+}) {
+  final first = nextWeeklyOccurrence(dia: dia, horaInicio: horaInicio, now: now);
+  if (first == null) return [];
+
+  return List<DateTime>.generate(
+    count,
+    (i) => first.add(Duration(days: 7 * i)),
+  );
+}

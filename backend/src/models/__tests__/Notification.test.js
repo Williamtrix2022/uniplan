@@ -124,4 +124,30 @@ describe('Notification model', () => {
       expect(result).toEqual({ id: 5, id_estudiante: 1, leida: 1 });
     });
   });
+
+  describe('findByStudent', () => {
+    it('filtra por fecha_programada (NULL o ya vencida) para no mostrar recordatorios futuros antes de tiempo', async () => {
+      pool.execute.mockResolvedValueOnce([[]]);
+
+      await Notification.findByStudent(1);
+
+      const query = pool.execute.mock.calls[0][0];
+      expect(query).toMatch(/fecha_programada/);
+      expect(query).toMatch(/fecha_programada\s+IS\s+NULL/i);
+      expect(query).toMatch(/fecha_programada\s*<=\s*NOW\(\)/i);
+    });
+  });
+
+  describe('getUnreadCount', () => {
+    it('filtra por fecha_programada (NULL o ya vencida) para no contar recordatorios futuros antes de tiempo', async () => {
+      pool.execute.mockResolvedValueOnce([[{ total: 0 }]]);
+
+      await Notification.getUnreadCount(1);
+
+      const query = pool.execute.mock.calls[0][0];
+      expect(query).toMatch(/fecha_programada/);
+      expect(query).toMatch(/fecha_programada\s+IS\s+NULL/i);
+      expect(query).toMatch(/fecha_programada\s*<=\s*NOW\(\)/i);
+    });
+  });
 });

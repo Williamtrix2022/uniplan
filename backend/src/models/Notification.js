@@ -147,6 +147,7 @@ class Notification {
       SELECT *
       FROM notificaciones
       WHERE id_estudiante = ? AND activo = TRUE
+        AND (fecha_programada IS NULL OR fecha_programada <= NOW())
     `;
     const params = [id_estudiante];
 
@@ -192,6 +193,7 @@ class Notification {
       SELECT COUNT(*) AS total
       FROM notificaciones
       WHERE id_estudiante = ? AND leida = FALSE AND activo = TRUE
+        AND (fecha_programada IS NULL OR fecha_programada <= NOW())
     `;
 
     try {
