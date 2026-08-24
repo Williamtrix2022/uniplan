@@ -33,6 +33,10 @@ class NotificationProvider extends ChangeNotifier {
   static const _cacheKey = 'cached_notifications';
   static const _preferencesCacheKey = 'cached_notification_preferences';
 
+  /// Cuántas ocurrencias semanales futuras de cada clase se programan por
+  /// corrida de `rescheduleAll` (ver comentario en el loop de clases).
+  static const _classOccurrencesPerReschedule = 4;
+
   // El servicio (y las dos llamadas de programación local que usa
   // `rescheduleAll`) son inyectables — a diferencia de otros providers del
   // proyecto, que instancian/llaman su servicio directamente — para poder
@@ -72,12 +76,25 @@ class NotificationProvider extends ChangeNotifier {
   String? get error => _error;
   bool get isInitialized => _isInitialized;
 
-  /// Notificaciones de un tipo específico ('tarea' | 'clase' | 'sistema' |
-  /// 'general'), más recientes primero.
-  List<AppNotification> notificationsByTipo(String? tipo) {
-    final list = tipo == null || tipo.isEmpty
-        ? List<AppNotification>.from(_notifications)
-        : _notifications.where((n) => n.tipo == tipo).toList();
+  /// Notificaciones agrupadas para los chips de filtro de la pantalla de
+  /// notificaciones, más recientes primero. [group] es uno de:
+  /// - `null` (o vacío): todas las notificaciones.
+  /// - `'clase'`: solo las de tipo `'clase'`.
+  /// - `'eventos'`: todo lo que NO es `'clase'` — agrupa `'tarea'` +
+  ///   `'sistema'` + `'general'` bajo un único filtro de presentación.
+  ///
+  /// Es puramente de UI: no cambia el campo `tipo` real de cada
+  /// notificación ni cómo se crean/persisten — `AppNotification.tipoLabel`
+  /// sigue mostrando el tipo granular original en cada tarjeta individual.
+  List<AppNotification> notificationsByFilterGroup(String? group) {
+    List<AppNotification> list;
+    if (group == null || group.isEmpty) {
+      list = List<AppNotification>.from(_notifications);
+    } else if (group == 'eventos') {
+      list = _notifications.where((n) => n.tipo != 'clase').toList();
+    } else {
+      list = _notifications.where((n) => n.tipo == group).toList();
+    }
     list.sort((a, b) => b.fechaCreacion.compareTo(a.fechaCreacion));
     return list;
   }
@@ -335,49 +352,68 @@ class NotificationProvider extends ChangeNotifier {
       }
     }
 
+    // Se programan hasta 4 ocurrencias semanales por clase (no solo la más
+    // próxima) en cada corrida de `rescheduleAll` — como el reschedule solo
+    // se dispara al abrir Home (ver `_scheduleNotificationReminders`), un
+    // usuario que no abre la app por varias semanas seguiría sin recibir
+    // recordatorios más allá de la primera clase. Con 4 semanas de alarmas
+    // ya programadas de una vez, la cobertura dura ~1 mes entre aperturas
+    // sin depender de infraestructura nueva (FCM/backend).
     for (final schedule in schedules) {
-      final id = LocalNotificationService.idFor('clase_${schedule.id}');
-      await _cancelNotification(id);
+      final occurrenceIds = List<int>.generate(
+        _classOccurrencesPerReschedule,
+        (i) => LocalNotificationService.idFor('clase_${schedule.id}_$i'),
+      );
+      for (final id in occurrenceIds) {
+        await _cancelNotification(id);
+      }
 
       if (!prefs.notifClases) continue;
 
-      final occurrence = nextWeeklyOccurrence(
+      final occurrences = nextWeeklyOccurrences(
         dia: schedule.dia,
         horaInicio: schedule.horaInicio,
         now: effectiveNow,
+        count: _classOccurrencesPerReschedule,
       );
-      if (occurrence == null) continue;
-
-      final reminder = computeReminderTime(
-        targetDateTime: occurrence,
-        minutesBefore: prefs.minutosAntesClase,
-        now: effectiveNow,
-        quietHoursStart: prefs.horaSilencioInicio,
-        quietHoursEnd: prefs.horaSilencioFin,
-      );
-      if (reminder == null) continue;
 
       final body = schedule.materiaNombre != null
           ? '${schedule.materiaNombre} · ${schedule.rangoHorario}'
           : 'Tienes una clase pronto';
 
-      await _scheduleNotification(
-        id: id,
-        title: 'Clase próxima a iniciar',
-        body: body,
-        scheduledDate: reminder,
-        channel: LocalNotificationService.channelClases,
-      );
+      for (var i = 0; i < occurrences.length; i++) {
+        final reminder = computeReminderTime(
+          targetDateTime: occurrences[i],
+          minutesBefore: prefs.minutosAntesClase,
+          now: effectiveNow,
+          quietHoursStart: prefs.horaSilencioInicio,
+          quietHoursEnd: prefs.horaSilencioFin,
+        );
+        if (reminder == null) continue;
 
-      if (await _ensureFeedEntry(
-        tipo: 'clase',
-        titulo: 'Clase próxima a iniciar',
-        mensaje: body,
-        referenciaTipo: 'clase',
-        referenciaId: schedule.id,
-        fechaProgramada: reminder,
-      )) {
-        feedChanged = true;
+        await _scheduleNotification(
+          id: occurrenceIds[i],
+          title: 'Clase próxima a iniciar',
+          body: body,
+          scheduledDate: reminder,
+          channel: LocalNotificationService.channelClases,
+        );
+
+        // Solo la ocurrencia más próxima (i == 0) refleja una entrada en el
+        // feed persistido — las otras 3 son únicamente alarmas del SO. Así
+        // el Centro de Notificaciones no se llena de filas futuras; la fila
+        // se refresca sola la próxima vez que `rescheduleAll` corra.
+        if (i == 0 &&
+            await _ensureFeedEntry(
+              tipo: 'clase',
+              titulo: 'Clase próxima a iniciar',
+              mensaje: body,
+              referenciaTipo: 'clase',
+              referenciaId: schedule.id,
+              fechaProgramada: reminder,
+            )) {
+          feedChanged = true;
+        }
       }
     }
 

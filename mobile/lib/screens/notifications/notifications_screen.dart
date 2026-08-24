@@ -23,10 +23,8 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
 
   static const List<MapEntry<String?, String>> _filters = [
     MapEntry(null, 'Todas'),
-    MapEntry('tarea', 'Tareas'),
     MapEntry('clase', 'Clases'),
-    MapEntry('sistema', 'Sistema'),
-    MapEntry('general', 'General'),
+    MapEntry('eventos', 'Eventos'),
   ];
 
   @override
@@ -41,7 +39,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
   Widget build(BuildContext context) {
     final provider = context.watch<NotificationProvider>();
     final isLoading = provider.isLoading && !provider.isInitialized;
-    final items = provider.notificationsByTipo(_tipoFilter);
+    final items = provider.notificationsByFilterGroup(_tipoFilter);
 
     return Scaffold(
       backgroundColor: AppTheme.white,
