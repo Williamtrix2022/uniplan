@@ -498,7 +498,8 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
         decoration: _selectorDecoration(context),
         padding: const EdgeInsets.all(16),
         child: Text(
-          'No tienes materias registradas. Crea una desde Tareas primero.',
+          'No tienes materias registradas. Crea una desde '
+          'Calificaciones > Gestionar materias.',
           style: textTheme.bodyMedium?.copyWith(color: AppTheme.greyText),
         ),
       );

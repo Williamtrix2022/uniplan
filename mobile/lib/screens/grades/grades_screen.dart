@@ -13,6 +13,7 @@ import '../../widgets/grades/average_indicator.dart';
 import '../../widgets/grades/grade_chart.dart';
 import '../../widgets/grades/subject_grades_list.dart';
 import 'grade_form_screen.dart';
+import 'manage_subjects_screen.dart';
 import 'subject_grades_screen.dart';
 
 class GradesScreen extends StatefulWidget {
@@ -209,13 +210,27 @@ class _GradesScreenState extends State<GradesScreen> {
             child: AverageIndicator(promedio: summary?.promedioGeneral),
           ),
           const SizedBox(height: 32),
-          Text(
-            'Mis materias',
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.darkText,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Mis materias',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.darkText,
+                ),
+              ),
+              IconButton(
+                onPressed: () => _navigateToManageSubjects(context),
+                icon: const Icon(Icons.tune_rounded),
+                color: AppTheme.greyText,
+                tooltip: 'Gestionar materias',
+                iconSize: 20,
+                padding: EdgeInsets.zero,
+                constraints: const BoxConstraints(),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           if (summary != null && summary.materias.isNotEmpty)
@@ -262,6 +277,13 @@ class _GradesScreenState extends State<GradesScreen> {
     );
     if (!mounted) return;
     if (result == true) provider.refresh();
+  }
+
+  Future<void> _navigateToManageSubjects(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ManageSubjectsScreen()),
+    );
   }
 
   Future<void> _navigateToSubject(
