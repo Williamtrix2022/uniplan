@@ -81,18 +81,6 @@ class Student {
     }
   }
 
-  // Obtener todos los estudiantes
-  static async findAll() {
-    const query = 'SELECT id, nombre, correo, carrera, universidad, fecha_registro FROM estudiantes WHERE activo = TRUE';
-    
-    try {
-      const [rows] = await queryWithRetry(query);
-      return rows;
-    } catch (error) {
-      throw error;
-    }
-  }
-
   // Actualizar estudiante
   static async update(id, studentData) {
     const { nombre, carrera, universidad } = studentData;

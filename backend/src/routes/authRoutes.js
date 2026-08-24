@@ -6,20 +6,21 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const authMiddleware = require('../middlewares/authMiddleware');
+const { authLimiter, resetLimiter } = require('../middlewares/rateLimiter');
 
 // ========== RUTAS PÚBLICAS (sin autenticación) ==========
 
 // POST /api/auth/register - Registrar nuevo estudiante
-router.post('/register', authController.register);
+router.post('/register', authLimiter, authController.register);
 
 // POST /api/auth/login - Iniciar sesión
-router.post('/login', authController.login);
+router.post('/login', authLimiter, authController.login);
 
 // POST /api/auth/forgot-password - Solicitar recuperación de contraseña
-router.post('/forgot-password', authController.forgotPassword);
+router.post('/forgot-password', resetLimiter, authController.forgotPassword);
 
 // POST /api/auth/reset-password - Restablecer contraseña
-router.post('/reset-password', authController.resetPassword);
+router.post('/reset-password', resetLimiter, authController.resetPassword);
 
 // ========== RUTAS PROTEGIDAS (requieren autenticación) ==========
 

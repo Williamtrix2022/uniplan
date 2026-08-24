@@ -10,9 +10,6 @@ const authMiddleware = require('../middlewares/authMiddleware');
 // ========== TODAS LAS RUTAS REQUIEREN AUTENTICACIÓN ==========
 router.use(authMiddleware);
 
-// GET /api/students - Obtener todos los estudiantes
-router.get('/', studentController.getAllStudents);
-
 // GET /api/students/:id - Obtener un estudiante específico
 router.get('/:id', studentController.getStudentById);
 
