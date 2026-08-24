@@ -1,0 +1,45 @@
+# ============================================================
+# UNIPLAN — MySQL local para desarrollo
+# ============================================================
+# Levanta una base de datos MySQL local con el esquema real ya aplicado
+# (backend/db/schema.sql), para no tener que tocar la base de datos de
+# producción (AlwaysData) mientras se desarrolla.
+#
+# Uso:
+#   docker compose up -d
+#
+# Después, en backend/.env apuntá a esta base local:
+#   DB_HOST=127.0.0.1
+#   DB_PORT=3307
+#   DB_USER=uniplan
+#   DB_PASSWORD=uniplan_dev
+#   DB_NAME=uniplan
+#
+# El puerto se mapea a 3307 (no 3306) para no chocar con un MySQL que ya
+# tengas corriendo localmente. El volumen `uniplan_mysql_data` persiste
+# los datos entre reinicios — para arrancar de cero: `docker compose down -v`.
+# ============================================================
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: uniplan_mysql_dev
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: root_dev_only
+      MYSQL_DATABASE: uniplan
+      MYSQL_USER: uniplan
+      MYSQL_PASSWORD: uniplan_dev
+    ports:
+      - "3307:3306"
+    volumes:
+      - uniplan_mysql_data:/var/lib/mysql
+      - ./backend/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_dev_only"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  uniplan_mysql_data:
