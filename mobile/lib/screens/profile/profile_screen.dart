@@ -542,6 +542,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     'Desarrollado por William Moya Santana',
                     style: TextStyle(fontSize: 12),
                   ),
+                  const Text(
+                    'Desarrollado por Jhon Quiceno',
+                    style: TextStyle(fontSize: 12),
+                  ),
                 ],
               );
             },

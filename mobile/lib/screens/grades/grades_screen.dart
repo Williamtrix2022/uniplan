@@ -139,7 +139,12 @@ class _GradesScreenState extends State<GradesScreen> {
       builder: (context, constraints) {
         return SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(AppSizes.paddingL),
+          padding: const EdgeInsets.fromLTRB(
+            AppSizes.paddingL,
+            AppSizes.paddingL,
+            AppSizes.paddingL,
+            96,
+          ),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: Center(
@@ -191,7 +196,12 @@ class _GradesScreenState extends State<GradesScreen> {
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(AppSizes.paddingL),
+      padding: const EdgeInsets.fromLTRB(
+        AppSizes.paddingL,
+        AppSizes.paddingL,
+        AppSizes.paddingL,
+        96,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
