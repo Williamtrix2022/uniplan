@@ -4,13 +4,24 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import 'package:table_calendar/table_calendar.dart';
 import '../../config/theme.dart';
 import '../../models/calendar_event.dart';
+import '../../models/schedule.dart';
+import '../../providers/schedule_provider.dart';
+import '../../services/auth_service.dart';
 import '../../services/calendar_service.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/segmented_pill_control.dart';
+import '../../widgets/common/user_avatar.dart';
+import '../../widgets/schedule/week_view.dart';
+import '../grades/grades_screen.dart';
 import '../home/home_screen.dart';
 import '../profile/profile_screen.dart';
+import '../schedule/class_detail_screen.dart';
+import '../schedule/schedule_day_view.dart';
+import '../schedule/schedule_form_screen.dart';
 import '../tasks/tasks_screen.dart';
 import 'event_form_screen.dart';
 
@@ -23,21 +34,28 @@ class CalendarScreen extends StatefulWidget {
 
 class _CalendarScreenState extends State<CalendarScreen> {
   final CalendarService _calendarService = CalendarService();
+  final AuthService _authService = AuthService();
 
   CalendarFormat _calendarFormat = CalendarFormat.month;
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   int _selectedIndex = 2;
+  int _viewIndex = 0; // 0 = Eventos, 1 = Horario
 
   Map<DateTime, List<CalendarEvent>> _events = {};
   List<CalendarEvent> _selectedEvents = [];
   bool isLoading = true;
+  late final Future<String> _userNameFuture;
 
   @override
   void initState() {
     super.initState();
+    _userNameFuture = _authService.getUserName();
     _selectedDay = _focusedDay;
     _loadEvents();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<ScheduleProvider>().initialize();
+    });
   }
 
   Future<void> _loadEvents() async {
@@ -161,23 +179,73 @@ class _CalendarScreenState extends State<CalendarScreen> {
     _loadEvents();
   }
 
+  Future<void> _navigateToScheduleForm({Schedule? schedule}) async {
+    final provider = context.read<ScheduleProvider>();
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ScheduleFormScreen(schedule: schedule),
+      ),
+    );
+    if (!mounted) return;
+    if (result == true) provider.refresh();
+  }
+
+  Future<void> _navigateToClassDetail(Schedule schedule) async {
+    final provider = context.read<ScheduleProvider>();
+    final result = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ClassDetailScreen(schedule: schedule),
+      ),
+    );
+    if (!mounted) return;
+    if (result == true) provider.refresh();
+  }
+
+  Future<void> _navigateToScheduleDayView(String day) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => ScheduleDayView(dia: day)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
+    final scheduleProvider = context.watch<ScheduleProvider>();
+
     return Scaffold(
       backgroundColor: AppTheme.surface,
       appBar: AppBar(
         backgroundColor: AppTheme.surface,
         elevation: 0,
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(1),
-          child: Container(height: 1, color: AppTheme.surfaceContainerHighest),
+          preferredSize: const Size.fromHeight(80),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                child: SegmentedPillControl(
+                  labels: const ['Eventos', 'Horario'],
+                  selectedIndex: _viewIndex,
+                  onChanged: (index) => setState(() => _viewIndex = index),
+                ),
+              ),
+              Container(height: 1, color: AppTheme.surfaceContainerHighest),
+            ],
+          ),
         ),
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back),
-        ),
+        leading: Navigator.canPop(context)
+            ? IconButton(
+                onPressed: () => Navigator.pop(context),
+                icon: const Icon(Icons.arrow_back),
+              )
+            : null,
         title: Text(
-          DateFormat('MMMM yyyy', 'es_ES').format(_focusedDay),
+          _viewIndex == 0
+              ? DateFormat('MMMM yyyy', 'es_ES').format(_focusedDay)
+              : 'Mi Horario',
           style: const TextStyle(
             color: AppTheme.darkText,
             fontSize: 18,
@@ -185,61 +253,97 @@ class _CalendarScreenState extends State<CalendarScreen> {
           ),
         ),
         actions: [
-          IconButton(
-            icon: const Icon(Icons.today),
-            color: AppTheme.darkText,
-            onPressed: _goToToday,
-          ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            color: AppTheme.darkText,
-            onPressed: () => _openEventForm(),
+          if (_viewIndex == 0) ...[
+            IconButton(
+              icon: const Icon(Icons.today),
+              color: AppTheme.darkText,
+              onPressed: _goToToday,
+            ),
+            IconButton(
+              icon: const Icon(Icons.add),
+              color: AppTheme.darkText,
+              onPressed: () => _openEventForm(),
+            ),
+          ],
+          Padding(
+            padding: const EdgeInsets.only(right: 16, left: 4),
+            child: FutureBuilder<String>(
+              future: _userNameFuture,
+              builder: (context, snapshot) {
+                return UserAvatar(
+                  name: snapshot.data ?? '',
+                  size: 36,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  ),
+                );
+              },
+            ),
           ),
         ],
       ),
-      body: isLoading
-          ? const Center(child: CircularProgressIndicator())
+      body: _viewIndex == 0
+          ? (isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : RefreshIndicator(
+                  onRefresh: _loadEvents,
+                  color: AppTheme.primaryGreen,
+                  child: SingleChildScrollView(
+                    physics: const AlwaysScrollableScrollPhysics(
+                      parent: ClampingScrollPhysics(),
+                    ),
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        _buildSummaryCard(),
+                        const SizedBox(height: 16),
+                        _buildCalendarCard(),
+                        const SizedBox(height: 24),
+                        _buildSectionHeader(),
+                        const SizedBox(height: 16),
+                        if (_selectedEvents.isEmpty)
+                          _buildEmptyState()
+                        else
+                          ..._selectedEvents.map(_buildEventCard),
+                      ],
+                    ),
+                  ),
+                ))
           : RefreshIndicator(
-              onRefresh: _loadEvents,
+              onRefresh: scheduleProvider.refresh,
               color: AppTheme.primaryGreen,
-              child: SingleChildScrollView(
-                physics: const AlwaysScrollableScrollPhysics(
-                  parent: ClampingScrollPhysics(),
-                ),
-                padding: const EdgeInsets.fromLTRB(16, 16, 16, 96),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _buildSummaryCard(),
-                    const SizedBox(height: 16),
-                    _buildCalendarCard(),
-                    const SizedBox(height: 24),
-                    _buildSectionHeader(),
-                    const SizedBox(height: 16),
-                    if (_selectedEvents.isEmpty)
-                      _buildEmptyState()
-                    else
-                      ..._selectedEvents.map(_buildEventCard),
-                  ],
-                ),
+              child: WeekView(
+                schedules: scheduleProvider.schedules,
+                conflictIds: scheduleProvider.conflictIds,
+                isLoading: scheduleProvider.isLoading,
+                onScheduleTap: (schedule) => _navigateToClassDetail(schedule),
+                onDaySelected: (day) => _navigateToScheduleDayView(day),
               ),
             ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: () => _openEventForm(),
-        backgroundColor: AppTheme.primaryGreen,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(100),
-        ),
-        icon: const Icon(Icons.add, color: AppTheme.white),
-        label: const Text(
-          'Nuevo evento',
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.bold,
-            color: AppTheme.white,
-          ),
-        ),
-      ),
+      floatingActionButton: _viewIndex == 0
+          ? FloatingActionButton.extended(
+              onPressed: () => _openEventForm(),
+              backgroundColor: AppTheme.primaryGreen,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(100),
+              ),
+              icon: const Icon(Icons.add, color: AppTheme.white),
+              label: const Text(
+                'Nuevo evento',
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.white,
+                ),
+              ),
+            )
+          : FloatingActionButton(
+              onPressed: () => _navigateToScheduleForm(),
+              backgroundColor: AppTheme.primaryGreen,
+              child: const Icon(Icons.add, color: AppTheme.white),
+            ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
@@ -273,7 +377,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       case 3:
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const ProfileScreen()),
+          MaterialPageRoute(builder: (context) => const GradesScreen()),
           (route) => false,
         );
         break;

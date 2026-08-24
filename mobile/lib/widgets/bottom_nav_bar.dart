@@ -45,8 +45,8 @@ class BottomNavBar extends StatelessWidget {
           label: 'Calendar',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person_2_outlined),
-          label: 'Perfil',
+          icon: Icon(Icons.grade_outlined),
+          label: 'Calificaciones',
         ),
       ],
     );
