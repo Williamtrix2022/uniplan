@@ -4,6 +4,8 @@
 
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
+import '../../models/pomodoro_preferences.dart';
+import '../../services/pomodoro_preferences_service.dart';
 import '../../widgets/common/custom_button.dart';
 
 class PomodoroSettingsScreen extends StatefulWidget {
@@ -21,6 +23,53 @@ class _PomodoroSettingsScreenState extends State<PomodoroSettingsScreen> {
   bool autoStartBreaks = true;
   bool autoStartPomodoros = false;
 
+  bool _isLoading = true;
+  bool _isSaving = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPreferences();
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await PomodoroPreferencesService.load();
+    if (!mounted) return;
+    setState(() {
+      workDuration = prefs.workDuration;
+      shortBreak = prefs.shortBreak;
+      longBreak = prefs.longBreak;
+      cyclesBeforeLongBreak = prefs.cyclesBeforeLongBreak;
+      autoStartBreaks = prefs.autoStartBreaks;
+      autoStartPomodoros = prefs.autoStartPomodoros;
+      _isLoading = false;
+    });
+  }
+
+  Future<void> _savePreferences() async {
+    setState(() => _isSaving = true);
+
+    await PomodoroPreferencesService.save(PomodoroPreferences(
+      workDuration: workDuration,
+      shortBreak: shortBreak,
+      longBreak: longBreak,
+      cyclesBeforeLongBreak: cyclesBeforeLongBreak,
+      autoStartBreaks: autoStartBreaks,
+      autoStartPomodoros: autoStartPomodoros,
+    ));
+
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Configuración guardada'),
+        backgroundColor: AppTheme.success,
+      ),
+    );
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -28,7 +77,11 @@ class _PomodoroSettingsScreenState extends State<PomodoroSettingsScreen> {
       appBar: AppBar(
         title: const Text('Configuración Pomodoro'),
       ),
-      body: SingleChildScrollView(
+      body: _isLoading
+          ? const Center(
+              child: CircularProgressIndicator(color: AppTheme.primaryGreen),
+            )
+          : SingleChildScrollView(
         padding: const EdgeInsets.all(AppSizes.paddingL),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -141,16 +194,8 @@ class _PomodoroSettingsScreenState extends State<PomodoroSettingsScreen> {
             // Botón guardar
             CustomButton(
               text: 'Guardar configuración',
-              onPressed: () {
-                // TODO: Guardar en SharedPreferences o backend
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(
-                    content: Text('Configuración guardada'),
-                    backgroundColor: AppTheme.success,
-                  ),
-                );
-                Navigator.pop(context);
-              },
+              isLoading: _isSaving,
+              onPressed: _savePreferences,
             ),
 
             const SizedBox(height: 12),

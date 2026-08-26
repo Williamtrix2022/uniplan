@@ -6,9 +6,11 @@ import 'dart:async';
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:intl/intl.dart';
 import '../../config/theme.dart';
 import '../../models/pomodoro.dart';
 import '../../models/task.dart';
+import '../../services/pomodoro_preferences_service.dart';
 import '../../services/pomodoro_service.dart';
 import '../../services/task_service.dart';
 import '../profile/pomodoro_settings_screen.dart';
@@ -27,11 +29,14 @@ class _PomodoroScreenState extends State<PomodoroScreen>
   final PomodoroService _pomodoroService = PomodoroService();
   final TaskService _taskService = TaskService();
 
-  // Configuración
+  // Configuración (se sobreescribe con lo guardado en
+  // PomodoroSettingsScreen apenas carga la pantalla — ver `_loadPreferences`)
   int workDuration = 25; // minutos
   int breakDuration = 5; // minutos
   int longBreakDuration = 15; // minutos
   int cyclesBeforeLongBreak = 4;
+  bool autoStartBreaks = true;
+  bool autoStartPomodoros = false;
 
   // Estado del timer
   PomodoroState currentState = PomodoroState.idle;
@@ -52,8 +57,28 @@ class _PomodoroScreenState extends State<PomodoroScreen>
   @override
   void initState() {
     super.initState();
+    _loadPreferences();
     _loadTasks();
     _setupAnimation();
+  }
+
+  Future<void> _loadPreferences() async {
+    final prefs = await PomodoroPreferencesService.load();
+    if (!mounted) return;
+    setState(() {
+      workDuration = prefs.workDuration;
+      breakDuration = prefs.shortBreak;
+      longBreakDuration = prefs.longBreak;
+      cyclesBeforeLongBreak = prefs.cyclesBeforeLongBreak;
+      autoStartBreaks = prefs.autoStartBreaks;
+      autoStartPomodoros = prefs.autoStartPomodoros;
+      // Solo reflejar la nueva duración de trabajo en el reloj si todavía no
+      // arrancó ninguna sesión — no queremos pisar un timer en curso.
+      if (currentState == PomodoroState.idle) {
+        secondsRemaining = workDuration * 60;
+        totalSeconds = workDuration * 60;
+      }
+    });
   }
 
   @override
@@ -80,9 +105,17 @@ class _PomodoroScreenState extends State<PomodoroScreen>
 
   Future<void> _loadTasks() async {
     try {
-      final tasks = await _taskService.getTasks(estado: 'pendiente');
+      // Sin filtro `estado` en la request: el backend no soporta pedir
+      // varios estados a la vez, así que se trae todo y se filtra acá —
+      // antes solo pedía 'pendiente', por lo que una tarea marcada "en
+      // progreso" desaparecía de este selector.
+      final tasks = await _taskService.getTasks();
+      final selectable = tasks
+          .where((t) => !t.isCompleted)
+          .toList()
+        ..sort((a, b) => a.fechaEntrega.compareTo(b.fechaEntrega));
       setState(() {
-        availableTasks = tasks;
+        availableTasks = selectable;
       });
     } catch (e) {
       print('Error loading tasks: $e');
@@ -189,14 +222,18 @@ class _PomodoroScreenState extends State<PomodoroScreen>
       // Mostrar notificación
       _showBreakDialog(isLongBreak);
 
-      // Auto-iniciar descanso
-      Future.delayed(const Duration(seconds: 2), () {
-        if (mounted && currentState == PomodoroState.resting) {
-          _startTimer();
-        }
-      });
+      // Auto-iniciar descanso, solo si el usuario lo activó en Automatización
+      if (autoStartBreaks) {
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted && currentState == PomodoroState.resting) {
+            _startTimer();
+          }
+        });
+      }
     } else if (currentState == PomodoroState.resting) {
       // Completar descanso
+      final completedAllCycles = currentCycle >= cyclesBeforeLongBreak;
+
       setState(() {
         currentState = PomodoroState.idle;
         secondsRemaining = workDuration * 60;
@@ -204,11 +241,23 @@ class _PomodoroScreenState extends State<PomodoroScreen>
       });
 
       // Si completó todos los ciclos
-      if (currentCycle >= cyclesBeforeLongBreak) {
+      if (completedAllCycles) {
         _saveSession(completed: true);
         _showCompletionDialog();
         setState(() {
           currentCycle = 0;
+        });
+      }
+
+      // Auto-iniciar el siguiente pomodoro, solo si el usuario lo activó en
+      // Automatización — antes de este fix esta opción no hacía nada: el
+      // timer siempre volvía a "idle" y esperaba a que el usuario tocara
+      // "Iniciar" a mano, sin importar el valor del switch.
+      if (autoStartPomodoros) {
+        Future.delayed(const Duration(seconds: 2), () {
+          if (mounted && currentState == PomodoroState.idle) {
+            _startTimer();
+          }
         });
       }
     }
@@ -330,7 +379,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                 MaterialPageRoute(
                   builder: (context) => const PomodoroSettingsScreen(),
                 ),
-              );
+              ).then((_) => _loadPreferences());
             },
           ),
         ],
@@ -699,40 +748,203 @@ class _TaskSelectorDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Seleccionar tarea'),
-      content: SizedBox(
-        width: double.maxFinite,
-        child: tasks.isEmpty
-            ? const Padding(
-                padding: EdgeInsets.all(20),
-                child: Text(
-                  'No hay tareas pendientes',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(color: AppTheme.greyText),
-                ),
-              )
-            : ListView.builder(
-                shrinkWrap: true,
-                itemCount: tasks.length,
-                itemBuilder: (context, index) {
-                  final task = tasks[index];
-                  return ListTile(
-                    title: Text(task.titulo),
-                    subtitle: task.materiaNombre != null
-                        ? Text(task.materiaNombre!)
-                        : null,
-                    onTap: () => Navigator.pop(context, task),
-                  );
-                },
-              ),
+    return Dialog(
+      backgroundColor: AppTheme.white,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppSizes.radiusL),
       ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.pop(context),
-          child: const Text('Cancelar'),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 460),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 20, 12, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const Icon(Icons.task_alt, color: AppTheme.primaryGreen),
+                  const SizedBox(width: 10),
+                  const Expanded(
+                    child: Text(
+                      'Elegí una tarea',
+                      style: TextStyle(
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.darkText,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () => Navigator.pop(context),
+                    icon: const Icon(Icons.close),
+                    color: AppTheme.greyText,
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Flexible(
+                child: tasks.isEmpty
+                    ? _buildEmptyState()
+                    : ListView.separated(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.only(top: 12, right: 8),
+                        itemCount: tasks.length,
+                        separatorBuilder: (_, __) => const SizedBox(height: 8),
+                        itemBuilder: (context, index) {
+                          final task = tasks[index];
+                          return _TaskSelectorTile(
+                            task: task,
+                            onTap: () => Navigator.pop(context, task),
+                          );
+                        },
+                      ),
+              ),
+            ],
+          ),
         ),
-      ],
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 28),
+      child: Column(
+        children: [
+          Icon(
+            Icons.check_circle_outline,
+            size: 48,
+            color: AppTheme.greyText.withValues(alpha: 0.5),
+          ),
+          const SizedBox(height: 12),
+          const Text(
+            'No hay tareas pendientes',
+            style: TextStyle(
+              color: AppTheme.darkText,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 4),
+          const Text(
+            'Creá una tarea para poder arrancar un Pomodoro',
+            textAlign: TextAlign.center,
+            style: TextStyle(color: AppTheme.greyText, fontSize: 12),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TaskSelectorTile extends StatelessWidget {
+  final Task task;
+  final VoidCallback onTap;
+
+  const _TaskSelectorTile({required this.task, required this.onTap});
+
+  Color get _priorityColor {
+    switch (task.prioridad) {
+      case 'alta':
+        return AppTheme.error;
+      case 'baja':
+        return AppTheme.success;
+      default:
+        return AppTheme.warning;
+    }
+  }
+
+  bool get _isOverdue {
+    final today = DateTime.now();
+    final todayStart = DateTime(today.year, today.month, today.day);
+    return task.fechaEntrega.isBefore(todayStart);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppTheme.lightGrey,
+      borderRadius: BorderRadius.circular(AppSizes.radiusM),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        onTap: onTap,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          child: Row(
+            children: [
+              Container(
+                width: 4,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _priorityColor,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      task.titulo,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.darkText,
+                        fontSize: 14,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        if (task.materiaNombre != null) ...[
+                          Flexible(
+                            child: Text(
+                              task.materiaNombre!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: AppTheme.greyText,
+                              ),
+                            ),
+                          ),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(horizontal: 6),
+                            child: Text('·',
+                                style: TextStyle(color: AppTheme.greyText)),
+                          ),
+                        ],
+                        Icon(
+                          Icons.calendar_today,
+                          size: 11,
+                          color: _isOverdue ? AppTheme.error : AppTheme.greyText,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          DateFormat('d MMM', 'es_ES').format(task.fechaEntrega),
+                          style: TextStyle(
+                            fontSize: 12,
+                            color:
+                                _isOverdue ? AppTheme.error : AppTheme.greyText,
+                            fontWeight: _isOverdue
+                                ? FontWeight.w600
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right,
+                  color: AppTheme.greyText, size: 20),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }
