@@ -4,7 +4,7 @@
 
 const Notification = require('../models/Notification');
 
-const VALID_TYPES = ['tarea', 'clase', 'sistema', 'general'];
+const VALID_TYPES = ['tarea', 'clase', 'evento', 'sistema', 'general'];
 
 // Obtener notificaciones del estudiante (con filtros opcionales ?tipo=&leida=)
 const getNotifications = async (req, res) => {

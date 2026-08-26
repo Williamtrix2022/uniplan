@@ -10,15 +10,19 @@ import '../../config/theme.dart';
 import '../../providers/schedule_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../services/auth_service.dart';
+import '../../services/calendar_service.dart';
 import '../../services/task_service.dart';
 import '../../services/dashboard_service.dart';
 import '../../services/local_notification_service.dart';
+import '../../services/pomodoro_preferences_service.dart';
+import '../../models/calendar_event.dart';
 import '../../models/task.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/common/user_avatar.dart';
 import '../tasks/tasks_screen.dart';
 import '../tasks/task_form_screen.dart';
 import '../pomodoro/pomodoro_screen.dart';
+import '../profile/pomodoro_settings_screen.dart';
 import '../calendar/calendar_screen.dart';
 import '../profile/profile_screen.dart';
 import '../grades/grades_screen.dart';
@@ -36,12 +40,14 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
   final TaskService _taskService = TaskService();
+  final CalendarService _calendarService = CalendarService();
   final DashboardService _dashboardService = DashboardService();
 
   String userName = '';
   List<Task> dashboardTasks = [];
   List<Task> _allTasks = [];
   int pomodorosThisWeek = 0;
+  int _pomodoroWorkDuration = 25;
   bool isLoading = true;
   int _selectedIndex = 0;
 
@@ -49,6 +55,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     final dashboardLoad = _loadDashboardData();
+    _loadPomodoroPreferences();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       await Future.wait([
@@ -92,31 +99,49 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  /// Recalcula y reprograma los recordatorios locales (tareas y clases) con
-  /// las tareas/horario/preferencias más recientes. Se llama al abrir el
-  /// dashboard (antes SOLO se recalculaba si el usuario entraba a Ajustes de
-  /// Notificaciones y presionaba "Guardar" — si nunca lo hacía, nunca se
-  /// programaba ningún recordatorio) y también al hacer pull-to-refresh, para
-  /// que una tarea/clase recién creada o editada quede reflejada sin tener
-  /// que reiniciar la app. El permiso se pide aquí, en el momento en que ya
-  /// sabemos que hay tareas/clases reales para recordar — es "contexto
-  /// claro", no a ciegas en el arranque.
+  /// Recalcula y reprograma los recordatorios locales (tareas, clases y
+  /// eventos de calendario) con las tareas/horario/eventos/preferencias más
+  /// recientes. Se llama al abrir el dashboard (antes SOLO se recalculaba
+  /// si el usuario entraba a Ajustes de Notificaciones y presionaba
+  /// "Guardar" — si nunca lo hacía, nunca se programaba ningún recordatorio)
+  /// y también al hacer pull-to-refresh, para que una tarea/clase/evento
+  /// recién creado o editado quede reflejado sin tener que reiniciar la
+  /// app. El permiso se pide aquí, en el momento en que ya sabemos que hay
+  /// tareas/clases/eventos reales para recordar — es "contexto claro", no a
+  /// ciegas en el arranque.
   Future<void> _scheduleNotificationReminders() async {
     if (!mounted) return;
     final scheduleProvider = context.read<ScheduleProvider>();
     final notificationProvider = context.read<NotificationProvider>();
+
+    List<CalendarEvent> events = const [];
+    try {
+      events = await _calendarService.getEvents();
+    } catch (e) {
+      // best-effort: si falla traer eventos, tareas y clases igual se reprograman
+    }
 
     await LocalNotificationService.requestPermission();
     if (!mounted) return;
     await notificationProvider.rescheduleAll(
       tasks: _allTasks,
       schedules: scheduleProvider.schedules,
+      events: events,
     );
   }
 
   Future<void> _onPullToRefresh() async {
     await _loadDashboardData();
     await _scheduleNotificationReminders();
+  }
+
+  /// Refleja en la card del Home la duración de trabajo configurada en
+  /// PomodoroSettingsScreen — antes de esto la card mostraba "25:00" fijo
+  /// sin importar lo que el usuario guardara ahí.
+  Future<void> _loadPomodoroPreferences() async {
+    final prefs = await PomodoroPreferencesService.load();
+    if (!mounted) return;
+    setState(() => _pomodoroWorkDuration = prefs.workDuration);
   }
 
   Future<void> _loadDashboardData() async {
@@ -156,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
           task.fechaEntrega.month,
           task.fechaEntrega.day,
         );
-        final isCompleted = task.completada || task.estado == 'completada';
+        final isCompleted = task.isCompleted;
         final isOverdue = due.isBefore(dayStart);
         return !isCompleted && !isOverdue;
       }).toList();
@@ -433,18 +458,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Tiempo y texto
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
+                  children: [
                     Text(
-                      '25:00',
-                      style: TextStyle(
+                      '${_pomodoroWorkDuration.toString().padLeft(2, '0')}:00',
+                      style: const TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.darkText,
                         height: 1,
                       ),
                     ),
-                    SizedBox(height: 4),
-                    Text(
+                    const SizedBox(height: 4),
+                    const Text(
                       'FOCUS SESSION',
                       style: TextStyle(
                         fontSize: 12,
@@ -473,7 +498,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     MaterialPageRoute(
                       builder: (context) => const PomodoroScreen(),
                     ),
-                  ).then((_) => _loadDashboardData());
+                  ).then((_) {
+                    _loadDashboardData();
+                    _loadPomodoroPreferences();
+                  });
                 },
                 icon: const Icon(Icons.play_arrow, size: 20),
                 label: const Text('Start'),
@@ -500,7 +528,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: IconButton(
                   onPressed: () {
-                    // TODO: Configurar Pomodoro
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PomodoroSettingsScreen(),
+                      ),
+                    ).then((_) => _loadPomodoroPreferences());
                   },
                   icon: const Icon(Icons.settings_outlined),
                   color: AppTheme.darkText,
@@ -585,6 +618,7 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(AppSizes.radiusL),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Icon(
               Icons.check_circle_outline,
@@ -594,6 +628,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 16),
             Text(
               'No tienes tareas activas',
+              textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -603,6 +638,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 8),
             Text(
               'No hay pendientes vigentes por mostrar',
+              textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 14,
                 color: AppTheme.onSurfaceVariant,
@@ -645,7 +681,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 DateTime.now().month,
                 DateTime.now().day,
               )) &&
-            !task.completada;
+            !task.isCompleted;
     final sideColor = _getTaskStatusColor(task, isOverdue);
 
     return GestureDetector(
@@ -792,7 +828,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Color _getTaskStatusColor(Task task, bool isOverdue) {
     if (isOverdue) return AppTheme.error;
-    if (task.completada || task.estado == 'completada') {
+    if (task.isCompleted) {
       return AppTheme.onSurfaceVariant.withOpacity(0.4);
     }
     if (task.estado == 'en_progreso') return AppTheme.info;

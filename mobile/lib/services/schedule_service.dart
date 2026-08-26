@@ -79,7 +79,8 @@ class ScheduleService {
     }
   }
 
-  // Obtener un bloque por ID
+  // Obtener un bloque por ID. Devuelve null si ya no existe (404) — el
+  // caller no debería tratar "no encontrado" como un error de red.
   Future<Schedule?> getScheduleById(int id) async {
     try {
       final response = await _apiService.get('${ApiConfig.schedules}/$id');
@@ -89,7 +90,8 @@ class ScheduleService {
       }
 
       return null;
-    } catch (e) {
+    } on ApiException catch (e) {
+      if (e.statusCode == 404) return null;
       rethrow;
     }
   }

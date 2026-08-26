@@ -46,6 +46,23 @@ class CalendarService {
     }
   }
 
+  // Obtener un evento por ID. Devuelve null si ya no existe (404) — el
+  // caller no debería tratar "no encontrado" como un error de red.
+  Future<CalendarEvent?> getEventById(int id) async {
+    try {
+      final response = await _apiService.get('${ApiConfig.calendar}/$id');
+
+      if (response['success'] == true && response['data'] != null) {
+        return CalendarEvent.fromJson(response['data']);
+      }
+
+      return null;
+    } on ApiException catch (e) {
+      if (e.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
   // Obtener eventos de hoy
   Future<List<CalendarEvent>> getTodayEvents() async {
     try {

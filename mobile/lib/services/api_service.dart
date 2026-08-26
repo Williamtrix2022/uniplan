@@ -141,16 +141,19 @@ class ApiService {
     if (statusCode >= 200 && statusCode < 300) {
       return data;
     } else if (statusCode == 401) {
-      throw ApiException('No autorizado. Por favor inicia sesión nuevamente.');
+      throw ApiException('No autorizado. Por favor inicia sesión nuevamente.',
+          statusCode: statusCode);
     } else if (statusCode == 403) {
-      throw ApiException('No tienes permisos para realizar esta acción.');
+      throw ApiException('No tienes permisos para realizar esta acción.',
+          statusCode: statusCode);
     } else if (statusCode == 404) {
-      throw ApiException('Recurso no encontrado.');
+      throw ApiException('Recurso no encontrado.', statusCode: statusCode);
     } else if (statusCode >= 500) {
-      throw ApiException('Error del servidor. Intenta más tarde.');
+      throw ApiException('Error del servidor. Intenta más tarde.',
+          statusCode: statusCode);
     } else {
       final message = data['message'] ?? 'Error desconocido';
-      throw ApiException(message);
+      throw ApiException(message, statusCode: statusCode);
     }
   }
 
@@ -171,7 +174,8 @@ class ApiService {
 // ========== EXCEPCIÓN PERSONALIZADA ==========
 class ApiException implements Exception {
   final String message;
-  ApiException(this.message);
+  final int? statusCode;
+  ApiException(this.message, {this.statusCode});
 
   @override
   String toString() => message;

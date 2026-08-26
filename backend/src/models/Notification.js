@@ -52,7 +52,7 @@ class Notification {
       CREATE TABLE IF NOT EXISTS notificaciones (
         id INT AUTO_INCREMENT PRIMARY KEY,
         id_estudiante INT NOT NULL,
-        tipo ENUM('tarea','clase','sistema','general') NOT NULL DEFAULT 'general',
+        tipo ENUM('tarea','clase','evento','sistema','general') NOT NULL DEFAULT 'general',
         titulo VARCHAR(150) NOT NULL,
         mensaje TEXT NULL,
         leida BOOLEAN DEFAULT FALSE,
@@ -94,7 +94,19 @@ class Notification {
     }
   }
 
-  // Crear nueva notificación
+  // Crear (o actualizar) una notificación de recordatorio.
+  //
+  // Es un upsert por referencia (`referencia_tipo` + `referencia_id`) a
+  // propósito, no un INSERT puro: `rescheduleAll` (cliente) decide cuándo
+  // llamar esto basándose en las notificaciones que tiene cargadas, pero
+  // `findByStudent`/`getUnreadCount` OCULTAN toda fila cuya
+  // `fecha_programada` todavía esté en el futuro — así que el cliente puede
+  // perfectamente no saber que ya existe una fila para esa misma referencia
+  // (la pidió, pero el backend se la escondió por no haber llegado su hora
+  // todavía). Sin este upsert, cada `rescheduleAll` antes de que el
+  // recordatorio se hiciera visible generaba una fila nueva y duplicada.
+  // Esta es la única fuente de verdad real sobre si "ya existe": no filtra
+  // por fecha, mira TODA fila activa para esa referencia.
   static async create(data) {
     const {
       id_estudiante,
@@ -105,6 +117,70 @@ class Notification {
       referencia_id,
       fecha_programada
     } = data;
+
+    if (referencia_tipo && referencia_id) {
+      const [existingRows] = await queryWithRetry(
+        `SELECT * FROM notificaciones
+         WHERE id_estudiante = ? AND referencia_tipo = ? AND referencia_id = ? AND activo = TRUE
+         LIMIT 1`,
+        [id_estudiante, referencia_tipo, referencia_id]
+      );
+
+      if (existingRows[0]) {
+        const existing = existingRows[0];
+
+        // `rescheduleAll` (cliente) llama esto en CADA apertura de la app,
+        // incluso cuando el recordatorio vigente es el mismo de siempre (la
+        // tarea/clase no avanzó a su próxima ocurrencia todavía). Si
+        // reseteáramos `leida` en cada llamada, una notificación que el
+        // usuario ya vio volvía a aparecer como no leída con solo reabrir
+        // la app — el bug reportado ("las notificaciones que ya había
+        // visto me vuelven a salir"). Comparar `fecha_programada` es la
+        // forma de distinguir "sigue siendo el mismo aviso" de "esto es
+        // una ocurrencia genuinamente nueva" (p.ej. la clase de la semana
+        // que viene, o el aviso del mismo día reemplazando al del día
+        // anterior).
+        const existingFecha = existing.fecha_programada
+          ? new Date(existing.fecha_programada).getTime()
+          : null;
+        const newFecha = fecha_programada
+          ? new Date(fecha_programada).getTime()
+          : null;
+
+        if (existingFecha === newFecha) {
+          return {
+            id: existing.id,
+            id_estudiante,
+            tipo: existing.tipo,
+            titulo: existing.titulo,
+            mensaje: existing.mensaje,
+            leida: !!existing.leida,
+            referencia_tipo,
+            referencia_id,
+            fecha_programada: existing.fecha_programada
+          };
+        }
+
+        await queryWithRetry(
+          `UPDATE notificaciones
+           SET titulo = ?, mensaje = ?, fecha_programada = ?, leida = FALSE
+           WHERE id = ?`,
+          [titulo, mensaje || null, fecha_programada || null, existing.id]
+        );
+
+        return {
+          id: existing.id,
+          id_estudiante,
+          tipo: tipo || 'general',
+          titulo,
+          mensaje: mensaje || null,
+          leida: false,
+          referencia_tipo,
+          referencia_id,
+          fecha_programada: fecha_programada || null
+        };
+      }
+    }
 
     const query = `
       INSERT INTO notificaciones

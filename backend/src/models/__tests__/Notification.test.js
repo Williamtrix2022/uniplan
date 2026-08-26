@@ -125,6 +125,145 @@ describe('Notification model', () => {
     });
   });
 
+  describe('create', () => {
+    it('inserta una fila nueva cuando no hay ninguna activa para esa referencia', async () => {
+      pool.execute
+        // 1) SELECT de existencia -> no hay ninguna
+        .mockResolvedValueOnce([[]])
+        // 2) INSERT
+        .mockResolvedValueOnce([{ insertId: 10 }]);
+
+      const result = await Notification.create({
+        id_estudiante: 1,
+        tipo: 'tarea',
+        titulo: 'Tarea próxima a vencer',
+        mensaje: 'Entrega de laboratorio',
+        referencia_tipo: 'tarea',
+        referencia_id: 5,
+        fecha_programada: '2026-08-25 23:00:00'
+      });
+
+      expect(pool.execute).toHaveBeenCalledTimes(2);
+      const insertCall = pool.execute.mock.calls[1];
+      expect(insertCall[0]).toMatch(/INSERT INTO notificaciones/);
+      expect(result).toEqual({
+        id: 10,
+        id_estudiante: 1,
+        tipo: 'tarea',
+        titulo: 'Tarea próxima a vencer',
+        mensaje: 'Entrega de laboratorio',
+        leida: false,
+        referencia_tipo: 'tarea',
+        referencia_id: 5,
+        fecha_programada: '2026-08-25 23:00:00'
+      });
+    });
+
+    it('actualiza la fila existente (upsert) y resetea leida cuando la ocurrencia '
+      + 'es genuinamente nueva (fecha_programada distinta a la guardada), aunque el '
+      + 'cliente no la haya visto (oculta por fecha_programada futura)', async () => {
+      pool.execute
+        // 1) SELECT de existencia -> ya existe la fila 7, para la ocurrencia de la
+        //    semana PASADA (el cliente no la vio porque findByStudent la oculta
+        //    hasta que llegue su fecha_programada, pero sigue activa)
+        .mockResolvedValueOnce([[{
+          id: 7,
+          leida: 0,
+          fecha_programada: '2026-08-19 08:30:00'
+        }]])
+        // 2) UPDATE
+        .mockResolvedValueOnce([{ affectedRows: 1 }]);
+
+      const result = await Notification.create({
+        id_estudiante: 1,
+        tipo: 'clase',
+        titulo: 'Clase próxima a iniciar',
+        mensaje: 'Cálculo · 09:00 - 10:00',
+        referencia_tipo: 'clase',
+        referencia_id: 90,
+        fecha_programada: '2026-08-26 08:30:00'
+      });
+
+      expect(pool.execute).toHaveBeenCalledTimes(2);
+      const updateCall = pool.execute.mock.calls[1];
+      expect(updateCall[0]).toMatch(/UPDATE notificaciones/);
+      expect(updateCall[1]).toEqual([
+        'Clase próxima a iniciar',
+        'Cálculo · 09:00 - 10:00',
+        '2026-08-26 08:30:00',
+        7
+      ]);
+      // No se llama a INSERT en absoluto -- no hay una tercera query.
+      expect(pool.execute).toHaveBeenCalledTimes(2);
+      expect(result).toEqual({
+        id: 7,
+        id_estudiante: 1,
+        tipo: 'clase',
+        titulo: 'Clase próxima a iniciar',
+        mensaje: 'Cálculo · 09:00 - 10:00',
+        leida: false,
+        referencia_tipo: 'clase',
+        referencia_id: 90,
+        fecha_programada: '2026-08-26 08:30:00'
+      });
+    });
+
+    it('NO toca la fila ni resetea leida cuando fecha_programada es igual a la '
+      + 'guardada — mismo aviso de siempre, evita que una notificación ya vista '
+      + 'vuelva a aparecer como no leída solo por reabrir la app', async () => {
+      pool.execute
+        // 1) SELECT de existencia -> misma fecha_programada que se está por enviar,
+        //    y ya estaba leída
+        .mockResolvedValueOnce([[{
+          id: 8,
+          tipo: 'tarea',
+          titulo: 'Tarea próxima a vencer',
+          mensaje: 'Entrega de laboratorio vence mañana',
+          leida: 1,
+          fecha_programada: '2026-08-25 20:00:00'
+        }]]);
+
+      const result = await Notification.create({
+        id_estudiante: 1,
+        tipo: 'tarea',
+        titulo: 'Tarea próxima a vencer',
+        mensaje: 'Entrega de laboratorio vence mañana',
+        referencia_tipo: 'tarea',
+        referencia_id: 40,
+        fecha_programada: '2026-08-25 20:00:00'
+      });
+
+      // Solo el SELECT de existencia -- ningún UPDATE ni INSERT.
+      expect(pool.execute).toHaveBeenCalledTimes(1);
+      expect(result).toEqual({
+        id: 8,
+        id_estudiante: 1,
+        tipo: 'tarea',
+        titulo: 'Tarea próxima a vencer',
+        mensaje: 'Entrega de laboratorio vence mañana',
+        leida: true,
+        referencia_tipo: 'tarea',
+        referencia_id: 40,
+        fecha_programada: '2026-08-25 20:00:00'
+      });
+    });
+
+    it('inserta directo sin chequear duplicados cuando no hay referencia_tipo/referencia_id '
+      + '(notificaciones generales/sistema sin entidad asociada)', async () => {
+      pool.execute.mockResolvedValueOnce([{ insertId: 20 }]);
+
+      await Notification.create({
+        id_estudiante: 1,
+        tipo: 'general',
+        titulo: 'Aviso del sistema',
+        mensaje: 'Mantenimiento programado'
+      });
+
+      expect(pool.execute).toHaveBeenCalledTimes(1);
+      expect(pool.execute.mock.calls[0][0]).toMatch(/INSERT INTO notificaciones/);
+    });
+  });
+
   describe('findByStudent', () => {
     it('filtra por fecha_programada (NULL o ya vencida) para no mostrar recordatorios futuros antes de tiempo', async () => {
       pool.execute.mockResolvedValueOnce([[]]);

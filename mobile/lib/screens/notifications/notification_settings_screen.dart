@@ -6,10 +6,12 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
 import '../../config/theme.dart';
+import '../../models/calendar_event.dart';
 import '../../models/notification_preferences.dart';
 import '../../providers/notification_provider.dart';
 import '../../providers/schedule_provider.dart';
 import '../../providers/task_provider.dart';
+import '../../services/calendar_service.dart';
 import '../../services/local_notification_service.dart';
 import '../../widgets/common/custom_button.dart';
 
@@ -23,6 +25,8 @@ class NotificationSettingsScreen extends StatefulWidget {
 
 class _NotificationSettingsScreenState
     extends State<NotificationSettingsScreen> {
+  final CalendarService _calendarService = CalendarService();
+
   late NotificationPreferences _draft;
   bool _loadedDraft = false;
   bool _isSaving = false;
@@ -71,7 +75,7 @@ class _NotificationSettingsScreenState
                   const SizedBox(height: 12),
                   _buildTypesSection(),
                   const SizedBox(height: 24),
-                  _buildSectionLabel('TIEMPO DE ANTICIPACIÓN'),
+                  _buildSectionLabel('TIEMPO DE ANTICIPACIÓN (CLASES)'),
                   const SizedBox(height: 12),
                   _buildLeadTimeSection(),
                   const SizedBox(height: 24),
@@ -120,7 +124,7 @@ class _NotificationSettingsScreenState
       _buildSwitchItem(
         icon: Icons.assignment_outlined,
         title: 'Tareas',
-        subtitle: 'Avisos antes de la fecha de entrega',
+        subtitle: 'Aviso el día anterior y el mismo día de la entrega',
         value: _draft.notifTareas,
         onChanged: (v) => setState(() => _draft = _draft.copyWith(notifTareas: v)),
       ),
@@ -232,23 +236,11 @@ class _NotificationSettingsScreenState
   }
 
   Widget _buildLeadTimeSection() {
+    // Las tareas ya no tienen anticipación configurable acá: siempre avisan
+    // el día anterior y el mismo día de la entrega (ver `rescheduleAll` en
+    // `NotificationProvider`) — este selector queda solo para clases, que sí
+    // tienen una hora de inicio real.
     return _card([
-      const Padding(
-        padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
-        child: Text(
-          'Antes de una tarea',
-          style: TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-        ),
-      ),
-      Padding(
-        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-        child: _buildLeadTimeChips(
-          value: _draft.minutosAntesTarea,
-          onChanged: (v) =>
-              setState(() => _draft = _draft.copyWith(minutosAntesTarea: v)),
-        ),
-      ),
-      const Divider(height: 1, color: AppTheme.surfaceContainerHighest),
       const Padding(
         padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
         child: Text(
@@ -452,10 +444,19 @@ class _NotificationSettingsScreenState
       final tasks = context.read<TaskProvider>().tasks;
       final schedules = context.read<ScheduleProvider>().schedules;
 
+      List<CalendarEvent> events = const [];
+      try {
+        events = await _calendarService.getEvents();
+      } catch (e) {
+        // best-effort: si falla, tareas y clases igual se reprograman
+      }
+
+      if (!mounted) return;
       await context.read<NotificationProvider>().updatePreferences(
             _draft,
             tasks: tasks,
             schedules: schedules,
+            events: events,
           );
 
       if (!mounted) return;

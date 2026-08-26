@@ -42,6 +42,23 @@ class TaskService {
     }
   }
 
+  // Obtener una tarea por ID. Devuelve null si ya no existe (404) — el
+  // caller no debería tratar "no encontrada" como un error de red.
+  Future<Task?> getTaskById(int id) async {
+    try {
+      final response = await _apiService.get('${ApiConfig.tasks}/$id');
+
+      if (response['success'] == true && response['data'] != null) {
+        return Task.fromJson(response['data']);
+      }
+
+      return null;
+    } on ApiException catch (e) {
+      if (e.statusCode == 404) return null;
+      rethrow;
+    }
+  }
+
   // Obtener tareas próximas
   Future<List<Task>> getUpcomingTasks() async {
     try {
