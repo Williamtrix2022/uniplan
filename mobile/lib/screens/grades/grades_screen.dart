@@ -141,7 +141,7 @@ class _GradesScreenState extends State<GradesScreen> {
           if (Navigator.canPop(context)) const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Mis Calificaciones',
+              'Mis Notas',
               style: GoogleFonts.inter(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
@@ -287,14 +287,16 @@ class _GradesScreenState extends State<GradesScreen> {
                   color: AppTheme.darkText,
                 ),
               ),
-              IconButton(
+              TextButton.icon(
                 onPressed: () => _navigateToManageSubjects(context),
-                icon: const Icon(Icons.tune_rounded),
-                color: AppTheme.greyText,
-                tooltip: 'Gestionar materias',
-                iconSize: 20,
-                padding: EdgeInsets.zero,
-                constraints: const BoxConstraints(),
+                icon: const Icon(Icons.tune_rounded, size: 18),
+                label: const Text('Gestionar'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppTheme.greyText,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
               ),
             ],
           ),

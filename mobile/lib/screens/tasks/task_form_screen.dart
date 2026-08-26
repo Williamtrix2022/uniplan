@@ -9,6 +9,7 @@ import '../../config/theme.dart';
 import '../../models/task.dart';
 import '../../services/subject_service.dart';
 import '../../services/task_service.dart';
+import '../grades/manage_subjects_screen.dart';
 
 class TaskFormScreen extends StatefulWidget {
   final Task? task;
@@ -180,6 +181,15 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     }
   }
 
+  Future<void> _openManageSubjects() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ManageSubjectsScreen()),
+    );
+    if (!mounted) return;
+    await _loadSubjects();
+  }
+
   Widget _buildSectionLabel(String text, BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
@@ -321,12 +331,22 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                       Container(
                         decoration: _selectorDecoration(context),
                         padding: const EdgeInsets.all(16),
-                        child: Text(
-                          'Todavía no tenés materias. Creá la primera desde '
-                          'Calificaciones.',
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: AppTheme.greyText,
-                          ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Todavía no tenés materias creadas.',
+                              style: textTheme.bodyMedium?.copyWith(
+                                color: AppTheme.greyText,
+                              ),
+                            ),
+                            const SizedBox(height: 12),
+                            OutlinedButton.icon(
+                              onPressed: _openManageSubjects,
+                              icon: const Icon(Icons.add, size: 18),
+                              label: const Text('Crear materia'),
+                            ),
+                          ],
                         ),
                       )
                     else if (_isLoadingSubjects)

@@ -13,6 +13,7 @@ import '../../providers/schedule_provider.dart';
 import '../../services/schedule_service.dart';
 import '../../services/subject_service.dart';
 import '../../widgets/schedule/day_selector.dart';
+import '../grades/manage_subjects_screen.dart';
 
 class ScheduleFormScreen extends StatefulWidget {
   final Schedule? schedule;
@@ -61,6 +62,15 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
   }
 
   // ── Carga de materias ────────────────────────────────────────────────────
+
+  Future<void> _openManageSubjects() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ManageSubjectsScreen()),
+    );
+    if (!mounted) return;
+    await _loadSubjects();
+  }
 
   Future<void> _loadSubjects() async {
     setState(() => _isLoadingSubjects = true);
@@ -525,9 +535,20 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
           borderRadius: BorderRadius.circular(AppSizes.radiusM),
           border: Border.all(color: colorScheme.outlineVariant),
         ),
-        child: Text(
-          'Todavía no tenés materias. Creá la primera desde Calificaciones.',
-          style: GoogleFonts.inter(fontSize: 13, color: AppTheme.greyText),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Todavía no tenés materias creadas.',
+              style: GoogleFonts.inter(fontSize: 13, color: AppTheme.greyText),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _openManageSubjects,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Crear materia'),
+            ),
+          ],
         ),
       );
     }
