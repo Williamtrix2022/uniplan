@@ -75,21 +75,24 @@ class _TasksScreenState extends State<TasksScreen> {
     if (_filterEstado != 'todos') {
       switch (_filterEstado) {
         case 'completadas':
-          filtered = filtered.where((task) {
-            return task.completada || task.estado == 'completada';
-          }).toList();
+          filtered = filtered.where((task) => task.isCompleted).toList();
           break;
         case 'vencidas':
           final now = DateTime.now();
           final today = DateTime(now.year, now.month, now.day);
           filtered = filtered.where((task) {
-            if (task.completada || task.estado == 'completada') return false;
+            if (task.isCompleted) return false;
             final due = DateTime(
               task.fechaEntrega.year,
               task.fechaEntrega.month,
               task.fechaEntrega.day,
             );
             return due.isBefore(today);
+          }).toList();
+          break;
+        case 'en_progreso':
+          filtered = filtered.where((task) {
+            return !task.isCompleted && task.estado == 'en_progreso';
           }).toList();
           break;
       }
@@ -126,7 +129,33 @@ class _TasksScreenState extends State<TasksScreen> {
         break;
     }
 
+    // Orden: activas primero, después vencidas, y las completadas al final
+    // — antes se mostraba tal cual el orden del backend (fecha ascendente
+    // sin agrupar por estado), así que una tarea completada o vencida de
+    // hace tiempo terminaba apareciendo ANTES que una tarea nueva por tener
+    // una fecha de entrega más antigua. Dentro de cada grupo se sigue
+    // ordenando por fecha de entrega.
+    filtered.sort((a, b) {
+      final groupCompare = _taskGroupWeight(a).compareTo(_taskGroupWeight(b));
+      if (groupCompare != 0) return groupCompare;
+      return a.fechaEntrega.compareTo(b.fechaEntrega);
+    });
+
     _filteredTasks = filtered;
+  }
+
+  /// 0 = activa/próxima, 1 = vencida (sin completar), 2 = completada.
+  int _taskGroupWeight(Task task) {
+    if (task.isCompleted) return 2;
+
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final due = DateTime(
+      task.fechaEntrega.year,
+      task.fechaEntrega.month,
+      task.fechaEntrega.day,
+    );
+    return due.isBefore(today) ? 1 : 0;
   }
 
   Future<void> _loadTasks() async {
@@ -248,6 +277,20 @@ class _TasksScreenState extends State<TasksScreen> {
                         });
                         setState(() {
                           _filterEstado = 'vencidas';
+                          _applyFilters();
+                        });
+                        Navigator.pop(context);
+                      },
+                    ),
+                    _buildFilterOption(
+                      'En progreso',
+                      _filterEstado == 'en_progreso',
+                      () {
+                        setModalState(() {
+                          _filterEstado = 'en_progreso';
+                        });
+                        setState(() {
+                          _filterEstado = 'en_progreso';
                           _applyFilters();
                         });
                         Navigator.pop(context);
@@ -443,7 +486,7 @@ class _TasksScreenState extends State<TasksScreen> {
 
   Color _getSideBarColor(Task task, bool isOverdue) {
     if (isOverdue) return AppTheme.error;
-    if (task.completada || task.estado == 'completada') {
+    if (task.isCompleted) {
       return AppTheme.onSurfaceVariant.withOpacity(0.4);
     }
     if (task.estado == 'en_progreso') return AppTheme.info; // Azul
@@ -707,7 +750,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                       DateTime.now().month,
                                       DateTime.now().day,
                                     )) &&
-                                  !task.completada;
+                                  !task.isCompleted;
                           final sideBarColor =
                               _getSideBarColor(task, isOverdue);
 
@@ -851,12 +894,12 @@ class _TasksScreenState extends State<TasksScreen> {
                                                         fontSize: 16,
                                                         fontWeight:
                                                             FontWeight.w600,
-                                                        color: task.completada
+                                                        color: task.isCompleted
                                                             ? AppTheme
                                                                 .onSurfaceVariant
                                                             : AppTheme.darkText,
                                                         decoration:
-                                                            task.completada
+                                                            task.isCompleted
                                                                 ? TextDecoration
                                                                     .lineThrough
                                                                 : null,
