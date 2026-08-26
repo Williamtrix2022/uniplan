@@ -129,7 +129,7 @@ class TaskProvider extends ChangeNotifier {
   }
 
   Future<void> toggleTask(Task task) async {
-    final targetCompleted = !task.completada;
+    final targetCompleted = !task.isCompleted;
     final optimistic = task.copyWith(
       completada: targetCompleted,
       estado: targetCompleted ? 'completada' : 'pendiente',
@@ -234,8 +234,8 @@ class TaskProvider extends ChangeNotifier {
 
   Map<String, int> get stats {
     final total = _tasks.length;
-    final completed = _tasks.where((task) => task.completada).length;
-    final pending = _tasks.where((task) => !task.completada).length;
+    final completed = _tasks.where((task) => task.isCompleted).length;
+    final pending = _tasks.where((task) => !task.isCompleted).length;
     final highPriority = _tasks.where((task) => task.prioridad == 'alta').length;
 
     return {

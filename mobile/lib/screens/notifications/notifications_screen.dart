@@ -9,7 +9,13 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../models/app_notification.dart';
 import '../../providers/notification_provider.dart';
+import '../../services/calendar_service.dart';
+import '../../services/schedule_service.dart';
+import '../../services/task_service.dart';
 import '../../widgets/notifications/notification_card.dart';
+import '../calendar/event_form_screen.dart';
+import '../schedule/class_detail_screen.dart';
+import '../tasks/task_form_screen.dart';
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -19,19 +25,37 @@ class NotificationsScreen extends StatefulWidget {
 }
 
 class _NotificationsScreenState extends State<NotificationsScreen> {
+  final TaskService _taskService = TaskService();
+  final ScheduleService _scheduleService = ScheduleService();
+  final CalendarService _calendarService = CalendarService();
+
   String? _tipoFilter;
 
   static const List<MapEntry<String?, String>> _filters = [
     MapEntry(null, 'Todas'),
+    MapEntry('tarea', 'Tareas'),
     MapEntry('clase', 'Clases'),
-    MapEntry('eventos', 'Eventos'),
+    MapEntry('evento', 'Eventos'),
+    MapEntry('otros', 'Otros'),
   ];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      context.read<NotificationProvider>().initialize();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      // `initialize()` es un no-op después de la primera vez que corre en
+      // toda la sesión (normalmente disparado desde Home) — sin el
+      // `refresh()` de acá, reabrir esta pantalla mostraba lo que había en
+      // memoria en ESE momento, no lo que el backend tiene ahora. Eso
+      // explicaba el bug reportado: entrabas a Notificaciones apenas
+      // abierta la app (antes de que `rescheduleAll` de Home terminara de
+      // crear/actualizar recordatorios) y veías la lista vacía o
+      // incompleta, aunque la campanita ya mostraba el contador correcto;
+      // recién se veía bien al volver a entrar más tarde.
+      final provider = context.read<NotificationProvider>();
+      await provider.initialize();
+      if (!mounted) return;
+      await provider.refresh();
     });
   }
 
@@ -241,23 +265,103 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     );
   }
 
+  /// Al tocar una notificación de `'tarea'`, `'clase'` o `'evento'`, navega
+  /// directo a la entidad referenciada y la saca del feed — ya cumplió su
+  /// función (avisar) y quedó vista, no tiene sentido que siga ocupando
+  /// lugar en la lista. Las de tipo `'sistema'`/`'general'` no tienen una
+  /// entidad a la que navegar, así que mantienen el comportamiento
+  /// anterior: se marcan como leídas y se confirma con un snackbar.
   Future<void> _handleTap(
     BuildContext context,
     NotificationProvider provider,
     AppNotification notification,
   ) async {
-    if (!notification.leida) {
-      await provider.markRead(notification.id);
-    }
-    if (!context.mounted) return;
+    final referenciaId = notification.referenciaId;
+    final isTarea = notification.tipo == 'tarea' && referenciaId != null;
+    final isClase = notification.tipo == 'clase' && referenciaId != null;
+    final isEvento = notification.tipo == 'evento' && referenciaId != null;
 
-    // La navegación profunda a la tarea/clase referenciada queda fuera de
-    // alcance de este sprint; se confirma la acción con un snackbar.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(notification.mensaje),
-        backgroundColor: AppTheme.info,
-      ),
-    );
+    if (!isTarea && !isClase && !isEvento) {
+      if (!notification.leida) {
+        await provider.markRead(notification.id);
+      }
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(notification.mensaje),
+          backgroundColor: AppTheme.info,
+        ),
+      );
+      return;
+    }
+
+    try {
+      if (isTarea) {
+        final task = await _taskService.getTaskById(referenciaId);
+        if (!context.mounted) return;
+        if (task == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Esa tarea ya no existe'),
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        } else {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => TaskFormScreen(task: task)),
+          );
+        }
+      } else if (isClase) {
+        final schedule = await _scheduleService.getScheduleById(referenciaId);
+        if (!context.mounted) return;
+        if (schedule == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Esa clase ya no existe'),
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        } else {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => ClassDetailScreen(schedule: schedule)),
+          );
+        }
+      } else {
+        final event = await _calendarService.getEventById(referenciaId);
+        if (!context.mounted) return;
+        if (event == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Ese evento ya no existe'),
+              backgroundColor: AppTheme.error,
+            ),
+          );
+        } else {
+          await Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => EventFormScreen(
+                event: event,
+                selectedDate: event.fecha,
+              ),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('No se pudo abrir: ${e.toString()}'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+      return; // no se borra si falló por red — se puede reintentar
+    }
+
+    if (!context.mounted) return;
+    await provider.delete(notification.id);
   }
 }

@@ -65,6 +65,14 @@ class Task {
     };
   }
 
+  /// `completada` (booleano) y `estado == 'completada'` pueden desincronizarse:
+  /// el formulario de edición solo permite cambiar `estado` vía los chips de
+  /// estado, y el backend (`Task.update` / `PUT /tasks/:id`) no toca la
+  /// columna `completada` en ese flujo — solo `PATCH /tasks/:id/toggle` la
+  /// cambia. Usar este getter en vez de mirar `completada` solo evita el bug
+  /// de "marco Completada en el formulario y no se tacha en la lista".
+  bool get isCompleted => completada || estado == 'completada';
+
   // Obtener color según prioridad
   String getPriorityColor() {
     switch (prioridad) {

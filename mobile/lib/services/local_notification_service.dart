@@ -26,6 +26,7 @@ class LocalNotificationService {
 
   static const String channelTareas = 'tareas';
   static const String channelClases = 'clases';
+  static const String channelEventos = 'eventos';
   static const String channelGeneral = 'general';
 
   static const AndroidNotificationChannel _tareasChannel =
@@ -41,6 +42,14 @@ class LocalNotificationService {
     channelClases,
     'Recordatorios de clases',
     description: 'Avisos antes de que inicie una clase de tu horario',
+    importance: Importance.high,
+  );
+
+  static const AndroidNotificationChannel _eventosChannel =
+      AndroidNotificationChannel(
+    channelEventos,
+    'Recordatorios de eventos',
+    description: 'Avisos antes de un evento de tu calendario',
     importance: Importance.high,
   );
 
@@ -81,6 +90,7 @@ class LocalNotificationService {
     if (androidPlugin != null) {
       await androidPlugin.createNotificationChannel(_tareasChannel);
       await androidPlugin.createNotificationChannel(_clasesChannel);
+      await androidPlugin.createNotificationChannel(_eventosChannel);
       await androidPlugin.createNotificationChannel(_generalChannel);
     }
 

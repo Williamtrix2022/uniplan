@@ -27,6 +27,8 @@ class NotificationCard extends StatelessWidget {
         return Icons.assignment_outlined;
       case 'clase':
         return Icons.school_outlined;
+      case 'evento':
+        return Icons.event_outlined;
       case 'sistema':
         return Icons.info_outline;
       default:
@@ -40,6 +42,8 @@ class NotificationCard extends StatelessWidget {
         return AppTheme.warning;
       case 'clase':
         return AppTheme.info;
+      case 'evento':
+        return AppTheme.success;
       case 'sistema':
         return AppTheme.greyText;
       default:

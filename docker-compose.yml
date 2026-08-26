@@ -2,8 +2,13 @@
 # UNIPLAN — MySQL local para desarrollo
 # ============================================================
 # Levanta una base de datos MySQL local con el esquema real ya aplicado
-# (backend/db/schema.sql), para no tener que tocar la base de datos de
-# producción (AlwaysData) mientras se desarrolla.
+# (backend/db/schema.sql) y datos de prueba (backend/seeds/), para no
+# tener que tocar la base de datos de producción (AlwaysData) mientras
+# se desarrolla.
+#
+# Estudiante demo ya cargado: demo@uniplan.co / Uniplan2026
+# (materias, tareas, horario, notas, calendario, pomodoro, calificaciones
+# y notificaciones — ver backend/seeds/*.sql para el detalle).
 #
 # Uso:
 #   docker compose up -d
