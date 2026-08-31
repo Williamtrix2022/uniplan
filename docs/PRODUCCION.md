@@ -15,10 +15,13 @@ suben al repo (`.gitignore` ya lo cubre).
 Variables usadas hoy (ver `backend/.env.example` para la lista completa):
 `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_PORT`, `JWT_SECRET`,
 `JWT_EXPIRE`, `BCRYPT_ROUNDS`, `RESET_PASSWORD_URL`,
-`RESET_TOKEN_EXPIRE_MINUTES`, `SMTP_*`.
+`RESET_TOKEN_EXPIRE_MINUTES`, `SMTP_*`, `CORS_ORIGINS`.
 
 - [ ] Confirmar que las variables de producción están configuradas en Vercel
       (Project Settings → Environment Variables), no solo en el `.env` local.
+- [ ] Setear `CORS_ORIGINS` en Vercel con el/los dominio(s) reales separados
+      por coma (ej. `https://uniplan.app,https://www.uniplan.app`). Si queda
+      sin setear, la API acepta cualquier origen y lo avisa en el log.
 - [x] Rotar la credencial SMTP de MailerSend filtrada en el historial de git
       (hallazgo Crítico de la auditoría — ya la rotaste).
 - [ ] `JWT_SECRET` en producción: confirmar que es un valor largo y aleatorio,
@@ -43,15 +46,23 @@ Variables usadas hoy (ver `backend/.env.example` para la lista completa):
 
 ## 3. Backend
 
-- [ ] Restringir `cors({ origin: '*' })` en `backend/src/app.js` al dominio
-      real de producción antes del lanzamiento (hallazgo Medio de la
-      auditoría — hoy cualquier sitio puede llamar a la API).
-- [ ] Agregar `helmet()` y un rate limiter global (más allá del que ya se
-      agregó específicamente a `/auth/*`) — hallazgo Medio de la auditoría.
-- [ ] Revisar los hallazgos Medio/Bajo restantes de la auditoría de
-      seguridad (JWT sin revocación, `express-validator` instalado pero sin
-      conectar a las rutas, dependencias desactualizadas) — quedaron fuera
-      de esta ronda porque solo se atendieron los High.
+- [x] CORS configurable por `CORS_ORIGINS` en `backend/src/app.js` (allowlist
+      por env; `*` solo si no está seteada, con advertencia en el log). Falta
+      setear la variable en Vercel — ver sección 1.
+- [x] `helmet()` y un rate limiter global (`apiLimiter`, 300 req/15min por IP)
+      además del límite específico de `/auth/*`.
+- [x] Las respuestas 5xx ya no filtran `error.message` ni el stack al cliente
+      fuera de `development` (middleware `sanitizeErrorResponse` + error handler
+      global endurecido).
+- [ ] JWT con revocación / refresh tokens — sigue pendiente, es un cambio
+      arquitectónico (tabla de tokens, rotación, "cerrar sesión en todos los
+      dispositivos", cambios en el cliente). Merece su propia fase.
+- [ ] Conectar `express-validator` a las rutas (hoy es una dependencia sin
+      usar). Son ~11 archivos de rutas con decenas de endpoints; conviene
+      hacerlo como fase dedicada, no junto a otros cambios.
+- [ ] `usesCleartextTraffic` ya salió del manifest de release (queda solo en
+      `debug`/`profile`); cuando exista dominio propio, confirmar que la app
+      apunta siempre a HTTPS.
 
 ## 4. Dominio
 
@@ -76,6 +87,10 @@ Variables usadas hoy (ver `backend/.env.example` para la lista completa):
       alojarse como una página estática en el dominio nuevo. Debe reflejar
       qué datos se recolectan: nombre, correo, carrera, universidad,
       contraseña (hasheada), y el uso de notificaciones locales.
+- [x] El token de sesión y los datos de usuario se guardan cifrados en el
+      dispositivo (`flutter_secure_storage`: Keychain en iOS,
+      EncryptedSharedPreferences en Android), no en `SharedPreferences` en
+      texto plano. Hay migración automática para sesiones ya existentes.
 - [ ] Completar el formulario de seguridad de datos ("Data safety") de Play
       Console con la misma información.
 - [ ] Cuestionario de clasificación de contenido.

@@ -2,12 +2,21 @@
 // SERVICIO DE AUTENTICACIÓN
 // ============================================
 
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 import 'api_service.dart';
 
 class AuthService {
   final ApiService _apiService = ApiService();
+
+  // El token de sesión y los datos del usuario se guardan cifrados
+  // (Keychain en iOS, EncryptedSharedPreferences en Android) en vez de
+  // SharedPreferences en texto plano.
+  static const FlutterSecureStorage _secureStorage = FlutterSecureStorage(
+    aOptions: AndroidOptions(encryptedSharedPreferences: true),
+  );
+
   static const String _tokenKey = 'auth_token';
   static const String _userKey = 'user_data';
 
@@ -219,32 +228,27 @@ class AuthService {
 
   // ========== GUARDAR TOKEN ==========
   Future<void> _saveToken(String token) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_tokenKey, token);
+    await _secureStorage.write(key: _tokenKey, value: token);
   }
 
   // ========== OBTENER TOKEN ==========
   Future<String?> getToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_tokenKey);
+    return _secureStorage.read(key: _tokenKey);
   }
 
   // ========== ELIMINAR TOKEN ==========
   Future<void> _removeToken() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_tokenKey);
+    await _secureStorage.delete(key: _tokenKey);
   }
 
   // ========== GUARDAR DATOS DE USUARIO ==========
   Future<void> _saveUserData(Map<String, dynamic> userData) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userKey, userData.toString());
+    await _secureStorage.write(key: _userKey, value: userData.toString());
   }
 
   // ========== OBTENER DATOS DE USUARIO ==========
   Future<Map<String, dynamic>?> getUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userDataString = prefs.getString(_userKey);
+    final userDataString = await _secureStorage.read(key: _userKey);
 
     if (userDataString != null) {
       // Aquí deberías parsear el string a Map
@@ -256,15 +260,40 @@ class AuthService {
 
   // ========== ELIMINAR DATOS DE USUARIO ==========
   Future<void> _removeUserData() async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_userKey);
+    await _secureStorage.delete(key: _userKey);
   }
 
   // ========== CARGAR TOKEN AL INICIAR ==========
   Future<void> loadToken() async {
+    await _migrateFromSharedPreferences();
+
     final token = await getToken();
     if (token != null) {
       _apiService.setToken(token);
+    }
+  }
+
+  // ========== MIGRACIÓN DESDE SHAREDPREFERENCES ==========
+  // Versiones anteriores guardaban el token en SharedPreferences en texto
+  // plano. Si todavía hay algo ahí, se pasa al storage cifrado y se borra
+  // el original, para no cerrarle la sesión a quien ya estaba logueado.
+  Future<void> _migrateFromSharedPreferences() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final legacyToken = prefs.getString(_tokenKey);
+
+      if (legacyToken != null && legacyToken.trim().isNotEmpty) {
+        final alreadyMigrated = await _secureStorage.read(key: _tokenKey);
+        if (alreadyMigrated == null) {
+          await _secureStorage.write(key: _tokenKey, value: legacyToken);
+        }
+      }
+
+      if (prefs.containsKey(_tokenKey)) await prefs.remove(_tokenKey);
+      if (prefs.containsKey(_userKey)) await prefs.remove(_userKey);
+    } catch (_) {
+      // Si la migración falla no se rompe el arranque: en el peor caso el
+      // usuario vuelve a iniciar sesión.
     }
   }
 }
