@@ -9,11 +9,13 @@
     <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
+    <!-- El tráfico en texto plano (HTTP) sólo se habilita en los builds de
+         debug/profile para poder apuntar a un backend local en la LAN.
+         En release la app sólo habla HTTPS. -->
     <application
         android:label="uniplan"
         android:name="${applicationName}"
-        android:icon="@mipmap/ic_launcher"
-        android:usesCleartextTraffic="true">
+        android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
             android:exported="true"

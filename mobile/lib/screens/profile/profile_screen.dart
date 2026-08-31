@@ -6,14 +6,10 @@ import 'package:flutter/material.dart';
 import '../../config/theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/dashboard_service.dart';
-import '../../widgets/bottom_nav_bar.dart';
 import '../auth/login_screen.dart';
 import 'change_password_screen.dart';
 import 'edit_profile_screen.dart';
 import 'pomodoro_settings_screen.dart';
-import '../home/home_screen.dart';
-import '../tasks/tasks_screen.dart';
-import '../calendar/calendar_screen.dart';
 import '../notifications/notification_settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
@@ -30,7 +26,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Map<String, dynamic> profileData = {};
   Map<String, dynamic> stats = {};
   bool isLoading = true;
-  int _selectedIndex = 3;
   String _userName = '';
 
   @override
@@ -55,42 +50,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
       print('Error loading profile: $e');
     } finally {
       setState(() => isLoading = false);
-    }
-  }
-
-  void _onItemTapped(int index) {
-    if (index == _selectedIndex) return;
-
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    switch (index) {
-      case 0:
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-          (route) => false,
-        );
-        break;
-      case 1:
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const TasksScreen()),
-          (route) => false,
-        );
-        break;
-      case 2:
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const CalendarScreen()),
-          (route) => false,
-        );
-        break;
-      case 3:
-        // Ya estamos en Profile, solo refrescar datos
-        _loadProfileData();
-        break;
     }
   }
 
@@ -138,6 +97,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             height: 1,
             color: AppTheme.surfaceContainerHighest,
           ),
+        ),
+        leading: IconButton(
+          onPressed: () => Navigator.pop(context),
+          icon: const Icon(Icons.arrow_back),
         ),
         title: Row(
           children: [
@@ -225,10 +188,6 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 ),
               ),
             ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        onItemSelected: _onItemTapped,
-      ),
     );
   }
 
@@ -540,6 +499,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   const SizedBox(height: 8),
                   const Text(
                     'Desarrollado por William Moya Santana',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                  const Text(
+                    'Desarrollado por Jhon Quiceno',
                     style: TextStyle(fontSize: 12),
                   ),
                 ],

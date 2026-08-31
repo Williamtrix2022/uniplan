@@ -262,4 +262,71 @@ void main() {
       expect(result, isNull);
     });
   });
+
+  group('nextWeeklyOccurrences', () {
+    // 2026-07-15 is a Wednesday ('miercoles'), 10:00.
+    final now = DateTime(2026, 7, 15, 10, 0);
+
+    test('returns 4 dates by default, 7 days apart, starting at the base '
+        'occurrence', () {
+      final result = nextWeeklyOccurrences(
+        dia: 'miercoles',
+        horaInicio: '14:00:00',
+        now: now,
+      );
+      expect(result, [
+        DateTime(2026, 7, 15, 14, 0),
+        DateTime(2026, 7, 22, 14, 0),
+        DateTime(2026, 7, 29, 14, 0),
+        DateTime(2026, 8, 5, 14, 0),
+      ]);
+    });
+
+    test('base occurrence already passed today → sequence starts next week',
+        () {
+      final result = nextWeeklyOccurrences(
+        dia: 'miercoles',
+        horaInicio: '08:00:00',
+        now: now,
+      );
+      expect(result, [
+        DateTime(2026, 7, 22, 8, 0),
+        DateTime(2026, 7, 29, 8, 0),
+        DateTime(2026, 8, 5, 8, 0),
+        DateTime(2026, 8, 12, 8, 0),
+      ]);
+    });
+
+    test('respects a custom count', () {
+      final result = nextWeeklyOccurrences(
+        dia: 'miercoles',
+        horaInicio: '14:00:00',
+        now: now,
+        count: 2,
+      );
+      expect(result, [
+        DateTime(2026, 7, 15, 14, 0),
+        DateTime(2026, 7, 22, 14, 0),
+      ]);
+    });
+
+    test('unknown weekday string → returns an empty list (same invalid-input '
+        'contract as nextWeeklyOccurrence)', () {
+      final result = nextWeeklyOccurrences(
+        dia: 'notaday',
+        horaInicio: '09:00',
+        now: now,
+      );
+      expect(result, isEmpty);
+    });
+
+    test('malformed horaInicio → returns an empty list', () {
+      final result = nextWeeklyOccurrences(
+        dia: 'viernes',
+        horaInicio: '0900',
+        now: now,
+      );
+      expect(result, isEmpty);
+    });
+  });
 }

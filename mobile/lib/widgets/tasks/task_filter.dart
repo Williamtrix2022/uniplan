@@ -56,7 +56,7 @@ class TaskFilter extends StatelessWidget {
           ),
           const SizedBox(height: 16),
           DropdownButtonFormField<String?>(
-            initialValue: status,
+            value: status,
             decoration: const InputDecoration(
               labelText: 'Estado',
               border: OutlineInputBorder(),
@@ -71,7 +71,7 @@ class TaskFilter extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<String?>(
-            initialValue: priority,
+            value: priority,
             decoration: const InputDecoration(
               labelText: 'Prioridad',
               border: OutlineInputBorder(),
@@ -86,7 +86,7 @@ class TaskFilter extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<int?>(
-            initialValue: subjectId,
+            value: subjectId,
             isExpanded: true,
             decoration: const InputDecoration(
               labelText: 'Materia',
@@ -116,7 +116,7 @@ class TaskFilter extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           DropdownButtonFormField<TaskSortOption>(
-            initialValue: sortOption,
+            value: sortOption,
             decoration: const InputDecoration(
               labelText: 'Orden',
               border: OutlineInputBorder(),

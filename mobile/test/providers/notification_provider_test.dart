@@ -1,7 +1,9 @@
+import 'package:flutter/material.dart' show TimeOfDay;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uniplan/models/app_notification.dart';
+import 'package:uniplan/models/calendar_event.dart';
 import 'package:uniplan/models/notification_preferences.dart';
 import 'package:uniplan/models/schedule.dart';
 import 'package:uniplan/models/task.dart';
@@ -68,6 +70,23 @@ Schedule _schedule({
       horaInicio: horaInicio,
       horaFin: '10:00:00',
       fechaCreacion: DateTime(2026, 1, 1),
+    );
+
+CalendarEvent _event({
+  required int id,
+  required DateTime fecha,
+  TimeOfDay? horaInicio,
+  bool recordatorio = true,
+  int minutosAntesRecordatorio = 30,
+}) =>
+    CalendarEvent(
+      id: id,
+      idEstudiante: 1,
+      titulo: 'Evento $id',
+      fecha: fecha,
+      horaInicio: horaInicio,
+      recordatorio: recordatorio,
+      minutosAntesRecordatorio: minutosAntesRecordatorio,
     );
 
 void main() {
@@ -267,6 +286,86 @@ void main() {
     });
   });
 
+  group('notificationsByFilterGroup', () {
+    List<AppNotification> filterableNotifications() => [
+          AppNotification(
+            id: 1,
+            tipo: 'tarea',
+            titulo: 'Tarea 1',
+            mensaje: 'Mensaje 1',
+            fechaCreacion: DateTime(2026, 7, 15, 9, 0),
+          ),
+          AppNotification(
+            id: 2,
+            tipo: 'clase',
+            titulo: 'Clase 1',
+            mensaje: 'Mensaje 2',
+            fechaCreacion: DateTime(2026, 7, 15, 8, 0),
+          ),
+          AppNotification(
+            id: 3,
+            tipo: 'sistema',
+            titulo: 'Sistema 1',
+            mensaje: 'Mensaje 3',
+            fechaCreacion: DateTime(2026, 7, 15, 7, 0),
+          ),
+          AppNotification(
+            id: 4,
+            tipo: 'general',
+            titulo: 'General 1',
+            mensaje: 'Mensaje 4',
+            fechaCreacion: DateTime(2026, 7, 15, 6, 0),
+          ),
+          AppNotification(
+            id: 5,
+            tipo: 'evento',
+            titulo: 'Evento 1',
+            mensaje: 'Mensaje 5',
+            fechaCreacion: DateTime(2026, 7, 15, 5, 0),
+          ),
+        ];
+
+    setUp(() async {
+      when(() => mockService.getNotifications())
+          .thenAnswer((_) async => filterableNotifications());
+      await provider.load();
+    });
+
+    test('null group returns every notification', () {
+      final result = provider.notificationsByFilterGroup(null);
+      expect(result.map((n) => n.id).toSet(), {1, 2, 3, 4, 5});
+    });
+
+    test('"clase" group returns only clase notifications', () {
+      final result = provider.notificationsByFilterGroup('clase');
+      expect(result.map((n) => n.id).toList(), [2]);
+    });
+
+    test('"tarea" group returns only tarea notifications', () {
+      final result = provider.notificationsByFilterGroup('tarea');
+      expect(result.map((n) => n.id).toList(), [1]);
+    });
+
+    test('"evento" group returns only evento notifications', () {
+      final result = provider.notificationsByFilterGroup('evento');
+      expect(result.map((n) => n.id).toList(), [5]);
+    });
+
+    test('"otros" group returns sistema + general only, excluding '
+        'clase, tarea AND evento (each has its own dedicated filter chip)', () {
+      final result = provider.notificationsByFilterGroup('otros');
+      expect(result.map((n) => n.id).toSet(), {3, 4});
+      expect(result.any((n) => n.tipo == 'clase'), isFalse);
+      expect(result.any((n) => n.tipo == 'tarea'), isFalse);
+      expect(result.any((n) => n.tipo == 'evento'), isFalse);
+    });
+
+    test('results are sorted most-recent-first', () {
+      final result = provider.notificationsByFilterGroup('otros');
+      expect(result.map((n) => n.id).toList(), [3, 4]);
+    });
+  });
+
   group('rescheduleAll', () {
     final fixedNow = DateTime(2026, 7, 15, 8, 0); // miércoles 08:00
 
@@ -287,15 +386,16 @@ void main() {
         () async {
       final dueSoonTask = _task(
         id: 10,
-        fechaEntrega: DateTime(2026, 7, 15, 10, 0), // reminder at 09:00
+        // Vence mañana: "día antes" cae hoy 20:00, "mismo día" mañana 08:00.
+        fechaEntrega: DateTime(2026, 7, 16),
       );
       final pastDueTask = _task(
         id: 11,
-        fechaEntrega: DateTime(2026, 7, 10, 10, 0), // reminder already passed
+        fechaEntrega: DateTime(2026, 7, 10), // ambos avisos ya pasaron
       );
       final completedTask = _task(
         id: 12,
-        fechaEntrega: DateTime(2026, 7, 20, 10, 0),
+        fechaEntrega: DateTime(2026, 7, 20),
         completada: true,
       );
       final classSchedule = _schedule(
@@ -311,29 +411,92 @@ void main() {
       );
 
       // Cancel-antes-de-reprogramar: se cancela SIEMPRE, sin importar si
-      // luego se reprograma o no.
+      // luego se reprograma o no. Cada tarea cancela sus 2 ids posibles
+      // (día antes + mismo día); las clases cancelan las 4 ids posibles
+      // (una por ocurrencia semanal).
       expect(
         scheduler.cancelledIds,
         containsAll([
-          LocalNotificationService.idFor('tarea_10'),
-          LocalNotificationService.idFor('tarea_11'),
-          LocalNotificationService.idFor('tarea_12'),
-          LocalNotificationService.idFor('clase_20'),
+          LocalNotificationService.idFor('tarea_10_antes'),
+          LocalNotificationService.idFor('tarea_10_mismodia'),
+          LocalNotificationService.idFor('tarea_11_antes'),
+          LocalNotificationService.idFor('tarea_11_mismodia'),
+          LocalNotificationService.idFor('tarea_12_antes'),
+          LocalNotificationService.idFor('tarea_12_mismodia'),
+          LocalNotificationService.idFor('clase_20_0'),
+          LocalNotificationService.idFor('clase_20_1'),
+          LocalNotificationService.idFor('clase_20_2'),
+          LocalNotificationService.idFor('clase_20_3'),
         ]),
       );
 
-      // Solo la tarea próxima a vencer y la clase deberían reprogramarse.
-      expect(scheduler.scheduled.length, 2);
+      // Los 2 avisos (día antes + mismo día) de la tarea próxima + las 4
+      // ocurrencias semanales de la clase deberían reprogramarse.
+      expect(scheduler.scheduled.length, 6);
 
-      final taskEntry = scheduler.scheduled
-          .firstWhere((s) => s['id'] == LocalNotificationService.idFor('tarea_10'));
-      expect(taskEntry['scheduledDate'], DateTime(2026, 7, 15, 9, 0));
-      expect(taskEntry['channel'], LocalNotificationService.channelTareas);
+      final beforeEntry = scheduler.scheduled.firstWhere((s) =>
+          s['id'] == LocalNotificationService.idFor('tarea_10_antes'));
+      expect(beforeEntry['scheduledDate'], DateTime(2026, 7, 15, 20, 0));
+      expect(beforeEntry['channel'], LocalNotificationService.channelTareas);
+      expect(beforeEntry['body'], contains('vence mañana'));
 
-      final classEntry = scheduler.scheduled.firstWhere(
-          (s) => s['id'] == LocalNotificationService.idFor('clase_20'));
-      expect(classEntry['scheduledDate'], DateTime(2026, 7, 15, 8, 30));
-      expect(classEntry['channel'], LocalNotificationService.channelClases);
+      final sameDayEntry = scheduler.scheduled.firstWhere((s) =>
+          s['id'] == LocalNotificationService.idFor('tarea_10_mismodia'));
+      expect(sameDayEntry['scheduledDate'], DateTime(2026, 7, 16, 8, 0));
+      expect(sameDayEntry['channel'], LocalNotificationService.channelTareas);
+      expect(sameDayEntry['body'], contains('vence hoy'));
+
+      final classEntries = [0, 1, 2, 3]
+          .map((i) => scheduler.scheduled.firstWhere((s) =>
+              s['id'] == LocalNotificationService.idFor('clase_20_$i')))
+          .toList();
+      final expectedDates = [
+        DateTime(2026, 7, 15, 8, 30),
+        DateTime(2026, 7, 22, 8, 30),
+        DateTime(2026, 7, 29, 8, 30),
+        DateTime(2026, 8, 5, 8, 30),
+      ];
+      for (var i = 0; i < 4; i++) {
+        expect(classEntries[i]['scheduledDate'], expectedDates[i]);
+        expect(classEntries[i]['channel'], LocalNotificationService.channelClases);
+      }
+    });
+
+    test(
+        'schedules 4 distinct-id weekly occurrences per class but only creates '
+        'one feed entry (for the nearest occurrence)', () async {
+      await schedulingProvider.load(); // sin notificaciones previas en el feed
+      final classSchedule = _schedule(
+        id: 70,
+        dia: 'miercoles',
+        horaInicio: '09:00:00',
+      );
+
+      await schedulingProvider.rescheduleAll(
+        tasks: const [],
+        schedules: [classSchedule],
+        now: fixedNow,
+      );
+
+      expect(scheduler.scheduled.length, 4);
+      expect(
+        scheduler.scheduled.map((s) => s['id']).toSet(),
+        {
+          LocalNotificationService.idFor('clase_70_0'),
+          LocalNotificationService.idFor('clase_70_1'),
+          LocalNotificationService.idFor('clase_70_2'),
+          LocalNotificationService.idFor('clase_70_3'),
+        },
+      );
+
+      verify(() => mockService.createNotification(
+            tipo: 'clase',
+            titulo: any(named: 'titulo'),
+            mensaje: any(named: 'mensaje'),
+            referenciaTipo: 'clase',
+            referenciaId: 70,
+            fechaProgramada: any(named: 'fechaProgramada'),
+          )).called(1);
     });
 
     test(
@@ -345,7 +508,7 @@ void main() {
 
       final dueSoonTask = _task(
         id: 30,
-        fechaEntrega: DateTime(2026, 7, 15, 10, 0),
+        fechaEntrega: DateTime(2026, 7, 16),
       );
 
       await schedulingProvider.rescheduleAll(
@@ -354,8 +517,30 @@ void main() {
         now: fixedNow,
       );
 
-      expect(scheduler.cancelledIds,
-          contains(LocalNotificationService.idFor('tarea_30')));
+      expect(scheduler.cancelledIds, containsAll([
+        LocalNotificationService.idFor('tarea_30_antes'),
+        LocalNotificationService.idFor('tarea_30_mismodia'),
+      ]));
+      expect(scheduler.scheduled, isEmpty);
+    });
+
+    test('does not schedule any reminder for a completed task', () async {
+      final completedTask = _task(
+        id: 31,
+        fechaEntrega: DateTime(2026, 7, 16),
+        completada: true,
+      );
+
+      await schedulingProvider.rescheduleAll(
+        tasks: [completedTask],
+        schedules: const [],
+        now: fixedNow,
+      );
+
+      expect(scheduler.cancelledIds, containsAll([
+        LocalNotificationService.idFor('tarea_31_antes'),
+        LocalNotificationService.idFor('tarea_31_mismodia'),
+      ]));
       expect(scheduler.scheduled, isEmpty);
     });
 
@@ -380,20 +565,27 @@ void main() {
         now: fixedNow,
       );
 
-      expect(scheduler.scheduled.length, 1);
-      // 08:30 cae dentro de la ventana de silencio [08:00, 09:00) -> se
-      // empuja al final de la ventana en vez de cancelarse.
-      expect(scheduler.scheduled.first['scheduledDate'],
-          DateTime(2026, 7, 15, 9, 0));
+      // Las 4 ocurrencias semanales caen a las 08:30 de su respectivo día,
+      // dentro de la ventana de silencio [08:00, 09:00) -> las 4 se empujan
+      // al final de la ventana en vez de cancelarse.
+      expect(scheduler.scheduled.length, 4);
+      final nearest = scheduler.scheduled.firstWhere(
+          (s) => s['id'] == LocalNotificationService.idFor('clase_40_0'));
+      expect(nearest['scheduledDate'], DateTime(2026, 7, 15, 9, 0));
     });
 
     test(
-        'creates a feed entry (bell / notification center) for a newly-scheduled reminder',
+        'persists a feed entry on the backend for a newly-scheduled reminder, '
+        'but keeps it hidden locally until its scheduled time actually arrives',
         () async {
       await schedulingProvider.load(); // sin notificaciones previas en el feed
       final dueSoonTask = _task(
         id: 50,
-        fechaEntrega: DateTime(2026, 7, 15, 10, 0),
+        // Vence mañana: el aviso "día antes" cae hoy a las 20:00 (después
+        // de fixedNow 08:00) — `computeReminderTime` garantiza que el
+        // recordatorio siempre cae después de `now`, así que esto es el
+        // caso general.
+        fechaEntrega: DateTime(2026, 7, 16),
       );
 
       await schedulingProvider.rescheduleAll(
@@ -402,17 +594,71 @@ void main() {
         now: fixedNow,
       );
 
+      // El recordatorio SÍ se crea en el backend (el más próximo de los dos
+      // avisos — "día antes", hoy 20:00 — representa la fila del feed)...
       verify(() => mockService.createNotification(
             tipo: 'tarea',
             titulo: any(named: 'titulo'),
-            mensaje: 'Tarea 50',
+            mensaje: 'Tarea 50 vence mañana',
             referenciaTipo: 'tarea',
             referenciaId: 50,
-            fechaProgramada: any(named: 'fechaProgramada'),
+            fechaProgramada: DateTime(2026, 7, 15, 20, 0),
           )).called(1);
+
+      // ...pero el backend (`getNotifications`/`getUnreadCount`) oculta toda
+      // notificación cuya `fecha_programada` siga en el futuro. Mostrarla ya
+      // en el feed local mentiría sobre lo que el backend realmente
+      // devuelve: el siguiente `load()`/`refresh()` la haría desaparecer
+      // hasta que de verdad llegara su hora — el bug reportado ("la
+      // notificación de la tarea llegó, después se quitó, y se volvió a
+      // mandar").
       expect(
         schedulingProvider.notifications
             .any((n) => n.referenciaTipo == 'tarea' && n.referenciaId == 50),
+        isFalse,
+      );
+    });
+
+    test(
+        'the feed entry becomes visible on the next load() once its scheduled time arrives',
+        () async {
+      await schedulingProvider.load();
+      final dueSoonTask = _task(
+        id: 51,
+        fechaEntrega: DateTime(2026, 7, 16),
+      );
+
+      await schedulingProvider.rescheduleAll(
+        tasks: [dueSoonTask],
+        schedules: const [],
+        now: fixedNow,
+      );
+      expect(
+        schedulingProvider.notifications
+            .any((n) => n.referenciaTipo == 'tarea' && n.referenciaId == 51),
+        isFalse,
+      );
+
+      // Simula que el backend ahora SÍ devuelve la notificación porque ya
+      // llegó su `fecha_programada`.
+      when(() => mockService.getNotifications()).thenAnswer((_) async => [
+            AppNotification(
+              id: 200,
+              tipo: 'tarea',
+              titulo: 'Tarea próxima a vencer',
+              mensaje: 'Tarea 51',
+              referenciaTipo: 'tarea',
+              referenciaId: 51,
+              fechaProgramada: DateTime(2026, 7, 15, 9, 0),
+              fechaCreacion: DateTime(2026, 7, 15, 8, 0),
+            ),
+          ]);
+
+      await schedulingProvider.refresh();
+
+      expect(
+        schedulingProvider.notifications
+            .any((n) => n.referenciaTipo == 'tarea' && n.referenciaId == 51),
         isTrue,
       );
     });
@@ -436,7 +682,7 @@ void main() {
 
       final dueSoonTask = _task(
         id: 60,
-        fechaEntrega: DateTime(2026, 7, 15, 10, 0),
+        fechaEntrega: DateTime(2026, 7, 16), // vence mañana -> reminder válido
       );
 
       await schedulingProvider.rescheduleAll(
@@ -454,6 +700,283 @@ void main() {
             fechaProgramada: any(named: 'fechaProgramada'),
           ));
       expect(schedulingProvider.notifications.length, 1);
+    });
+
+    test(
+        "does not create a feed entry when the class's nearest occurrence isn't today",
+        () async {
+      await schedulingProvider.load(); // sin notificaciones previas en el feed
+      final mondayClass = _schedule(
+        id: 80,
+        dia: 'lunes', // fixedNow es miércoles: la próxima ocurrencia es en días
+        horaInicio: '09:00:00',
+      );
+
+      await schedulingProvider.rescheduleAll(
+        tasks: const [],
+        schedules: [mondayClass],
+        now: fixedNow,
+      );
+
+      // Las 4 alarmas locales sí se programan (el SO las dispara igual el
+      // día que corresponda)...
+      expect(scheduler.scheduled.length, 4);
+      // ...pero como la ocurrencia más próxima no es hoy, no debe aparecer en
+      // el feed dentro de la app. Antes de este fix, cualquier clase con una
+      // próxima ocurrencia futura (sin importar el día) generaba una fila acá
+      // apenas se abría la app, mezclando clases de días distintos.
+      verifyNever(() => mockService.createNotification(
+            tipo: 'clase',
+            titulo: any(named: 'titulo'),
+            mensaje: any(named: 'mensaje'),
+            referenciaTipo: 'clase',
+            referenciaId: 80,
+            fechaProgramada: any(named: 'fechaProgramada'),
+          ));
+      expect(
+        schedulingProvider.notifications
+            .any((n) => n.referenciaTipo == 'clase' && n.referenciaId == 80),
+        isFalse,
+      );
+    });
+
+    test(
+        'an already-read, same-day class feed entry survives rescheduleAll '
+        'later that day instead of being deleted/recreated as unread — this '
+        'was the reported bug: "notificaciones que ya había visto vuelven a '
+        'salir" caused by treating "already due" the same as "stale"',
+        () async {
+      when(() => mockService.getNotifications()).thenAnswer((_) async => [
+            AppNotification(
+              id: 9,
+              tipo: 'clase',
+              titulo: 'Clase próxima a iniciar',
+              mensaje: 'Cálculo · 09:00 - 10:00',
+              leida: true, // el usuario ya la vio
+              referenciaTipo: 'clase',
+              referenciaId: 110,
+              fechaProgramada: DateTime(2026, 7, 15, 8, 30), // hoy, ya pasó
+              fechaCreacion: DateTime(2026, 7, 15, 8, 0),
+            ),
+          ]);
+      await schedulingProvider.load();
+
+      final wednesdayClass = _schedule(
+        id: 110,
+        dia: 'miercoles',
+        horaInicio: '09:00:00', // mismo reminder de siempre: 08:30 hoy
+      );
+
+      // Simula reabrir la app más tarde el MISMO día (12:00), horas después
+      // de que el recordatorio de las 08:30 ya pasara.
+      await schedulingProvider.rescheduleAll(
+        tasks: const [],
+        schedules: [wednesdayClass],
+        now: DateTime(2026, 7, 15, 12, 0),
+      );
+
+      verifyNever(() => mockService.deleteNotification(9));
+      verifyNever(() => mockService.createNotification(
+            tipo: any(named: 'tipo'),
+            titulo: any(named: 'titulo'),
+            mensaje: any(named: 'mensaje'),
+            referenciaTipo: any(named: 'referenciaTipo'),
+            referenciaId: any(named: 'referenciaId'),
+            fechaProgramada: any(named: 'fechaProgramada'),
+          ));
+
+      final entry = schedulingProvider.notifications.firstWhere(
+          (n) => n.referenciaTipo == 'clase' && n.referenciaId == 110);
+      expect(entry.id, 9);
+      expect(entry.leida, isTrue);
+    });
+
+    test(
+        'expires a stale class feed entry (from a previous week) instead of leaving it forever',
+        () async {
+      when(() => mockService.getNotifications()).thenAnswer((_) async => [
+            AppNotification(
+              id: 5,
+              tipo: 'clase',
+              titulo: 'Clase próxima a iniciar',
+              mensaje: 'Cálculo · 09:00 - 10:00',
+              leida: false,
+              referenciaTipo: 'clase',
+              referenciaId: 90,
+              fechaProgramada: DateTime(2026, 7, 8, 8, 30), // semana pasada
+              fechaCreacion: DateTime(2026, 7, 8),
+            ),
+          ]);
+      await schedulingProvider.load();
+
+      final wednesdayClass = _schedule(
+        id: 90,
+        dia: 'miercoles',
+        horaInicio: '09:00:00',
+      );
+
+      await schedulingProvider.rescheduleAll(
+        tasks: const [],
+        schedules: [wednesdayClass],
+        now: fixedNow,
+      );
+
+      // La fila vencida (de la semana pasada) se borra del backend...
+      verify(() => mockService.deleteNotification(5)).called(1);
+      // ...y se crea una fila nueva en el backend para la ocurrencia de hoy
+      // (reminder a las 08:30, después de fixedNow 08:00 — todavía no
+      // "llegó", así que el backend la mantiene oculta hasta esa hora, y el
+      // cliente no la muestra optimistamente; ver el test de arriba sobre
+      // por qué). Lo importante acá es que la vieja NO se queda pegada para
+      // siempre junto a la nueva.
+      verify(() => mockService.createNotification(
+            tipo: 'clase',
+            titulo: any(named: 'titulo'),
+            mensaje: any(named: 'mensaje'),
+            referenciaTipo: 'clase',
+            referenciaId: 90,
+            fechaProgramada: any(named: 'fechaProgramada'),
+          )).called(1);
+      final classEntries = schedulingProvider.notifications
+          .where((n) => n.referenciaTipo == 'clase' && n.referenciaId == 90)
+          .toList();
+      expect(classEntries, isEmpty);
+    });
+
+    test(
+        'expires a stale task feed entry (already past due) instead of leaving '
+        'it forever, and does not replace it since the task is now overdue',
+        () async {
+      when(() => mockService.getNotifications()).thenAnswer((_) async => [
+            AppNotification(
+              id: 6,
+              tipo: 'tarea',
+              titulo: 'Tarea próxima a vencer',
+              mensaje: 'Entrega de laboratorio',
+              leida: false,
+              referenciaTipo: 'tarea',
+              referenciaId: 95,
+              fechaProgramada: DateTime(2026, 7, 1, 7, 0), // ya venció
+              fechaCreacion: DateTime(2026, 7, 1),
+            ),
+          ]);
+      await schedulingProvider.load();
+
+      final overdueTask = _task(
+        id: 95,
+        fechaEntrega: DateTime(2026, 7, 10, 10, 0), // antes de fixedNow (15/7)
+      );
+
+      await schedulingProvider.rescheduleAll(
+        tasks: [overdueTask],
+        schedules: const [],
+        now: fixedNow,
+      );
+
+      // La fila vieja ("Tarea próxima a vencer" de una tarea que ya venció
+      // hace días) se borra del backend...
+      verify(() => mockService.deleteNotification(6)).called(1);
+      // ...y NO se reemplaza por una nueva: la tarea ya está vencida, así
+      // que `computeReminderTime` no calcula ningún recordatorio nuevo para
+      // ella (mismo motivo que el test "skipping past-due tasks" de arriba).
+      verifyNever(() => mockService.createNotification(
+            tipo: 'tarea',
+            titulo: any(named: 'titulo'),
+            mensaje: any(named: 'mensaje'),
+            referenciaTipo: 'tarea',
+            referenciaId: 95,
+            fechaProgramada: any(named: 'fechaProgramada'),
+          ));
+      final taskEntries = schedulingProvider.notifications
+          .where((n) => n.referenciaTipo == 'tarea' && n.referenciaId == 95)
+          .toList();
+      expect(taskEntries, isEmpty);
+    });
+
+    test(
+        'schedules a reminder for an event using its OWN minutosAntesRecordatorio '
+        '(no global preference involved) and creates a feed entry once visible',
+        () async {
+      await schedulingProvider.load();
+      final event = _event(
+        id: 200,
+        fecha: DateTime(2026, 7, 15),
+        horaInicio: const TimeOfDay(hour: 9, minute: 0),
+        recordatorio: true,
+        minutosAntesRecordatorio: 15, // no es ninguno de los presets globales
+      );
+
+      await schedulingProvider.rescheduleAll(
+        tasks: const [],
+        schedules: const [],
+        events: [event],
+        now: fixedNow, // 08:00 -> reminder a las 08:45, todavía futuro
+      );
+
+      expect(scheduler.cancelledIds,
+          contains(LocalNotificationService.idFor('evento_200')));
+      final scheduled = scheduler.scheduled.single;
+      expect(scheduled['id'], LocalNotificationService.idFor('evento_200'));
+      expect(scheduled['scheduledDate'], DateTime(2026, 7, 15, 8, 45));
+      expect(scheduled['channel'], LocalNotificationService.channelEventos);
+
+      verify(() => mockService.createNotification(
+            tipo: 'evento',
+            titulo: any(named: 'titulo'),
+            mensaje: 'Evento 200',
+            referenciaTipo: 'evento',
+            referenciaId: 200,
+            fechaProgramada: DateTime(2026, 7, 15, 8, 45),
+          )).called(1);
+    });
+
+    test('does not schedule anything for an event with recordatorio off',
+        () async {
+      final event = _event(
+        id: 201,
+        fecha: DateTime(2026, 7, 16),
+        recordatorio: false,
+      );
+
+      await schedulingProvider.rescheduleAll(
+        tasks: const [],
+        schedules: const [],
+        events: [event],
+        now: fixedNow,
+      );
+
+      expect(scheduler.cancelledIds,
+          contains(LocalNotificationService.idFor('evento_201')));
+      expect(scheduler.scheduled, isEmpty);
+      verifyNever(() => mockService.createNotification(
+            tipo: any(named: 'tipo'),
+            titulo: any(named: 'titulo'),
+            mensaje: any(named: 'mensaje'),
+            referenciaTipo: any(named: 'referenciaTipo'),
+            referenciaId: any(named: 'referenciaId'),
+            fechaProgramada: any(named: 'fechaProgramada'),
+          ));
+    });
+
+    test(
+        'defaults to 8:00 AM that day for an all-day event with no horaInicio',
+        () async {
+      final event = _event(
+        id: 202,
+        fecha: DateTime(2026, 7, 16), // mañana, sin hora -> objetivo 08:00
+        horaInicio: null,
+        minutosAntesRecordatorio: 30,
+      );
+
+      await schedulingProvider.rescheduleAll(
+        tasks: const [],
+        schedules: const [],
+        events: [event],
+        now: fixedNow,
+      );
+
+      final scheduled = scheduler.scheduled.single;
+      expect(scheduled['scheduledDate'], DateTime(2026, 7, 16, 7, 30));
     });
   });
 

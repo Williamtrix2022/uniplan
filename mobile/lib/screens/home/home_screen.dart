@@ -8,21 +8,23 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../providers/schedule_provider.dart';
-import '../../providers/grade_provider.dart';
 import '../../providers/notification_provider.dart';
 import '../../services/auth_service.dart';
+import '../../services/calendar_service.dart';
 import '../../services/task_service.dart';
 import '../../services/dashboard_service.dart';
 import '../../services/local_notification_service.dart';
+import '../../services/pomodoro_preferences_service.dart';
+import '../../models/calendar_event.dart';
 import '../../models/task.dart';
-import '../../models/schedule.dart';
-import '../../models/grade.dart';
+import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/user_avatar.dart';
 import '../tasks/tasks_screen.dart';
 import '../tasks/task_form_screen.dart';
 import '../pomodoro/pomodoro_screen.dart';
+import '../profile/pomodoro_settings_screen.dart';
 import '../calendar/calendar_screen.dart';
 import '../profile/profile_screen.dart';
-import '../schedule/schedule_screen.dart';
 import '../grades/grades_screen.dart';
 import '../notifications/notifications_screen.dart';
 
@@ -38,55 +40,108 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final AuthService _authService = AuthService();
   final TaskService _taskService = TaskService();
+  final CalendarService _calendarService = CalendarService();
   final DashboardService _dashboardService = DashboardService();
 
   String userName = '';
   List<Task> dashboardTasks = [];
   List<Task> _allTasks = [];
   int pomodorosThisWeek = 0;
+  int _pomodoroWorkDuration = 25;
   bool isLoading = true;
+  int _selectedIndex = 0;
 
   @override
   void initState() {
     super.initState();
     final dashboardLoad = _loadDashboardData();
+    _loadPomodoroPreferences();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
       await Future.wait([
         dashboardLoad,
         context.read<ScheduleProvider>().initialize(),
-        context.read<GradeProvider>().initialize(),
         context.read<NotificationProvider>().initialize(),
       ]);
       await _scheduleNotificationReminders();
     });
   }
 
-  /// Recalcula y reprograma los recordatorios locales (tareas y clases) con
-  /// las tareas/horario/preferencias más recientes. Se llama al abrir el
-  /// dashboard (antes SOLO se recalculaba si el usuario entraba a Ajustes de
-  /// Notificaciones y presionaba "Guardar" — si nunca lo hacía, nunca se
-  /// programaba ningún recordatorio) y también al hacer pull-to-refresh, para
-  /// que una tarea/clase recién creada o editada quede reflejada sin tener
-  /// que reiniciar la app. El permiso se pide aquí, en el momento en que ya
-  /// sabemos que hay tareas/clases reales para recordar — es "contexto
-  /// claro", no a ciegas en el arranque.
+  void _onItemTapped(int index) {
+    if (index == _selectedIndex) return;
+
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 1:
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const TasksScreen()),
+          (route) => false,
+        );
+        break;
+      case 2:
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const CalendarScreen()),
+          (route) => false,
+        );
+        break;
+      case 3:
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const GradesScreen()),
+          (route) => false,
+        );
+        break;
+    }
+  }
+
+  /// Recalcula y reprograma los recordatorios locales (tareas, clases y
+  /// eventos de calendario) con las tareas/horario/eventos/preferencias más
+  /// recientes. Se llama al abrir el dashboard (antes SOLO se recalculaba
+  /// si el usuario entraba a Ajustes de Notificaciones y presionaba
+  /// "Guardar" — si nunca lo hacía, nunca se programaba ningún recordatorio)
+  /// y también al hacer pull-to-refresh, para que una tarea/clase/evento
+  /// recién creado o editado quede reflejado sin tener que reiniciar la
+  /// app. El permiso se pide aquí, en el momento en que ya sabemos que hay
+  /// tareas/clases/eventos reales para recordar — es "contexto claro", no a
+  /// ciegas en el arranque.
   Future<void> _scheduleNotificationReminders() async {
     if (!mounted) return;
     final scheduleProvider = context.read<ScheduleProvider>();
     final notificationProvider = context.read<NotificationProvider>();
+
+    List<CalendarEvent> events = const [];
+    try {
+      events = await _calendarService.getEvents();
+    } catch (e) {
+      // best-effort: si falla traer eventos, tareas y clases igual se reprograman
+    }
 
     await LocalNotificationService.requestPermission();
     if (!mounted) return;
     await notificationProvider.rescheduleAll(
       tasks: _allTasks,
       schedules: scheduleProvider.schedules,
+      events: events,
     );
   }
 
   Future<void> _onPullToRefresh() async {
     await _loadDashboardData();
     await _scheduleNotificationReminders();
+  }
+
+  /// Refleja en la card del Home la duración de trabajo configurada en
+  /// PomodoroSettingsScreen — antes de esto la card mostraba "25:00" fijo
+  /// sin importar lo que el usuario guardara ahí.
+  Future<void> _loadPomodoroPreferences() async {
+    final prefs = await PomodoroPreferencesService.load();
+    if (!mounted) return;
+    setState(() => _pomodoroWorkDuration = prefs.workDuration);
   }
 
   Future<void> _loadDashboardData() async {
@@ -126,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
           task.fechaEntrega.month,
           task.fechaEntrega.day,
         );
-        final isCompleted = task.completada || task.estado == 'completada';
+        final isCompleted = task.isCompleted;
         final isOverdue = due.isBefore(dayStart);
         return !isCompleted && !isOverdue;
       }).toList();
@@ -237,16 +292,6 @@ class _HomeScreenState extends State<HomeScreen> {
                       // Lista de tareas
                       _buildTasksList(),
 
-                      const SizedBox(height: 32),
-
-                      // Sección Mi Horario
-                      _buildScheduleSection(),
-
-                      const SizedBox(height: 32),
-
-                      // Sección Mis Calificaciones
-                      _buildGradesSection(),
-
                       const SizedBox(height: 24),
                     ],
                   ),
@@ -265,8 +310,11 @@ class _HomeScreenState extends State<HomeScreen> {
         backgroundColor: AppTheme.primaryGreen,
         child: const Icon(Icons.add, color: AppTheme.white),
       ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
-      bottomNavigationBar: _buildBottomNav(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _selectedIndex,
+        onItemSelected: _onItemTapped,
+      ),
     );
   }
 
@@ -278,35 +326,56 @@ class _HomeScreenState extends State<HomeScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              _getGreeting(),
-              style: GoogleFonts.inter(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.darkText,
+        Expanded(
+          child: Row(
+            children: [
+              UserAvatar(
+                name: userName,
+                size: 44,
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const ProfileScreen(),
+                    ),
+                  ).then((_) => _loadDashboardData());
+                },
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              'Hola, $firstName',
-              style: GoogleFonts.inter(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.darkText,
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _getGreeting(),
+                      style: GoogleFonts.inter(
+                        fontSize: 22,
+                        fontWeight: FontWeight.bold,
+                        color: AppTheme.darkText,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Hola, $firstName',
+                      style: GoogleFonts.inter(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.darkText,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      _getFormattedDate(),
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        color: AppTheme.onSurfaceVariant,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              _getFormattedDate(),
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: AppTheme.onSurfaceVariant,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
         _buildNotificationsButton(),
       ],
@@ -389,18 +458,18 @@ class _HomeScreenState extends State<HomeScreen> {
                 // Tiempo y texto
                 Column(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: const [
+                  children: [
                     Text(
-                      '25:00',
-                      style: TextStyle(
+                      '${_pomodoroWorkDuration.toString().padLeft(2, '0')}:00',
+                      style: const TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
                         color: AppTheme.darkText,
                         height: 1,
                       ),
                     ),
-                    SizedBox(height: 4),
-                    Text(
+                    const SizedBox(height: 4),
+                    const Text(
                       'FOCUS SESSION',
                       style: TextStyle(
                         fontSize: 12,
@@ -429,7 +498,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     MaterialPageRoute(
                       builder: (context) => const PomodoroScreen(),
                     ),
-                  ).then((_) => _loadDashboardData());
+                  ).then((_) {
+                    _loadDashboardData();
+                    _loadPomodoroPreferences();
+                  });
                 },
                 icon: const Icon(Icons.play_arrow, size: 20),
                 label: const Text('Start'),
@@ -456,7 +528,12 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 child: IconButton(
                   onPressed: () {
-                    // TODO: Configurar Pomodoro
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => const PomodoroSettingsScreen(),
+                      ),
+                    ).then((_) => _loadPomodoroPreferences());
                   },
                   icon: const Icon(Icons.settings_outlined),
                   color: AppTheme.darkText,
@@ -541,6 +618,7 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(AppSizes.radiusL),
         ),
         child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Icon(
               Icons.check_circle_outline,
@@ -550,6 +628,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 16),
             Text(
               'No tienes tareas activas',
+              textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
@@ -559,6 +638,7 @@ class _HomeScreenState extends State<HomeScreen> {
             const SizedBox(height: 8),
             Text(
               'No hay pendientes vigentes por mostrar',
+              textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 14,
                 color: AppTheme.onSurfaceVariant,
@@ -601,7 +681,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 DateTime.now().month,
                 DateTime.now().day,
               )) &&
-            !task.completada;
+            !task.isCompleted;
     final sideColor = _getTaskStatusColor(task, isOverdue);
 
     return GestureDetector(
@@ -748,455 +828,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Color _getTaskStatusColor(Task task, bool isOverdue) {
     if (isOverdue) return AppTheme.error;
-    if (task.completada || task.estado == 'completada') {
+    if (task.isCompleted) {
       return AppTheme.onSurfaceVariant.withOpacity(0.4);
     }
     if (task.estado == 'en_progreso') return AppTheme.info;
     return AppTheme.primaryGreen;
   }
 
-  // ── Sección Mi Horario ──────────────────────────────────────────────────
-
-  static const Map<int, String> _weekdayKeys = {
-    1: 'lunes', 2: 'martes', 3: 'miercoles',
-    4: 'jueves', 5: 'viernes', 6: 'sabado', 7: 'domingo',
-  };
-
-  Widget _buildScheduleSection() {
-    final provider   = context.watch<ScheduleProvider>();
-    final todayKey   = _weekdayKeys[DateTime.now().weekday];
-    final todayList  = todayKey != null
-        ? provider.schedulesForDay(todayKey)
-        : <Schedule>[];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Mi Horario',
-              style: GoogleFonts.inter(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.darkText,
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const ScheduleScreen()),
-              ),
-              child: Text(
-                'Ver todo →',
-                style: GoogleFonts.inter(
-                  color: AppTheme.primaryGreen,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (provider.isLoading)
-          _buildScheduleSkeleton()
-        else if (todayList.isEmpty)
-          _buildScheduleEmpty()
-        else
-          _buildScheduleList(todayList),
-      ],
-    );
-  }
-
-  Widget _buildScheduleSkeleton() {
-    return Container(
-      height: 70,
-      decoration: BoxDecoration(
-        color: AppTheme.lightGrey,
-        borderRadius: BorderRadius.circular(AppSizes.radiusM),
-      ),
-    );
-  }
-
-  Widget _buildScheduleEmpty() {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const ScheduleScreen()),
-      ),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppSizes.paddingM),
-        decoration: BoxDecoration(
-          color: AppTheme.lightGreen,
-          borderRadius: BorderRadius.circular(AppSizes.radiusM),
-          border: Border.all(
-            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.calendar_today_outlined,
-              color: AppTheme.primaryGreen,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'No tienes clases hoy',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: AppTheme.primaryGreen,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildScheduleList(List<Schedule> schedules) {
-    final visible = schedules.take(3).toList();
-    return Column(
-      children: visible.map((s) => _buildScheduleItem(s)).toList(),
-    );
-  }
-
-  Widget _buildScheduleItem(Schedule schedule) {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const ScheduleScreen()),
-      ),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.paddingM,
-          vertical: 12,
-        ),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusM),
-          border: Border.all(color: AppTheme.outlineVariant),
-          boxShadow: AppTheme.softShadow,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 4,
-              height: 36,
-              decoration: BoxDecoration(
-                color: schedule.colorMateria,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    schedule.materiaNombre ?? 'Sin materia',
-                    style: GoogleFonts.inter(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: AppTheme.darkText,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    schedule.rangoHorario +
-                        (schedule.aula != null ? ' · ${schedule.aula}' : ''),
-                    style: GoogleFonts.inter(
-                      fontSize: 12,
-                      color: AppTheme.greyText,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(
-              Icons.chevron_right,
-              color: AppTheme.greyText,
-              size: 18,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ── Sección Mis Calificaciones ───────────────────────────────────────────
-
-  Widget _buildGradesSection() {
-    final provider = context.watch<GradeProvider>();
-    final summary  = provider.summary;
-    final materias = summary?.materias.take(3).toList() ?? [];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Mis Calificaciones',
-              style: GoogleFonts.inter(
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-                color: AppTheme.darkText,
-              ),
-            ),
-            TextButton(
-              onPressed: () => Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const GradesScreen()),
-              ),
-              child: Text(
-                'Ver todo →',
-                style: GoogleFonts.inter(
-                  color: AppTheme.primaryGreen,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 12),
-        if (provider.isLoading && !provider.isInitialized)
-          _buildGradesSkeleton()
-        else if (materias.isEmpty)
-          _buildGradesEmpty()
-        else ...[
-          if (summary?.promedioGeneral != null) _buildGradesAverageBanner(summary!),
-          ...materias.map((m) => _buildGradeItem(m)),
-        ],
-      ],
-    );
-  }
-
-  Widget _buildGradesSkeleton() {
-    return Container(
-      height: 70,
-      decoration: BoxDecoration(
-        color: AppTheme.lightGrey,
-        borderRadius: BorderRadius.circular(AppSizes.radiusM),
-      ),
-    );
-  }
-
-  Widget _buildGradesEmpty() {
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const GradesScreen()),
-      ),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(AppSizes.paddingM),
-        decoration: BoxDecoration(
-          color: AppTheme.lightGreen,
-          borderRadius: BorderRadius.circular(AppSizes.radiusM),
-          border: Border.all(
-            color: AppTheme.primaryGreen.withValues(alpha: 0.3),
-          ),
-        ),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.grade_outlined,
-              color: AppTheme.primaryGreen,
-              size: 20,
-            ),
-            const SizedBox(width: 12),
-            Text(
-              'Aún no tienes calificaciones',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                color: AppTheme.primaryGreen,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildGradesAverageBanner(GradesSummary summary) {
-    final promedio = summary.promedioGeneral!;
-    final color = Grade.colorForValor(promedio);
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppTheme.lightGreen.withValues(alpha: 0.3),
-        borderRadius: BorderRadius.circular(AppSizes.radiusM),
-      ),
-      child: Row(
-        children: [
-          Text(
-            promedio.toStringAsFixed(2),
-            style: GoogleFonts.inter(
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-              color: color,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'Promedio general',
-              style: GoogleFonts.inter(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: AppTheme.darkText,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildGradeItem(SubjectAverage materia) {
-    final promedio = materia.promedio;
-    final color = promedio != null ? Grade.colorForValor(promedio) : AppTheme.greyText;
-
-    return GestureDetector(
-      onTap: () => Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => const GradesScreen()),
-      ),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: 8),
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppSizes.paddingM,
-          vertical: 12,
-        ),
-        decoration: BoxDecoration(
-          color: AppTheme.surface,
-          borderRadius: BorderRadius.circular(AppSizes.radiusM),
-          border: Border.all(color: AppTheme.outlineVariant),
-          boxShadow: AppTheme.softShadow,
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 4,
-              height: 36,
-              decoration: BoxDecoration(
-                color: materia.colorMateria,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                materia.materiaNombre,
-                style: GoogleFonts.inter(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppTheme.darkText,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Text(
-              promedio != null ? promedio.toStringAsFixed(2) : '--',
-              style: GoogleFonts.inter(
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
-                color: color,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(
-              Icons.chevron_right,
-              color: AppTheme.greyText,
-              size: 18,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBottomNav() {
-    return BottomAppBar(
-      color: AppTheme.white,
-      elevation: 8,
-      notchMargin: 8,
-      shape: const CircularNotchedRectangle(),
-      child: SizedBox(
-        height: 60,
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [
-            _buildNavItem(Icons.home, 'Home', true),
-            _buildNavItem(Icons.task_alt_outlined, 'Tasks', false),
-            const SizedBox(width: 48), // Espacio para FAB
-            _buildNavItem(Icons.calendar_today_outlined, 'Calendar', false),
-            _buildNavItem(Icons.person_outline, 'Profile', false),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildNavItem(IconData icon, String label, bool isActive) {
-    return InkWell(
-      onTap: () {
-        if (label == 'Tasks') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const TasksScreen(),
-            ),
-          ).then((_) => _loadDashboardData());
-        } else if (label == 'Calendar') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const CalendarScreen(),
-            ),
-          ).then((_) => _loadDashboardData());
-        } else if (label == 'Profile') {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const ProfileScreen(),
-            ),
-          ).then((_) => _loadDashboardData());
-        }
-      },
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(
-            icon,
-            color: isActive ? AppTheme.primaryGreen : AppTheme.greyText,
-            size: 24,
-          ),
-          const SizedBox(height: 4),
-          Text(
-            label,
-            style: GoogleFonts.inter(
-              fontSize: 12,
-              fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-              color: isActive ? AppTheme.primaryGreen : AppTheme.greyText,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
 // ============================================

@@ -9,10 +9,18 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../models/grade.dart';
 import '../../providers/grade_provider.dart';
+import '../../services/auth_service.dart';
+import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/user_avatar.dart';
 import '../../widgets/grades/average_indicator.dart';
 import '../../widgets/grades/grade_chart.dart';
 import '../../widgets/grades/subject_grades_list.dart';
+import '../calendar/calendar_screen.dart';
+import '../home/home_screen.dart';
+import '../profile/profile_screen.dart';
+import '../tasks/tasks_screen.dart';
 import 'grade_form_screen.dart';
+import 'manage_subjects_screen.dart';
 import 'subject_grades_screen.dart';
 
 class GradesScreen extends StatefulWidget {
@@ -23,12 +31,53 @@ class GradesScreen extends StatefulWidget {
 }
 
 class _GradesScreenState extends State<GradesScreen> {
+  final AuthService _authService = AuthService();
+  int _selectedIndex = 3;
+  late final Future<String> _userNameFuture;
+
   @override
   void initState() {
     super.initState();
+    _userNameFuture = _authService.getUserName();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<GradeProvider>().initialize();
     });
+  }
+
+  void _onItemTapped(int index) {
+    if (index == _selectedIndex) return;
+
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false,
+        );
+        break;
+      case 1:
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const TasksScreen()),
+          (route) => false,
+        );
+        break;
+      case 2:
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const CalendarScreen()),
+          (route) => false,
+        );
+        break;
+      case 3:
+        // Ya estamos en Calificaciones, solo refrescar datos
+        context.read<GradeProvider>().refresh();
+        break;
+    }
   }
 
   @override
@@ -65,6 +114,10 @@ class _GradesScreenState extends State<GradesScreen> {
         backgroundColor: AppTheme.primaryGreen,
         child: const Icon(Icons.add, color: AppTheme.white),
       ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _selectedIndex,
+        onItemSelected: _onItemTapped,
+      ),
     );
   }
 
@@ -76,24 +129,38 @@ class _GradesScreenState extends State<GradesScreen> {
       ),
       child: Row(
         children: [
-          IconButton(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            color: AppTheme.darkText,
-            iconSize: 20,
-            padding: EdgeInsets.zero,
-            constraints: const BoxConstraints(),
-          ),
-          const SizedBox(width: 12),
+          if (Navigator.canPop(context))
+            IconButton(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back_ios_new_rounded),
+              color: AppTheme.darkText,
+              iconSize: 20,
+              padding: EdgeInsets.zero,
+              constraints: const BoxConstraints(),
+            ),
+          if (Navigator.canPop(context)) const SizedBox(width: 12),
           Expanded(
             child: Text(
-              'Mis Calificaciones',
+              'Mis Notas',
               style: GoogleFonts.inter(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
                 color: AppTheme.darkText,
               ),
             ),
+          ),
+          FutureBuilder<String>(
+            future: _userNameFuture,
+            builder: (context, snapshot) {
+              return UserAvatar(
+                name: snapshot.data ?? '',
+                size: 36,
+                onTap: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                ),
+              );
+            },
           ),
         ],
       ),
@@ -139,7 +206,12 @@ class _GradesScreenState extends State<GradesScreen> {
       builder: (context, constraints) {
         return SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
-          padding: const EdgeInsets.all(AppSizes.paddingL),
+          padding: const EdgeInsets.fromLTRB(
+            AppSizes.paddingL,
+            AppSizes.paddingL,
+            AppSizes.paddingL,
+            96,
+          ),
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: Center(
@@ -191,7 +263,12 @@ class _GradesScreenState extends State<GradesScreen> {
 
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(AppSizes.paddingL),
+      padding: const EdgeInsets.fromLTRB(
+        AppSizes.paddingL,
+        AppSizes.paddingL,
+        AppSizes.paddingL,
+        96,
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -199,13 +276,29 @@ class _GradesScreenState extends State<GradesScreen> {
             child: AverageIndicator(promedio: summary?.promedioGeneral),
           ),
           const SizedBox(height: 32),
-          Text(
-            'Mis materias',
-            style: GoogleFonts.inter(
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-              color: AppTheme.darkText,
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Mis materias',
+                style: GoogleFonts.inter(
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.darkText,
+                ),
+              ),
+              TextButton.icon(
+                onPressed: () => _navigateToManageSubjects(context),
+                icon: const Icon(Icons.tune_rounded, size: 18),
+                label: const Text('Gestionar'),
+                style: TextButton.styleFrom(
+                  foregroundColor: AppTheme.greyText,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  minimumSize: Size.zero,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                ),
+              ),
+            ],
           ),
           const SizedBox(height: 12),
           if (summary != null && summary.materias.isNotEmpty)
@@ -252,6 +345,13 @@ class _GradesScreenState extends State<GradesScreen> {
     );
     if (!mounted) return;
     if (result == true) provider.refresh();
+  }
+
+  Future<void> _navigateToManageSubjects(BuildContext context) async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ManageSubjectsScreen()),
+    );
   }
 
   Future<void> _navigateToSubject(

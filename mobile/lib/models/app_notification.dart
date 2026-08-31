@@ -30,6 +30,7 @@ class AppNotification {
   static const Map<String, String> tipoLabels = {
     'tarea': 'Tarea',
     'clase': 'Clase',
+    'evento': 'Evento',
     'sistema': 'Sistema',
     'general': 'General',
   };

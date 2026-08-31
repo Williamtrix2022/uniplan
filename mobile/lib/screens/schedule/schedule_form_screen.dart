@@ -13,6 +13,7 @@ import '../../providers/schedule_provider.dart';
 import '../../services/schedule_service.dart';
 import '../../services/subject_service.dart';
 import '../../widgets/schedule/day_selector.dart';
+import '../grades/manage_subjects_screen.dart';
 
 class ScheduleFormScreen extends StatefulWidget {
   final Schedule? schedule;
@@ -62,6 +63,15 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
 
   // ── Carga de materias ────────────────────────────────────────────────────
 
+  Future<void> _openManageSubjects() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ManageSubjectsScreen()),
+    );
+    if (!mounted) return;
+    await _loadSubjects();
+  }
+
   Future<void> _loadSubjects() async {
     setState(() => _isLoadingSubjects = true);
     try {
@@ -107,38 +117,6 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
         _horaFin = picked;
       }
     });
-  }
-
-  // ── Nueva materia (inline) ───────────────────────────────────────────────
-
-  Future<void> _showCreateSubjectDialog() async {
-    final draft = await showDialog<Map<String, String?>>(
-      context: context,
-      builder: (_) => const _CreateSubjectDialog(),
-    );
-    if (!mounted || draft == null) return;
-
-    final name = draft['nombre']?.trim() ?? '';
-    if (name.isEmpty) {
-      _showSnack('El nombre es obligatorio', isError: true);
-      return;
-    }
-
-    try {
-      final created = await _subjectService.createSubject(
-        nombre: name,
-        codigo: draft['codigo'],
-      );
-      if (!mounted) return;
-      setState(() {
-        _subjects = [..._subjects, created]
-          ..sort((a, b) => a.nombre.compareTo(b.nombre));
-        _selectedSubjectId = created.id;
-      });
-      _showSnack('Materia creada');
-    } catch (e) {
-      if (mounted) _showSnack('Error creando materia: $e', isError: true);
-    }
   }
 
   // ── Guardar ──────────────────────────────────────────────────────────────
@@ -550,52 +528,27 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
     }
 
     if (_subjects.isEmpty) {
-      return GestureDetector(
-        onTap: _showCreateSubjectDialog,
-        child: Container(
-          padding: const EdgeInsets.all(AppSizes.paddingM),
-          decoration: BoxDecoration(
-            color: colorScheme.surface,
-            borderRadius: BorderRadius.circular(AppSizes.radiusM),
-            border: Border.all(color: colorScheme.outlineVariant),
-          ),
-          child: Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
-                  color: colorScheme.secondaryContainer,
-                ),
-                child: Icon(Icons.school_outlined,
-                    color: colorScheme.onSecondaryContainer),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Agregar nueva materia',
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.darkText,
-                      ),
-                    ),
-                    Text(
-                      'Toca para crearla',
-                      style: GoogleFonts.inter(
-                        fontSize: 12,
-                        color: AppTheme.greyText,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+      return Container(
+        padding: const EdgeInsets.all(AppSizes.paddingM),
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          borderRadius: BorderRadius.circular(AppSizes.radiusM),
+          border: Border.all(color: colorScheme.outlineVariant),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Todavía no tenés materias creadas.',
+              style: GoogleFonts.inter(fontSize: 13, color: AppTheme.greyText),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _openManageSubjects,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Crear materia'),
+            ),
+          ],
         ),
       );
     }
@@ -723,89 +676,6 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
           ],
         ),
       ),
-    );
-  }
-}
-
-// ── Diálogo inline "Nueva materia" ───────────────────────────────────────────
-
-class _CreateSubjectDialog extends StatefulWidget {
-  const _CreateSubjectDialog();
-
-  @override
-  State<_CreateSubjectDialog> createState() => _CreateSubjectDialogState();
-}
-
-class _CreateSubjectDialogState extends State<_CreateSubjectDialog> {
-  late final TextEditingController _nameController;
-  late final TextEditingController _codeController;
-
-  @override
-  void initState() {
-    super.initState();
-    _nameController = TextEditingController();
-    _codeController = TextEditingController();
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _codeController.dispose();
-    super.dispose();
-  }
-
-  void _submit() {
-    final name = _nameController.text.trim();
-    if (name.isEmpty) return;
-    FocusScope.of(context).unfocus();
-    Navigator.of(context).pop({
-      'nombre': name,
-      'codigo': _codeController.text.trim().isEmpty
-          ? null
-          : _codeController.text.trim(),
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return AlertDialog(
-      title: const Text('Nueva materia'),
-      content: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          TextField(
-            controller: _nameController,
-            autofocus: true,
-            decoration: const InputDecoration(
-              labelText: 'Nombre *',
-              hintText: 'Ej. Álgebra Lineal',
-            ),
-            onSubmitted: (_) => _submit(),
-          ),
-          const SizedBox(height: 12),
-          TextField(
-            controller: _codeController,
-            decoration: const InputDecoration(
-              labelText: 'Código (opcional)',
-              hintText: 'Ej. MAT-201',
-            ),
-            onSubmitted: (_) => _submit(),
-          ),
-        ],
-      ),
-      actions: [
-        TextButton(
-          onPressed: () {
-            FocusScope.of(context).unfocus();
-            Navigator.pop(context);
-          },
-          child: const Text('Cancelar'),
-        ),
-        ElevatedButton(
-          onPressed: _submit,
-          child: const Text('Crear'),
-        ),
-      ],
     );
   }
 }

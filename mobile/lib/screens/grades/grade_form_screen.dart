@@ -11,6 +11,7 @@ import '../../models/grade.dart';
 import '../../models/subject.dart';
 import '../../providers/grade_provider.dart';
 import '../../services/subject_service.dart';
+import 'manage_subjects_screen.dart';
 
 class GradeFormScreen extends StatefulWidget {
   final Grade? grade;
@@ -70,6 +71,15 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
     _porcentajeController.dispose();
     _descripcionController.dispose();
     super.dispose();
+  }
+
+  Future<void> _openManageSubjects() async {
+    await Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const ManageSubjectsScreen()),
+    );
+    if (!mounted) return;
+    await _loadSubjects();
   }
 
   Future<void> _loadSubjects() async {
@@ -497,9 +507,20 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
       return Container(
         decoration: _selectorDecoration(context),
         padding: const EdgeInsets.all(16),
-        child: Text(
-          'No tienes materias registradas. Crea una desde Tareas primero.',
-          style: textTheme.bodyMedium?.copyWith(color: AppTheme.greyText),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'No tienes materias registradas.',
+              style: textTheme.bodyMedium?.copyWith(color: AppTheme.greyText),
+            ),
+            const SizedBox(height: 12),
+            OutlinedButton.icon(
+              onPressed: _openManageSubjects,
+              icon: const Icon(Icons.add, size: 18),
+              label: const Text('Crear materia'),
+            ),
+          ],
         ),
       );
     }

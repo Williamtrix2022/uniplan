@@ -67,6 +67,8 @@ mobile/.fvm/
 *.sql
 *.sqlite
 *.db
+# Excepción: el esquema versionado (sin datos reales) sí se sube
+!backend/db/*.sql
 
 # ========== LOGS Y TEMPORALES ==========
 *.log
@@ -96,4 +98,6 @@ docs/*.tmp
 docs/~$*
 
 # ========== DB ==========
+# Dumps reales de producción (PII y hashes de contraseñas) — nunca subir
 docs/DB/base-de-datos.md
+docs/uniplan_db.md

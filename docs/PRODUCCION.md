@@ -1,0 +1,112 @@
+# Checklist de producción — Uniplan
+
+Este documento es una lista de verificación, no un script automático. Los pasos
+que requieren credenciales o cuentas personales (dominio, Play Console, claves
+de firma) los tiene que ejecutar Jhon directamente — acá se deja documentado
+qué falta y en qué orden tiene sentido hacerlo.
+
+## 1. Variables de entorno
+
+El backend (`backend/src/config/database.js` y el resto de `backend/src`) ya
+lee todo desde variables de entorno, sin valores hardcodeados — pasar de local
+a producción es solo cuestión de `.env` correcto en cada ambiente. Nunca se
+suben al repo (`.gitignore` ya lo cubre).
+
+Variables usadas hoy (ver `backend/.env.example` para la lista completa):
+`DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`, `DB_PORT`, `JWT_SECRET`,
+`JWT_EXPIRE`, `BCRYPT_ROUNDS`, `RESET_PASSWORD_URL`,
+`RESET_TOKEN_EXPIRE_MINUTES`, `SMTP_*`, `CORS_ORIGINS`.
+
+- [ ] Confirmar que las variables de producción están configuradas en Vercel
+      (Project Settings → Environment Variables), no solo en el `.env` local.
+- [ ] Setear `CORS_ORIGINS` en Vercel con el/los dominio(s) reales separados
+      por coma (ej. `https://uniplan.app,https://www.uniplan.app`). Si queda
+      sin setear, la API acepta cualquier origen y lo avisa en el log.
+- [x] Rotar la credencial SMTP de MailerSend filtrada en el historial de git
+      (hallazgo Crítico de la auditoría — ya la rotaste).
+- [ ] `JWT_SECRET` en producción: confirmar que es un valor largo y aleatorio,
+      distinto al usado en desarrollo.
+
+## 2. Base de datos
+
+- [x] Esquema versionado en `backend/db/schema.sql` (antes no existía ningún
+      `.sql` en el repo — `*.sql` estaba en `.gitignore` sin excepción).
+- [x] `docker-compose.yml` para levantar MySQL local con el esquema aplicado
+      (`docker compose up -d`), verificado de punta a punta.
+- [ ] Decidir si producción sigue en AlwaysData o se migra a otro proveedor
+      (Railway, PlanetScale, RDS, etc.) — el código no depende de Alwaysday
+      específicamente, es MySQL estándar vía `mysql2`.
+- [ ] Si se migra: exportar los datos reales (no solo el esquema) desde
+      AlwaysData e importarlos al nuevo proveedor.
+- [ ] Adoptar una herramienta de migraciones versionadas (ej. `db-migrate` o
+      Knex) para que los próximos cambios de esquema no vuelvan a quedar solo
+      en la base de producción sin registro. Hoy los cambios de esquema se
+      documentan a mano en `docs/DB/base-de-datos.md` (gitignored, contiene
+      datos reales de estudiantes — no subir nunca ese archivo).
+
+## 3. Backend
+
+- [x] CORS configurable por `CORS_ORIGINS` en `backend/src/app.js` (allowlist
+      por env; `*` solo si no está seteada, con advertencia en el log). Falta
+      setear la variable en Vercel — ver sección 1.
+- [x] `helmet()` y un rate limiter global (`apiLimiter`, 300 req/15min por IP)
+      además del límite específico de `/auth/*`.
+- [x] Las respuestas 5xx ya no filtran `error.message` ni el stack al cliente
+      fuera de `development` (middleware `sanitizeErrorResponse` + error handler
+      global endurecido).
+- [ ] JWT con revocación / refresh tokens — sigue pendiente, es un cambio
+      arquitectónico (tabla de tokens, rotación, "cerrar sesión en todos los
+      dispositivos", cambios en el cliente). Merece su propia fase.
+- [ ] Conectar `express-validator` a las rutas (hoy es una dependencia sin
+      usar). Son ~11 archivos de rutas con decenas de endpoints; conviene
+      hacerlo como fase dedicada, no junto a otros cambios.
+- [ ] `usesCleartextTraffic` ya salió del manifest de release (queda solo en
+      `debug`/`profile`); cuando exista dominio propio, confirmar que la app
+      apunta siempre a HTTPS.
+
+## 4. Dominio
+
+- [ ] Comprar el dominio.
+- [ ] Apuntar el DNS al proyecto de Vercel (o al hosting que se elija para el
+      backend).
+- [ ] Actualizar `RESET_PASSWORD_URL` (backend) y la URL base de la API en
+      `mobile/lib/config/api_config.dart` para que apunten al dominio nuevo.
+- [ ] Certificado TLS — Vercel lo gestiona automáticamente si el dominio se
+      conecta ahí.
+
+## 5. Play Store
+
+- [ ] Cuenta de Google Play Console (cuesta una vez, la paga Jhon).
+- [ ] Revisar `applicationId` en `mobile/android/app/build.gradle` — debe ser
+      único y definitivo, no se puede cambiar después de publicar.
+- [ ] Generar el keystore de firma de release y guardarlo fuera del repo
+      (nunca versionado) — el CI actual (`ci-tests.yml` /
+      `firebase-distribution.yml`) no firma para Play Store todavía, solo
+      para Firebase App Distribution.
+- [ ] Escribir la política de privacidad (obligatoria para publicar) — puede
+      alojarse como una página estática en el dominio nuevo. Debe reflejar
+      qué datos se recolectan: nombre, correo, carrera, universidad,
+      contraseña (hasheada), y el uso de notificaciones locales.
+- [x] El token de sesión y los datos de usuario se guardan cifrados en el
+      dispositivo (`flutter_secure_storage`: Keychain en iOS,
+      EncryptedSharedPreferences en Android), no en `SharedPreferences` en
+      texto plano. Hay migración automática para sesiones ya existentes.
+- [ ] Completar el formulario de seguridad de datos ("Data safety") de Play
+      Console con la misma información.
+- [ ] Cuestionario de clasificación de contenido.
+- [ ] Capturas de pantalla, ícono, descripción corta/larga de la ficha de
+      Play Store.
+
+## 6. CI/CD
+
+- [x] `ci-tests.yml`: corre `flutter analyze` + `flutter test` + `npm test`
+      en cada Pull Request a `main` y `dev`.
+- [x] `firebase-distribution.yml`: ahora corre analyze + test también antes
+      de buildear el APK de distribución (antes no corría ningún test).
+- [ ] **Pendiente de un administrador del repo**: activar "Require status
+      checks to pass" en Settings → Branches para `main` (y opcionalmente
+      `dev`), seleccionando los jobs de `ci-tests.yml` como obligatorios.
+      Sin este paso, los tests corren y se ven en el PR, pero no bloquean el
+      merge si fallan — eso es una configuración de GitHub, no del código,
+      así que no se puede hacer desde acá sin permisos de administración del
+      repositorio.

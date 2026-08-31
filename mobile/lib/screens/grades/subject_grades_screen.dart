@@ -140,7 +140,7 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
                                 .toList(),
                           ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 96),
                 ],
               ),
             ),

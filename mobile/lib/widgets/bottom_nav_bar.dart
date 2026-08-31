@@ -34,19 +34,19 @@ class BottomNavBar extends StatelessWidget {
       items: const [
         BottomNavigationBarItem(
           icon: Icon(Icons.home_outlined),
-          label: 'Home',
+          label: 'Inicio',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.task_alt_outlined),
-          label: 'Tasks',
+          label: 'Tareas',
         ),
         BottomNavigationBarItem(
           icon: Icon(Icons.calendar_today_outlined),
-          label: 'Calendar',
+          label: 'Calendario',
         ),
         BottomNavigationBarItem(
-          icon: Icon(Icons.person_2_outlined),
-          label: 'Perfil',
+          icon: Icon(Icons.grade_outlined),
+          label: 'Notas',
         ),
       ],
     );
