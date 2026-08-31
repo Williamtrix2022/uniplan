@@ -4,4 +4,8 @@
          to allow setting breakpoints, to provide hot reload, etc.
     -->
     <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Sólo en profile: permite apuntar a un backend HTTP local (LAN)
+         durante mediciones de performance. El release queda sólo HTTPS. -->
+    <application android:usesCleartextTraffic="true" />
 </manifest>

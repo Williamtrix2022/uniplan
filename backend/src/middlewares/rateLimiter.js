@@ -42,7 +42,20 @@ const resetLimiter = rateLimit({
   handler: rateLimitHandler
 });
 
+// Límite general para toda la API: 300 peticiones cada 15 minutos por IP.
+// Es un techo amplio pensado para frenar scraping o abuso automatizado sin
+// molestar el uso normal de la app; los endpoints de auth ya tienen sus
+// propios límites más estrictos encima de este.
+const apiLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 300,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: rateLimitHandler
+});
+
 module.exports = {
   authLimiter,
-  resetLimiter
+  resetLimiter,
+  apiLimiter
 };
