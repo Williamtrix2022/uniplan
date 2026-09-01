@@ -149,6 +149,14 @@ class _GradesScreenState extends State<GradesScreen> {
               ),
             ),
           ),
+          IconButton(
+            onPressed: () => _navigateToManageSubjects(context),
+            icon: const Icon(Icons.school_outlined),
+            color: AppTheme.darkText,
+            iconSize: 22,
+            tooltip: 'Gestionar materias',
+          ),
+          const SizedBox(width: 4),
           FutureBuilder<String>(
             future: _userNameFuture,
             builder: (context, snapshot) {
@@ -247,6 +255,15 @@ class _GradesScreenState extends State<GradesScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppTheme.primaryGreen,
                       foregroundColor: AppTheme.white,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () => _navigateToManageSubjects(context),
+                    icon: const Icon(Icons.school_outlined, size: 18),
+                    label: const Text('Gestionar materias'),
+                    style: TextButton.styleFrom(
+                      foregroundColor: AppTheme.greyText,
                     ),
                   ),
                 ],
@@ -348,10 +365,13 @@ class _GradesScreenState extends State<GradesScreen> {
   }
 
   Future<void> _navigateToManageSubjects(BuildContext context) async {
+    final provider = context.read<GradeProvider>();
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const ManageSubjectsScreen()),
     );
+    if (!mounted) return;
+    provider.refresh();
   }
 
   Future<void> _navigateToSubject(
