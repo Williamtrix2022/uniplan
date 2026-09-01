@@ -10,6 +10,13 @@ import 'api_service.dart';
 class AuthService {
   final ApiService _apiService = ApiService();
 
+  AuthService() {
+    // ApiService (singleton) reintenta los 401 llamando a este callback.
+    // Se registra al construir cualquier AuthService, que es lo que hacen
+    // las pantallas — no depende de que se llame loadToken().
+    _apiService.setRefreshCallback(refreshSession);
+  }
+
   // El token de sesión y los datos del usuario se guardan cifrados
   // (Keychain en iOS, EncryptedSharedPreferences en Android) en vez de
   // SharedPreferences en texto plano.
@@ -18,6 +25,7 @@ class AuthService {
   );
 
   static const String _tokenKey = 'auth_token';
+  static const String _refreshKey = 'refresh_token';
   static const String _userKey = 'user_data';
 
   // ========== LOGIN ==========
@@ -34,15 +42,9 @@ class AuthService {
         },
       );
 
-      // Guardar token y datos del usuario
+      // Guardar tokens y datos del usuario
       if (response['success'] == true) {
-        final token = response['token'];
-        final userData = response['data'];
-
-        await _saveToken(token);
-        await _saveUserData(userData);
-        _apiService.setToken(token);
-
+        await _persistSession(response);
         return response;
       } else {
         throw Exception(response['message'] ?? 'Error al iniciar sesión');
@@ -72,15 +74,9 @@ class AuthService {
         },
       );
 
-      // Guardar token y datos del usuario
+      // Guardar tokens y datos del usuario
       if (response['success'] == true) {
-        final token = response['token'];
-        final userData = response['data'];
-
-        await _saveToken(token);
-        await _saveUserData(userData);
-        _apiService.setToken(token);
-
+        await _persistSession(response);
         return response;
       } else {
         throw Exception(response['message'] ?? 'Error al registrarse');
@@ -191,9 +187,61 @@ class AuthService {
 
   // ========== LOGOUT ==========
   Future<void> logout() async {
-    await _removeToken();
-    await _removeUserData();
-    _apiService.clearToken();
+    // Best-effort: avisar al backend para que revoque el refresh token.
+    final refreshToken = await _secureStorage.read(key: _refreshKey);
+    if (refreshToken != null && refreshToken.trim().isNotEmpty) {
+      try {
+        await _apiService.post(ApiConfig.logout, {'refreshToken': refreshToken});
+      } catch (_) {
+        // Si no hay red o el token ya no vale, igual se limpia localmente.
+      }
+    }
+    await _clearSession();
+  }
+
+  // ========== CERRAR SESIÓN EN TODOS LOS DISPOSITIVOS ==========
+  Future<void> logoutAll() async {
+    try {
+      await _apiService.post(ApiConfig.logoutAll, {});
+    } catch (_) {
+      // Idem: se limpia localmente aunque falle.
+    }
+    await _clearSession();
+  }
+
+  // ========== REFRESCAR SESIÓN ==========
+  // Lo llama ApiService cuando una petición devuelve 401. Devuelve true si
+  // consiguió un access token nuevo.
+  Future<bool> refreshSession() async {
+    final refreshToken = await _secureStorage.read(key: _refreshKey);
+    if (refreshToken == null || refreshToken.trim().isEmpty) {
+      return false;
+    }
+
+    try {
+      final response = await _apiService.post(
+        ApiConfig.refresh,
+        {'refreshToken': refreshToken},
+      );
+
+      if (response['success'] == true && response['token'] != null) {
+        await _saveToken(response['token']);
+        if (response['refreshToken'] != null) {
+          await _secureStorage.write(
+            key: _refreshKey,
+            value: response['refreshToken'],
+          );
+        }
+        _apiService.setToken(response['token']);
+        return true;
+      }
+
+      await _clearSession();
+      return false;
+    } catch (_) {
+      await _clearSession();
+      return false;
+    }
   }
 
   // ========== VERIFICAR SI ESTÁ AUTENTICADO ==========
@@ -224,6 +272,26 @@ class AuthService {
     } catch (e) {
       return 'Usuario';
     }
+  }
+
+  // ========== PERSISTIR / LIMPIAR SESIÓN ==========
+  Future<void> _persistSession(Map<String, dynamic> response) async {
+    await _saveToken(response['token']);
+    if (response['refreshToken'] != null) {
+      await _secureStorage.write(
+        key: _refreshKey,
+        value: response['refreshToken'],
+      );
+    }
+    await _saveUserData(response['data']);
+    _apiService.setToken(response['token']);
+  }
+
+  Future<void> _clearSession() async {
+    await _removeToken();
+    await _removeUserData();
+    await _secureStorage.delete(key: _refreshKey);
+    _apiService.clearToken();
   }
 
   // ========== GUARDAR TOKEN ==========

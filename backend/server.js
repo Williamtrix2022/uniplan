@@ -6,16 +6,20 @@ require('dotenv').config();
 const app = require('./src/app');
 const { testConnection } = require('./src/config/database');
 const Notification = require('./src/models/Notification');
+const RefreshToken = require('./src/models/RefreshToken');
 
 const PORT = process.env.PORT || 3000;
 
-// Asegura que existan las tablas de notificaciones (no debe tumbar el server si falla)
+// Asegura que existan las tablas de notificaciones y refresh tokens (no debe
+// tumbar el server si falla). Las migraciones son el registro "oficial";
+// esto es la red de seguridad para el entorno serverless.
 const ensureNotificationTables = async () => {
   try {
     await Notification.ensureTables();
-    console.log('✅ Tablas de notificaciones verificadas/creadas');
+    await RefreshToken.ensureTable();
+    console.log('✅ Tablas de notificaciones y refresh tokens verificadas/creadas');
   } catch (error) {
-    console.error('⚠️ No se pudieron verificar/crear las tablas de notificaciones:', error.message);
+    console.error('⚠️ No se pudieron verificar/crear tablas auxiliares:', error.message);
   }
 };
 

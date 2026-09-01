@@ -81,7 +81,9 @@ DB_PORT=3306
 
 # JWT
 JWT_SECRET=tu_clave_secreta_super_segura
-JWT_EXPIRE=7d
+JWT_ACCESS_EXPIRE=15m          # access token corto (formato jsonwebtoken)
+JWT_REFRESH_EXPIRE_DAYS=30     # refresh token, en días
+JWT_EXPIRE=7d                  # OBSOLETO (token único previo al refresh)
 
 # Bcrypt
 BCRYPT_ROUNDS=10
@@ -208,12 +210,15 @@ backend/
 
 | Método | Ruta | Descripción | Auth |
 |--------|------|-------------|------|
-| POST | `/api/auth/register` | Registrar estudiante | No |
-| POST | `/api/auth/login` | Iniciar sesión | No |
+| POST | `/api/auth/register` | Registrar estudiante (devuelve `token` + `refreshToken`) | No |
+| POST | `/api/auth/login` | Iniciar sesión (devuelve `token` + `refreshToken`) | No |
+| POST | `/api/auth/refresh` | Rotar el par de tokens con un `refreshToken` válido | No |
 | POST | `/api/auth/forgot-password` | Solicitar recuperación (envía correo) | No |
 | POST | `/api/auth/reset-password` | Restablecer contraseña (correo + token) | No |
 | GET | `/api/auth/profile` | Obtener perfil | Sí |
 | PATCH | `/api/auth/change-password` | Cambiar contraseña autenticado | Sí |
+| POST | `/api/auth/logout` | Revoca el `refreshToken` indicado | Sí |
+| POST | `/api/auth/logout-all` | Revoca todos los refresh tokens del usuario | Sí |
 
 ### Materias
 
@@ -312,6 +317,13 @@ backend/
 - `progreso_academico` - Estadísticas
 - `horarios` - Bloques de horario semanal
 - `calificaciones` - Notas y evaluaciones por materia
+- `refresh_tokens` - Sesiones (rotación + revocación)
+- `password_resets` - Tokens de recuperación de contraseña
+- `notificaciones` / `preferencias_notificacion` - Feed y ajustes de avisos
+
+El esquema versionado está en `backend/db/schema.sql` y el historial de
+cambios en `backend/migrations/` (`npm run migrate`, ver
+`backend/migrations/README.md`).
 
 ### Diagrama ER
 

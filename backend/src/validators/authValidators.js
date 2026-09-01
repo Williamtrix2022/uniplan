@@ -68,10 +68,18 @@ const changePassword = [
     .isLength({ min: 6 }).withMessage('La nueva contraseña debe tener al menos 6 caracteres')
 ];
 
+const refreshOrLogout = [
+  body('refreshToken')
+    .isString().withMessage('refreshToken es obligatorio')
+    .trim()
+    .notEmpty().withMessage('refreshToken es obligatorio')
+];
+
 module.exports = {
   register,
   login,
   forgotPassword,
   resetPassword,
-  changePassword
+  changePassword,
+  refreshOrLogout
 };
