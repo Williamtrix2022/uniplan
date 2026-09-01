@@ -57,9 +57,11 @@ Variables usadas hoy (ver `backend/.env.example` para la lista completa):
 - [ ] JWT con revocación / refresh tokens — sigue pendiente, es un cambio
       arquitectónico (tabla de tokens, rotación, "cerrar sesión en todos los
       dispositivos", cambios en el cliente). Merece su propia fase.
-- [ ] Conectar `express-validator` a las rutas (hoy es una dependencia sin
-      usar). Son ~11 archivos de rutas con decenas de endpoints; conviene
-      hacerlo como fase dedicada, no junto a otros cambios.
+- [x] `express-validator` conectado a las 11 rutas como guardia de entrada
+      (`backend/src/validators/*` + `middlewares/validate.js`). Valida tipos,
+      largos, enums y `:id` antes de llegar al controlador; responde 400 con
+      `{ success:false, message, errors[] }`. Los chequeos inline previos de
+      los controladores se dejaron como segunda línea.
 - [ ] `usesCleartextTraffic` ya salió del manifest de release (queda solo en
       `debug`/`profile`); cuando exista dominio propio, confirmar que la app
       apunta siempre a HTTPS.
