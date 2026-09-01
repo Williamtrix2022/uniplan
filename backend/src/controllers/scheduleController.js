@@ -57,8 +57,7 @@ const createSchedule = async (req, res) => {
     console.error('Error en createSchedule:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al crear bloque de horario',
-      error: error.message
+      message: 'Error al crear bloque de horario'
     });
   }
 };
@@ -85,8 +84,7 @@ const getMySchedules = async (req, res) => {
     console.error('Error en getMySchedules:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener horarios',
-      error: error.message
+      message: 'Error al obtener horarios'
     });
   }
 };
@@ -107,8 +105,7 @@ const getWeekSchedule = async (req, res) => {
     console.error('Error en getWeekSchedule:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener horario semanal',
-      error: error.message
+      message: 'Error al obtener horario semanal'
     });
   }
 };
@@ -138,8 +135,7 @@ const getScheduleByDay = async (req, res) => {
     console.error('Error en getScheduleByDay:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener horario del día',
-      error: error.message
+      message: 'Error al obtener horario del día'
     });
   }
 };
@@ -176,8 +172,7 @@ const getScheduleConflicts = async (req, res) => {
     console.error('Error en getScheduleConflicts:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener conflictos de horario',
-      error: error.message
+      message: 'Error al obtener conflictos de horario'
     });
   }
 };
@@ -211,8 +206,7 @@ const getScheduleById = async (req, res) => {
     console.error('Error en getScheduleById:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener bloque de horario',
-      error: error.message
+      message: 'Error al obtener bloque de horario'
     });
   }
 };
@@ -290,8 +284,7 @@ const updateSchedule = async (req, res) => {
     console.error('Error en updateSchedule:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al actualizar bloque de horario',
-      error: error.message
+      message: 'Error al actualizar bloque de horario'
     });
   }
 };
@@ -327,8 +320,7 @@ const deleteSchedule = async (req, res) => {
     console.error('Error en deleteSchedule:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al eliminar bloque de horario',
-      error: error.message
+      message: 'Error al eliminar bloque de horario'
     });
   }
 };

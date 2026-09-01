@@ -67,8 +67,7 @@ const getDashboard = async (req, res) => {
     console.error('Error en getDashboard:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener dashboard',
-      error: error.message
+      message: 'Error al obtener dashboard'
     });
   }
 };
@@ -101,8 +100,7 @@ const getWeeklySummary = async (req, res) => {
     console.error('Error en getWeeklySummary:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener resumen semanal',
-      error: error.message
+      message: 'Error al obtener resumen semanal'
     });
   }
 };
@@ -143,8 +141,7 @@ const getTodaySummary = async (req, res) => {
     console.error('Error en getTodaySummary:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener resumen de hoy',
-      error: error.message
+      message: 'Error al obtener resumen de hoy'
     });
   }
 };

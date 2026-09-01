@@ -108,8 +108,7 @@ const register = async (req, res) => {
     console.error('Error en register:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al registrar estudiante',
-      error: error.message
+      message: 'Error al registrar estudiante'
     });
   }
 };
@@ -208,8 +207,7 @@ const getProfile = async (req, res) => {
     console.error('Error en getProfile:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener perfil',
-      error: error.message
+      message: 'Error al obtener perfil'
     });
   }
 };
@@ -364,8 +362,7 @@ const forgotPassword = async (req, res) => {
     console.error('Error en forgotPassword:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al procesar recuperación de contraseña',
-      error: error.message
+      message: 'Error al procesar recuperación de contraseña'
     });
   }
 };
@@ -446,8 +443,7 @@ const resetPassword = async (req, res) => {
     console.error('Error en resetPassword:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al restablecer contraseña',
-      error: error.message
+      message: 'Error al restablecer contraseña'
     });
   }
 };
@@ -506,8 +502,7 @@ const changePassword = async (req, res) => {
     console.error('Error en changePassword:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al cambiar contraseña',
-      error: error.message
+      message: 'Error al cambiar contraseña'
     });
   }
 };

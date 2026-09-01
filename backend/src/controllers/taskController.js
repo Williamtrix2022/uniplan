@@ -41,8 +41,7 @@ const createTask = async (req, res) => {
     console.error('Error en createTask:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al crear tarea',
-      error: error.message
+      message: 'Error al crear tarea'
     });
   }
 };
@@ -73,8 +72,7 @@ const getMyTasks = async (req, res) => {
     console.error('Error en getMyTasks:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener tareas',
-      error: error.message
+      message: 'Error al obtener tareas'
     });
   }
 };
@@ -95,8 +93,7 @@ const getUpcomingTasks = async (req, res) => {
     console.error('Error en getUpcomingTasks:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener tareas próximas',
-      error: error.message
+      message: 'Error al obtener tareas próximas'
     });
   }
 };
@@ -130,8 +127,7 @@ const getTaskById = async (req, res) => {
     console.error('Error en getTaskById:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener tarea',
-      error: error.message
+      message: 'Error al obtener tarea'
     });
   }
 };
@@ -187,8 +183,7 @@ const updateTask = async (req, res) => {
     console.error('Error en updateTask:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al actualizar tarea',
-      error: error.message
+      message: 'Error al actualizar tarea'
     });
   }
 };
@@ -240,8 +235,7 @@ const toggleTaskComplete = async (req, res) => {
     console.error('Error en toggleTaskComplete:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al actualizar estado de tarea',
-      error: error.message
+      message: 'Error al actualizar estado de tarea'
     });
   }
 };
@@ -284,8 +278,7 @@ const deleteTask = async (req, res) => {
     console.error('Error en deleteTask:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al eliminar tarea',
-      error: error.message
+      message: 'Error al eliminar tarea'
     });
   }
 };
@@ -305,8 +298,7 @@ const getTaskStats = async (req, res) => {
     console.error('Error en getTaskStats:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener estadísticas',
-      error: error.message
+      message: 'Error al obtener estadísticas'
     });
   }
 };

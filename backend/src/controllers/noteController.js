@@ -38,8 +38,7 @@ const createNote = async (req, res) => {
     console.error('Error en createNote:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al crear nota',
-      error: error.message
+      message: 'Error al crear nota'
     });
   }
 };
@@ -67,8 +66,7 @@ const getMyNotes = async (req, res) => {
     console.error('Error en getMyNotes:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener notas',
-      error: error.message
+      message: 'Error al obtener notas'
     });
   }
 };
@@ -89,8 +87,7 @@ const getFavoriteNotes = async (req, res) => {
     console.error('Error en getFavoriteNotes:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener notas favoritas',
-      error: error.message
+      message: 'Error al obtener notas favoritas'
     });
   }
 };
@@ -112,8 +109,7 @@ const getRecentNotes = async (req, res) => {
     console.error('Error en getRecentNotes:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener notas recientes',
-      error: error.message
+      message: 'Error al obtener notas recientes'
     });
   }
 };
@@ -147,8 +143,7 @@ const getNoteById = async (req, res) => {
     console.error('Error en getNoteById:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener nota',
-      error: error.message
+      message: 'Error al obtener nota'
     });
   }
 };
@@ -202,8 +197,7 @@ const updateNote = async (req, res) => {
     console.error('Error en updateNote:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al actualizar nota',
-      error: error.message
+      message: 'Error al actualizar nota'
     });
   }
 };
@@ -249,8 +243,7 @@ const toggleFavorite = async (req, res) => {
     console.error('Error en toggleFavorite:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al actualizar favorito',
-      error: error.message
+      message: 'Error al actualizar favorito'
     });
   }
 };
@@ -293,8 +286,7 @@ const deleteNote = async (req, res) => {
     console.error('Error en deleteNote:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al eliminar nota',
-      error: error.message
+      message: 'Error al eliminar nota'
     });
   }
 };
@@ -314,8 +306,7 @@ const getNoteStats = async (req, res) => {
     console.error('Error en getNoteStats:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener estadísticas',
-      error: error.message
+      message: 'Error al obtener estadísticas'
     });
   }
 };

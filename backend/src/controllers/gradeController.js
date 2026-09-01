@@ -85,8 +85,7 @@ const createGrade = async (req, res) => {
     console.error('Error en createGrade:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al crear calificación',
-      error: error.message
+      message: 'Error al crear calificación'
     });
   }
 };
@@ -107,8 +106,7 @@ const getMyGrades = async (req, res) => {
     console.error('Error en getMyGrades:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener calificaciones',
-      error: error.message
+      message: 'Error al obtener calificaciones'
     });
   }
 };
@@ -142,8 +140,7 @@ const getGradeById = async (req, res) => {
     console.error('Error en getGradeById:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener calificación',
-      error: error.message
+      message: 'Error al obtener calificación'
     });
   }
 };
@@ -166,8 +163,7 @@ const getGradesBySubject = async (req, res) => {
     console.error('Error en getGradesBySubject:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener calificaciones de la materia',
-      error: error.message
+      message: 'Error al obtener calificaciones de la materia'
     });
   }
 };
@@ -240,8 +236,7 @@ const updateGrade = async (req, res) => {
     console.error('Error en updateGrade:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al actualizar calificación',
-      error: error.message
+      message: 'Error al actualizar calificación'
     });
   }
 };
@@ -277,8 +272,7 @@ const deleteGrade = async (req, res) => {
     console.error('Error en deleteGrade:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al eliminar calificación',
-      error: error.message
+      message: 'Error al eliminar calificación'
     });
   }
 };
@@ -331,8 +325,7 @@ const getSummary = async (req, res) => {
     console.error('Error en getSummary:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener resumen de calificaciones',
-      error: error.message
+      message: 'Error al obtener resumen de calificaciones'
     });
   }
 };
@@ -354,8 +347,7 @@ const getSubjectProjection = async (req, res) => {
     console.error('Error en getSubjectProjection:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al calcular proyección de calificación',
-      error: error.message
+      message: 'Error al calcular proyección de calificación'
     });
   }
 };
