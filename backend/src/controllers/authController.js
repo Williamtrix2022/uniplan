@@ -4,10 +4,20 @@
 
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const jwt = require('jsonwebtoken');
 const Student = require('../models/Student');
+const RefreshToken = require('../models/RefreshToken');
 const { isValidEmail, isRealEmail } = require('../utils/validators');
 const { sendEmail } = require('../services/mailService');
+const { signAccessToken, generateRefreshToken, hashToken } = require('../services/tokenService');
+
+// Emite un par access + refresh, persiste el refresh (hash) y devuelve
+// ambos en claro para la respuesta.
+const issueTokenPair = async (student) => {
+  const token = signAccessToken({ id: student.id, correo: student.correo });
+  const { token: refreshToken, tokenHash, expiresAt } = generateRefreshToken();
+  await RefreshToken.create(student.id, tokenHash, expiresAt);
+  return { token, refreshToken };
+};
 
 // ========== REGISTRAR NUEVO ESTUDIANTE ==========
 const register = async (req, res) => {
@@ -59,12 +69,8 @@ const register = async (req, res) => {
       universidad
     });
 
-    // 5. Generar token JWT
-    const token = jwt.sign(
-      { id: studentId, correo },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE }
-    );
+    // 5. Generar par de tokens (access + refresh)
+    const { token, refreshToken } = await issueTokenPair({ id: studentId, correo });
 
     // 6. Responder con éxito
     res.status(201).json({
@@ -77,7 +83,8 @@ const register = async (req, res) => {
         carrera,
         universidad
       },
-      token
+      token,
+      refreshToken
     });
 
     const welcomeSubject = 'Uniplan - Cuenta registrada';
@@ -138,12 +145,8 @@ const login = async (req, res) => {
       });
     }
 
-    // 4. Generar token JWT
-    const token = jwt.sign(
-      { id: student.id, correo: student.correo },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRE }
-    );
+    // 4. Generar par de tokens (access + refresh)
+    const { token, refreshToken } = await issueTokenPair(student);
 
     // 5. Responder con éxito (sin enviar la contraseña)
     res.json({
@@ -156,7 +159,8 @@ const login = async (req, res) => {
         carrera: student.carrera,
         universidad: student.universidad
       },
-      token
+      token,
+      refreshToken
     });
 
   } catch (error) {
@@ -508,11 +512,101 @@ const changePassword = async (req, res) => {
   }
 };
 
+// ========== REFRESCAR SESIÓN (rotación de refresh token) ==========
+const refresh = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    const tokenHash = hashToken(refreshToken);
+    const stored = await RefreshToken.findByHash(tokenHash);
+
+    if (!stored) {
+      return res.status(401).json({
+        success: false,
+        message: 'Refresh token inválido'
+      });
+    }
+
+    // Reuso de un token ya revocado → posible robo: se cierran todas las
+    // sesiones del estudiante.
+    if (stored.revoked === 1) {
+      await RefreshToken.revokeAllForStudent(stored.id_estudiante);
+      return res.status(401).json({
+        success: false,
+        message: 'Sesión inválida. Iniciá sesión de nuevo.'
+      });
+    }
+
+    if (!RefreshToken.isUsable(stored)) {
+      return res.status(401).json({
+        success: false,
+        message: 'La sesión expiró. Iniciá sesión de nuevo.'
+      });
+    }
+
+    const student = await Student.findById(stored.id_estudiante);
+    if (!student) {
+      return res.status(401).json({ success: false, message: 'Sesión inválida' });
+    }
+
+    // Rotación: se emite un par nuevo y se revoca el anterior apuntando al nuevo.
+    const token = signAccessToken({ id: student.id, correo: student.correo });
+    const next = generateRefreshToken();
+    const newId = await RefreshToken.create(student.id, next.tokenHash, next.expiresAt);
+    await RefreshToken.revoke(stored.id, newId);
+
+    res.json({
+      success: true,
+      token,
+      refreshToken: next.token
+    });
+  } catch (error) {
+    console.error('Error en refresh:', error);
+    res.status(500).json({ success: false, message: 'Error al refrescar la sesión' });
+  }
+};
+
+// ========== CERRAR SESIÓN (revoca el refresh token actual) ==========
+const logout = async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
+    const stored = await RefreshToken.findByHash(hashToken(refreshToken));
+
+    // Solo se revoca si pertenece al usuario autenticado. Se responde 200
+    // igual (idempotente) para no filtrar si el token existía o no.
+    if (stored && stored.id_estudiante === req.user.id && stored.revoked === 0) {
+      await RefreshToken.revoke(stored.id);
+    }
+
+    res.json({ success: true, message: 'Sesión cerrada' });
+  } catch (error) {
+    console.error('Error en logout:', error);
+    res.status(500).json({ success: false, message: 'Error al cerrar sesión' });
+  }
+};
+
+// ========== CERRAR SESIÓN EN TODOS LOS DISPOSITIVOS ==========
+const logoutAll = async (req, res) => {
+  try {
+    const revocadas = await RefreshToken.revokeAllForStudent(req.user.id);
+    res.json({
+      success: true,
+      message: 'Se cerraron todas las sesiones',
+      data: { sesiones_cerradas: revocadas }
+    });
+  } catch (error) {
+    console.error('Error en logoutAll:', error);
+    res.status(500).json({ success: false, message: 'Error al cerrar las sesiones' });
+  }
+};
+
 module.exports = {
   register,
   login,
   getProfile,
   forgotPassword,
   resetPassword,
-  changePassword
+  changePassword,
+  refresh,
+  logout,
+  logoutAll
 };

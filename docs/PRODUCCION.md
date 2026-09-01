@@ -56,9 +56,18 @@ Variables usadas hoy (ver `backend/.env.example` para la lista completa):
 - [x] Las respuestas 5xx ya no filtran `error.message` ni el stack al cliente
       fuera de `development` (middleware `sanitizeErrorResponse` + error handler
       global endurecido).
-- [ ] JWT con revocación / refresh tokens — sigue pendiente, es un cambio
-      arquitectónico (tabla de tokens, rotación, "cerrar sesión en todos los
-      dispositivos", cambios en el cliente). Merece su propia fase.
+- [x] JWT con revocación / refresh tokens. Access token corto
+      (`JWT_ACCESS_EXPIRE`, default 15m) + refresh token largo
+      (`JWT_REFRESH_EXPIRE_DAYS`, default 30) guardado hasheado en
+      `refresh_tokens`. Endpoints `POST /api/auth/refresh` (rotación +
+      detección de reuso), `/logout` y `/logout-all`. El cliente guarda el
+      refresh cifrado y reintenta los 401 una vez (single-flight).
+- [ ] Setear `JWT_ACCESS_EXPIRE` y `JWT_REFRESH_EXPIRE_DAYS` en Vercel
+      (si no se setean, aplican los defaults 15m / 30d). `JWT_EXPIRE` quedó
+      obsoleto.
+- [ ] Al liberar a `main`: la app vieja (sin lógica de refresh) sigue
+      funcionando con su access token actual hasta que venza; después el
+      usuario vuelve a iniciar sesión. Los builds nuevos hacen refresh solos.
 - [x] `express-validator` conectado a las 11 rutas como guardia de entrada
       (`backend/src/validators/*` + `middlewares/validate.js`). Valida tipos,
       largos, enums y `:id` antes de llegar al controlador; responde 400 con

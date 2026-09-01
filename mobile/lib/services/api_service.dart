@@ -3,6 +3,7 @@
 // ============================================
 
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
 import '../config/api_config.dart';
 
@@ -13,6 +14,22 @@ class ApiService {
   ApiService._internal();
 
   String? _token;
+
+  // Cliente HTTP. Se puede reemplazar en tests con un MockClient.
+  http.Client _client = http.Client();
+
+  @visibleForTesting
+  void setHttpClient(http.Client client) {
+    _client = client;
+  }
+
+  // Callback que intenta refrescar la sesión (lo setea AuthService). Devuelve
+  // true si consiguió un access token nuevo. Sin él, un 401 no se reintenta.
+  Future<bool> Function()? _refreshCallback;
+
+  // Single-flight: si ya hay un refresh en curso, todas las peticiones que
+  // reciban 401 esperan el mismo Future en vez de disparar N refresh.
+  Future<bool>? _refreshing;
 
   // Setear token de autenticación
   void setToken(String token) {
@@ -27,79 +44,54 @@ class ApiService {
     _token = null;
   }
 
-  // ========== GET REQUEST ==========
-  Future<Map<String, dynamic>> get(String endpoint) async {
-    try {
-      final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-      final headers = ApiConfig.getHeaders(token: _token);
-
-      final response = await http.get(
-        url,
-        headers: headers,
-      ).timeout(ApiConfig.connectionTimeout);
-
-      return _handleResponse(response);
-    } catch (e) {
-      throw _handleError(e);
-    }
+  void setRefreshCallback(Future<bool> Function() callback) {
+    _refreshCallback = callback;
   }
 
-  // ========== POST REQUEST ==========
+  // ========== VERBOS HTTP ==========
+  Future<Map<String, dynamic>> get(String endpoint) =>
+      _send('GET', endpoint);
+
   Future<Map<String, dynamic>> post(
     String endpoint,
     Map<String, dynamic> body,
-  ) async {
-    try {
-      final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-      final headers = ApiConfig.getHeaders(token: _token);
+  ) =>
+      _send('POST', endpoint, body: body);
 
-      final response = await http.post(
-        url,
-        headers: headers,
-        body: jsonEncode(body),
-      ).timeout(ApiConfig.connectionTimeout);
-
-      return _handleResponse(response);
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  // ========== PUT REQUEST ==========
   Future<Map<String, dynamic>> put(
     String endpoint,
     Map<String, dynamic> body,
-  ) async {
-    try {
-      final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-      final headers = ApiConfig.getHeaders(token: _token);
+  ) =>
+      _send('PUT', endpoint, body: body);
 
-      final response = await http.put(
-        url,
-        headers: headers,
-        body: jsonEncode(body),
-      ).timeout(ApiConfig.connectionTimeout);
-
-      return _handleResponse(response);
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  // ========== PATCH REQUEST ==========
   Future<Map<String, dynamic>> patch(
     String endpoint, {
     Map<String, dynamic>? body,
-  }) async {
-    try {
-      final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-      final headers = ApiConfig.getHeaders(token: _token);
+  }) =>
+      _send('PATCH', endpoint, body: body);
 
-      final response = await http.patch(
-        url,
-        headers: headers,
-        body: body != null ? jsonEncode(body) : null,
-      ).timeout(ApiConfig.connectionTimeout);
+  Future<Map<String, dynamic>> delete(String endpoint) =>
+      _send('DELETE', endpoint);
+
+  // ========== ENVÍO CON REINTENTO POR 401 ==========
+  Future<Map<String, dynamic>> _send(
+    String method,
+    String endpoint, {
+    Map<String, dynamic>? body,
+  }) async {
+    final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
+
+    try {
+      var response = await _rawSend(method, url, body: body)
+          .timeout(ApiConfig.connectionTimeout);
+
+      if (response.statusCode == 401 && _canRefresh(endpoint)) {
+        final refreshed = await _runRefresh();
+        if (refreshed) {
+          response = await _rawSend(method, url, body: body)
+              .timeout(ApiConfig.connectionTimeout);
+        }
+      }
 
       return _handleResponse(response);
     } catch (e) {
@@ -107,21 +99,41 @@ class ApiService {
     }
   }
 
-  // ========== DELETE REQUEST ==========
-  Future<Map<String, dynamic>> delete(String endpoint) async {
-    try {
-      final url = Uri.parse('${ApiConfig.baseUrl}$endpoint');
-      final headers = ApiConfig.getHeaders(token: _token);
+  Future<http.Response> _rawSend(
+    String method,
+    Uri url, {
+    Map<String, dynamic>? body,
+  }) {
+    final headers = ApiConfig.getHeaders(token: _token);
+    final encoded = body != null ? jsonEncode(body) : null;
 
-      final response = await http.delete(
-        url,
-        headers: headers,
-      ).timeout(ApiConfig.connectionTimeout);
-
-      return _handleResponse(response);
-    } catch (e) {
-      throw _handleError(e);
+    switch (method) {
+      case 'GET':
+        return _client.get(url, headers: headers);
+      case 'POST':
+        return _client.post(url, headers: headers, body: encoded);
+      case 'PUT':
+        return _client.put(url, headers: headers, body: encoded);
+      case 'PATCH':
+        return _client.patch(url, headers: headers, body: encoded);
+      case 'DELETE':
+        return _client.delete(url, headers: headers);
+      default:
+        throw ArgumentError('Método HTTP no soportado: $method');
     }
+  }
+
+  // El refresh y el login/registro nunca se reintentan (evita bucles).
+  bool _canRefresh(String endpoint) {
+    if (_refreshCallback == null) return false;
+    return endpoint != ApiConfig.refresh &&
+        endpoint != ApiConfig.login &&
+        endpoint != ApiConfig.register;
+  }
+
+  Future<bool> _runRefresh() {
+    _refreshing ??= _refreshCallback!().whenComplete(() => _refreshing = null);
+    return _refreshing!;
   }
 
   // ========== MANEJAR RESPUESTA ==========
