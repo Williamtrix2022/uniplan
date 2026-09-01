@@ -31,8 +31,7 @@ const createSession = async (req, res) => {
     console.error('Error en createSession:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al crear sesión',
-      error: error.message
+      message: 'Error al crear sesión'
     });
   }
 };
@@ -63,8 +62,7 @@ const getMySessions = async (req, res) => {
     console.error('Error en getMySessions:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener sesiones',
-      error: error.message
+      message: 'Error al obtener sesiones'
     });
   }
 };
@@ -85,8 +83,7 @@ const getTodaySessions = async (req, res) => {
     console.error('Error en getTodaySessions:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener sesiones de hoy',
-      error: error.message
+      message: 'Error al obtener sesiones de hoy'
     });
   }
 };
@@ -120,8 +117,7 @@ const getSessionById = async (req, res) => {
     console.error('Error en getSessionById:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener sesión',
-      error: error.message
+      message: 'Error al obtener sesión'
     });
   }
 };
@@ -175,8 +171,7 @@ const updateSession = async (req, res) => {
     console.error('Error en updateSession:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al actualizar sesión',
-      error: error.message
+      message: 'Error al actualizar sesión'
     });
   }
 };
@@ -235,8 +230,7 @@ const completeSession = async (req, res) => {
     console.error('Error en completeSession:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al completar sesión',
-      error: error.message
+      message: 'Error al completar sesión'
     });
   }
 };
@@ -279,8 +273,7 @@ const deleteSession = async (req, res) => {
     console.error('Error en deleteSession:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al eliminar sesión',
-      error: error.message
+      message: 'Error al eliminar sesión'
     });
   }
 };
@@ -303,8 +296,7 @@ const getStats = async (req, res) => {
     console.error('Error en getStats:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener estadísticas',
-      error: error.message
+      message: 'Error al obtener estadísticas'
     });
   }
 };
@@ -324,8 +316,7 @@ const getStatsBySubject = async (req, res) => {
     console.error('Error en getStatsBySubject:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener estadísticas por materia',
-      error: error.message
+      message: 'Error al obtener estadísticas por materia'
     });
   }
 };
@@ -345,8 +336,7 @@ const getStatsByDay = async (req, res) => {
     console.error('Error en getStatsByDay:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener estadísticas por día',
-      error: error.message
+      message: 'Error al obtener estadísticas por día'
     });
   }
 };

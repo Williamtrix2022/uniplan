@@ -4,26 +4,7 @@
 // Guarda solo el hash SHA-256 del refresh token. Soporta rotación
 // (replaced_by) y revocación individual o masiva (revoked).
 
-const { pool } = require('../config/database');
-
-async function queryWithRetry(query, params = [], retries = 2) {
-  for (let attempt = 1; attempt <= retries; attempt++) {
-    try {
-      return await pool.execute(query, params);
-    } catch (error) {
-      const isConnectionError =
-        error.code === 'ECONNRESET' ||
-        error.code === 'PROTOCOL_CONNECTION_LOST' ||
-        error.code === 'ETIMEDOUT' ||
-        error.errno === -4077;
-      if (isConnectionError && attempt < retries) {
-        await new Promise((r) => setTimeout(r, 500));
-        continue;
-      }
-      throw error;
-    }
-  }
-}
+const queryWithRetry = require('../utils/queryWithRetry');
 
 class RefreshToken {
   static async ensureTable() {

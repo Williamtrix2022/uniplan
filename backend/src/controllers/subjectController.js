@@ -41,8 +41,7 @@ const createSubject = async (req, res) => {
     console.error('Error en createSubject:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al crear materia',
-      error: error.message
+      message: 'Error al crear materia'
     });
   }
 };
@@ -63,8 +62,7 @@ const getMySubjects = async (req, res) => {
     console.error('Error en getMySubjects:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener materias',
-      error: error.message
+      message: 'Error al obtener materias'
     });
   }
 };
@@ -99,8 +97,7 @@ const getSubjectById = async (req, res) => {
     console.error('Error en getSubjectById:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener materia',
-      error: error.message
+      message: 'Error al obtener materia'
     });
   }
 };
@@ -157,8 +154,7 @@ const updateSubject = async (req, res) => {
     console.error('Error en updateSubject:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al actualizar materia',
-      error: error.message
+      message: 'Error al actualizar materia'
     });
   }
 };
@@ -202,8 +198,7 @@ const deleteSubject = async (req, res) => {
     console.error('Error en deleteSubject:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al eliminar materia',
-      error: error.message
+      message: 'Error al eliminar materia'
     });
   }
 };
@@ -223,8 +218,7 @@ const getSubjectStats = async (req, res) => {
     console.error('Error en getSubjectStats:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener estadísticas',
-      error: error.message
+      message: 'Error al obtener estadísticas'
     });
   }
 };

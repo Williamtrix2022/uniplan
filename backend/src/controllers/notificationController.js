@@ -45,8 +45,7 @@ const getNotifications = async (req, res) => {
     console.error('Error en getNotifications:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener notificaciones',
-      error: error.message
+      message: 'Error al obtener notificaciones'
     });
   }
 };
@@ -101,8 +100,7 @@ const createNotification = async (req, res) => {
     console.error('Error en createNotification:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al crear notificación',
-      error: error.message
+      message: 'Error al crear notificación'
     });
   }
 };
@@ -122,8 +120,7 @@ const getUnreadCount = async (req, res) => {
     console.error('Error en getUnreadCount:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener el conteo de notificaciones no leídas',
-      error: error.message
+      message: 'Error al obtener el conteo de notificaciones no leídas'
     });
   }
 };
@@ -162,8 +159,7 @@ const markRead = async (req, res) => {
     console.error('Error en markRead:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al marcar la notificación como leída',
-      error: error.message
+      message: 'Error al marcar la notificación como leída'
     });
   }
 };
@@ -184,8 +180,7 @@ const markAllRead = async (req, res) => {
     console.error('Error en markAllRead:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al marcar las notificaciones como leídas',
-      error: error.message
+      message: 'Error al marcar las notificaciones como leídas'
     });
   }
 };
@@ -223,8 +218,7 @@ const deleteNotification = async (req, res) => {
     console.error('Error en deleteNotification:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al eliminar la notificación',
-      error: error.message
+      message: 'Error al eliminar la notificación'
     });
   }
 };
@@ -244,8 +238,7 @@ const getPreferences = async (req, res) => {
     console.error('Error en getPreferences:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener preferencias de notificación',
-      error: error.message
+      message: 'Error al obtener preferencias de notificación'
     });
   }
 };
@@ -300,8 +293,7 @@ const updatePreferences = async (req, res) => {
     console.error('Error en updatePreferences:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al actualizar preferencias de notificación',
-      error: error.message
+      message: 'Error al actualizar preferencias de notificación'
     });
   }
 };
