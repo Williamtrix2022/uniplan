@@ -67,8 +67,9 @@ mobile/.fvm/
 *.sql
 *.sqlite
 *.db
-# Excepción: el esquema versionado (sin datos reales) sí se sube
+# Excepción: el esquema versionado y las migraciones (sin datos reales) sí se suben
 !backend/db/*.sql
+!backend/migrations/sqls/*.sql
 
 # ========== LOGS Y TEMPORALES ==========
 *.log

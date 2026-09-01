@@ -38,11 +38,13 @@ Variables usadas hoy (ver `backend/.env.example` para la lista completa):
       específicamente, es MySQL estándar vía `mysql2`.
 - [ ] Si se migra: exportar los datos reales (no solo el esquema) desde
       AlwaysData e importarlos al nuevo proveedor.
-- [ ] Adoptar una herramienta de migraciones versionadas (ej. `db-migrate` o
-      Knex) para que los próximos cambios de esquema no vuelvan a quedar solo
-      en la base de producción sin registro. Hoy los cambios de esquema se
-      documentan a mano en `docs/DB/base-de-datos.md` (gitignored, contiene
-      datos reales de estudiantes — no subir nunca ese archivo).
+- [x] Migraciones versionadas con `db-migrate` (`backend/migrations/`, ver
+      `backend/migrations/README.md`). El baseline `20260901000000-initial-schema`
+      usa `CREATE TABLE IF NOT EXISTS`, así que la primera corrida sobre la
+      base de producción actual es un no-op que solo registra el baseline.
+- [ ] Correr `npm run migrate` una vez sobre la base de producción para
+      registrar el baseline (pendiente de hacerlo con las credenciales
+      reales — desde acá solo se verificó la estructura, no contra la DB).
 
 ## 3. Backend
 
