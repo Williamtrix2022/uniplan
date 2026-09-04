@@ -1,239 +1,167 @@
-\# 📚 Uniplan - Aplicación Académica Universitaria
+<div align="center">
 
+<img src="mobile/assets/images/uniplan_logo.png" alt="Uniplan" width="120" />
 
+# 📚 Uniplan
 
-!\[Estado](https://img.shields.io/badge/Estado-En%20Desarrollo-yellow)
+**Organización académica universitaria, todo en un solo lugar.**
 
-!\[Versión](https://img.shields.io/badge/Versión-1.0.0-blue)
+[![CI — Tests](https://github.com/Williamtrix2022/uniplan/actions/workflows/ci-tests.yml/badge.svg)](https://github.com/Williamtrix2022/uniplan/actions/workflows/ci-tests.yml)
+[![Licencia MIT](https://img.shields.io/badge/Licencia-MIT-green)](LICENSE)
+[![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white)](mobile/pubspec.yaml)
+[![Node.js](https://img.shields.io/badge/Node.js-18%2B-339933?logo=node.js&logoColor=white)](backend/package.json)
+[![Backend en Vercel](https://img.shields.io/badge/Backend-Vercel-black?logo=vercel)](https://uniplan-jade.vercel.app)
 
-!\[Licencia](https://img.shields.io/badge/Licencia-MIT-green)
-
-
-
-\## 📖 Descripción
-
-
-
-\*\*Uniplan\*\* es una aplicación móvil diseñada para ayudar a estudiantes universitarios a organizar sus actividades académicas, gestionar tareas, horarios y mejorar su productividad mediante la técnica Pomodoro.
-
-
-
-\### ✨ Características Principales
-
-
-
-\- ✅ Gestión de materias y horarios
-
-\- 📝 Organización de tareas y evaluaciones
-
-\- 📅 Calendario académico integrado
-
-\- ⏱️ Temporizador Pomodoro para estudio
-
-\- 📊 Seguimiento de progreso académico
-
-\- 📔 Creación de notas y apuntes
-
-\- 🔐 Autenticación segura con JWT
-
-
+</div>
 
 ---
 
+## 📖 Descripción
 
+**Uniplan** es una aplicación móvil (Flutter) con una API REST propia (Node.js
++ Express + MySQL) que ayuda a estudiantes universitarios a organizar su vida
+académica: materias, horarios, tareas, calificaciones, notas y sesiones de
+estudio con la técnica Pomodoro, todo sincronizado en la nube y con
+notificaciones locales.
 
-\## 🛠️ Tecnologías Utilizadas
+Proyecto desarrollado por estudiantes de Ingeniería de Sistemas de la
+**Universidad de Córdoba**.
 
-\### Frontend (Mobile)
+### ✨ Características principales
 
-\- \*\*Flutter\*\* 3.x - Framework de desarrollo móvil
-
-\- \*\*Dart\*\* - Lenguaje de programación
-
-\### Backend (API)
-
-\- \*\*Node.js\*\* - Entorno de ejecución
-
-\- \*\*Express.js\*\* - Framework web
-
-\- \*\*MySQL\*\* - Base de datos relacional
-
-\- \*\*JWT\*\* - Autenticación y seguridad
-
-
-
-\### Herramientas de Desarrollo
-
-\- \*\*Git\*\* - Control de versiones
-
-\- \*\*GitHub\*\* - Repositorio remoto
-
-\- \*\*VS Code\*\* - Editor de código
-
-\- \*\*XAMPP\*\* - Servidor MySQL local
-
-\- \*\*Postman/Thunder Client\*\* - Pruebas de API
-
-
+- 🔐 **Autenticación** con JWT + refresh tokens (rotación y revocación de sesión)
+- 📚 **Materias y horarios**, con detección automática de conflictos de horario
+- ✅ **Tareas y entregas** con prioridades, filtros y estadísticas
+- 🎓 **Calificaciones**, resumen por materia y proyección de la nota necesaria para aprobar
+- 📔 **Notas y apuntes**, con favoritos
+- ⏱️ **Pomodoro** con persistencia de configuración y automatización real
+- 📅 **Calendario académico** (día / semana / mes)
+- 🔔 **Notificaciones** locales (recordatorios de tareas, sin duplicados)
+- 📊 **Dashboard** con resumen y productividad semanal
 
 ---
 
+## 🛠️ Stack tecnológico
 
+| | |
+|---|---|
+| **Mobile** | Flutter · Dart · Provider (estado) · go_router (navegación) · Dio/http |
+| **Backend** | Node.js · Express · MySQL (`mysql2`) · JWT · express-validator |
+| **Infraestructura** | Vercel (API en producción) · Docker Compose (MySQL local) · `db-migrate` (migraciones versionadas) |
+| **Calidad** | Jest (backend) · `flutter test` + `flutter analyze` (mobile) · GitHub Actions (CI) |
+| **Distribución** | Firebase App Distribution (builds de prueba para testers) |
 
-\## 📁 Estructura del Proyecto
+---
 
-
+## 📁 Estructura del proyecto
 
 ```
-
 uniplan/
-
-├── backend/          # API REST en Node.js + Express
-
-├── mobile/           # Aplicación móvil en Flutter
-
-├── docs/             # Documentación del proyecto
-
-└── README.md         # Este archivo
-
+├── backend/          # API REST (Node.js + Express + MySQL)
+│   ├── src/          # controllers, models, routes, middlewares, validators
+│   ├── migrations/   # historial de esquema versionado (db-migrate)
+│   └── db/schema.sql # snapshot del esquema + datos demo
+├── mobile/            # App Flutter (Android / iOS / Windows / Web)
+├── docs/              # MVP, sprints y checklist de producción
+├── docker-compose.yml # MySQL local para desarrollo
+└── README.md
 ```
-
-
 
 ---
 
+## 🚀 Empezar rápido
 
+### Prerrequisitos
 
-\## 🚀 Instalación y Configuración
+- Node.js ≥ 18
+- Flutter ≥ 3.x
+- Docker (para MySQL local) o una instancia MySQL 8 propia
+- Git
 
-
-
-\### Prerrequisitos
-
-
-
-\- Node.js >= 18.x
-
-\- Flutter >= 3.x
-
-\- MySQL >= 8.x
-
-\- Git
-
-
-
-\### Backend
-
-
+### 1. Base de datos local
 
 ```bash
+docker compose up -d
+```
 
+Levanta MySQL en `localhost:3307` con el esquema y datos demo ya cargados
+(estudiante de prueba: `demo@uniplan.co` / `Uniplan2026`).
+
+### 2. Backend
+
+```bash
 cd backend
-
 npm install
-
 cp .env.example .env
-
-\# Configurar variables de entorno en .env
-
+# Apuntar DB_HOST/DB_PORT/DB_USER/DB_PASSWORD/DB_NAME a la base local (ver docker-compose.yml)
 npm run dev
-
 ```
 
+La API queda en `http://localhost:3000`.
 
-
-\### Mobile
-
-
+### 3. Mobile
 
 ```bash
-
 cd mobile
-
 flutter pub get
-
-flutter run
-
+flutter run --dart-define=API_URL=http://localhost:3000
 ```
 
-
-
----
-
-
-
-\## 📝 Documentación
-
-
-
-\- \[Arquitectura del Sistema](docs/arquitectura.md)
-
-\- \[API Documentation](docs/api.md)
-
-\- \[Manual de Usuario](docs/manual\_usuario.md)
-
-\- \[Guía de Contribución](docs/CONTRIBUTING.md)
-
-
+Sin `--dart-define`, la app apunta por defecto al backend en producción
+(`https://uniplan-jade.vercel.app`).
 
 ---
 
+## 🧪 Tests
 
+```bash
+# Backend
+cd backend && npm test
 
-\## 👨‍💻 Autor
+# Mobile
+cd mobile && flutter analyze && flutter test
+```
 
-
-
-\*\*William Moya Santana\*\*
-\*\*Jhon Quiceno Padilla\*\*
-
-\- Universidad de Córdoba
-
-\- Facultad de Ingeniería
-
-\- Departamento de Ingeniería de Sistemas
-
-
+Ambos corren automáticamente en cada Pull Request a `main`/`dev` vía
+[GitHub Actions](.github/workflows/ci-tests.yml).
 
 ---
 
+## 📝 Documentación
 
-
-\## 📄 Licencia
-
-
-
-Este proyecto está bajo la Licencia MIT - ver el archivo \[LICENSE](LICENSE) para más detalles.
-
-
+- [Especificación del MVP y progreso por sprint](docs/mvp/UNIPLAN_MVP.md)
+- [Detalle de sprints](docs/sprints)
+- [Checklist de producción](docs/PRODUCCION.md)
+- [API y endpoints del backend](backend/README.md)
+- [Migraciones de base de datos](backend/migrations/README.md)
 
 ---
 
+## 👨‍💻 Autores
 
+**William Moya Santana** · **Jhon Quiceno Padilla**
 
-\## 🤝 Contribuciones
-
-
-
-Las contribuciones son bienvenidas. Por favor, lee la \[guía de contribución](docs/CONTRIBUTING.md) antes de enviar un pull request.
-
-
+Universidad de Córdoba — Facultad de Ingeniería — Ingeniería de Sistemas
 
 ---
 
+## 📄 Licencia
 
+Este proyecto está bajo la Licencia MIT — ver [LICENSE](LICENSE) para más detalles.
 
-\## 📧 Contacto
+## 🤝 Contribuciones
 
+Las contribuciones son bienvenidas. Abre un issue o un pull request contra
+`dev` para proponer cambios.
 
+## 📧 Contacto
 
-Para preguntas o sugerencias, por favor abre un issue en GitHub.
-
-
+Para preguntas o sugerencias, abre un [issue en GitHub](https://github.com/Williamtrix2022/uniplan/issues).
 
 ---
 
+<div align="center">
 
+**Desarrollado con ❤️ para la comunidad estudiantil universitaria**
 
-\*\*Desarrollado con ❤️ para la comunidad estudiantil universitaria\*\*
-
+</div>
