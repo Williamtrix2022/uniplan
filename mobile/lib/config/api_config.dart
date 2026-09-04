@@ -21,6 +21,9 @@ class ApiConfig {
   static const String forgotPassword = '$apiPrefix/auth/forgot-password';
   static const String resetPassword = '$apiPrefix/auth/reset-password';
   static const String changePassword = '$apiPrefix/auth/change-password';
+  static const String refresh = '$apiPrefix/auth/refresh';
+  static const String logout = '$apiPrefix/auth/logout';
+  static const String logoutAll = '$apiPrefix/auth/logout-all';
 
   // Students
   static const String students = '$apiPrefix/students';

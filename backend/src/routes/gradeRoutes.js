@@ -6,12 +6,14 @@ const express = require('express');
 const router = express.Router();
 const gradeController = require('../controllers/gradeController');
 const authMiddleware = require('../middlewares/authMiddleware');
+const { handleValidation } = require('../middlewares/validate');
+const v = require('../validators/gradeValidators');
 
 // Todas las rutas requieren autenticación
 router.use(authMiddleware);
 
 // POST /api/grades - Crear calificación
-router.post('/', gradeController.createGrade);
+router.post('/', v.create, handleValidation, gradeController.createGrade);
 
 // GET /api/grades - Obtener todas las calificaciones del estudiante
 router.get('/', gradeController.getMyGrades);
@@ -20,18 +22,18 @@ router.get('/', gradeController.getMyGrades);
 router.get('/summary', gradeController.getSummary);
 
 // GET /api/grades/subject/:id - Calificaciones de una materia específica
-router.get('/subject/:id', gradeController.getGradesBySubject);
+router.get('/subject/:id', v.detail, handleValidation, gradeController.getGradesBySubject);
 
 // GET /api/grades/subject/:id/projection - Nota necesaria para aprobar la materia
-router.get('/subject/:id/projection', gradeController.getSubjectProjection);
+router.get('/subject/:id/projection', v.detail, handleValidation, gradeController.getSubjectProjection);
 
 // GET /api/grades/:id - Obtener una calificación específica
-router.get('/:id', gradeController.getGradeById);
+router.get('/:id', v.detail, handleValidation, gradeController.getGradeById);
 
 // PUT /api/grades/:id - Actualizar calificación
-router.put('/:id', gradeController.updateGrade);
+router.put('/:id', v.update, handleValidation, gradeController.updateGrade);
 
 // DELETE /api/grades/:id - Eliminar calificación
-router.delete('/:id', gradeController.deleteGrade);
+router.delete('/:id', v.detail, handleValidation, gradeController.deleteGrade);
 
 module.exports = router;

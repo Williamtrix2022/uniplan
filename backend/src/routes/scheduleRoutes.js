@@ -6,15 +6,17 @@ const express = require('express');
 const router = express.Router();
 const scheduleController = require('../controllers/scheduleController');
 const authMiddleware = require('../middlewares/authMiddleware');
+const { handleValidation } = require('../middlewares/validate');
+const v = require('../validators/scheduleValidators');
 
 // Todas las rutas requieren autenticación
 router.use(authMiddleware);
 
 // POST /api/schedules - Crear bloque de horario
-router.post('/', scheduleController.createSchedule);
+router.post('/', v.create, handleValidation, scheduleController.createSchedule);
 
 // GET /api/schedules - Obtener todos los horarios (con filtros opcionales: ?dia=lunes&id_materia=1)
-router.get('/', scheduleController.getMySchedules);
+router.get('/', v.list, handleValidation, scheduleController.getMySchedules);
 
 // GET /api/schedules/week - Horario semanal completo ordenado lunes→domingo
 router.get('/week', scheduleController.getWeekSchedule);
@@ -23,15 +25,15 @@ router.get('/week', scheduleController.getWeekSchedule);
 router.get('/conflicts', scheduleController.getScheduleConflicts);
 
 // GET /api/schedules/day/:dia - Horario de un día específico
-router.get('/day/:dia', scheduleController.getScheduleByDay);
+router.get('/day/:dia', v.byDay, handleValidation, scheduleController.getScheduleByDay);
 
 // GET /api/schedules/:id - Obtener un bloque específico
-router.get('/:id', scheduleController.getScheduleById);
+router.get('/:id', v.detail, handleValidation, scheduleController.getScheduleById);
 
 // PUT /api/schedules/:id - Actualizar bloque
-router.put('/:id', scheduleController.updateSchedule);
+router.put('/:id', v.update, handleValidation, scheduleController.updateSchedule);
 
 // DELETE /api/schedules/:id - Eliminar bloque
-router.delete('/:id', scheduleController.deleteSchedule);
+router.delete('/:id', v.detail, handleValidation, scheduleController.deleteSchedule);
 
 module.exports = router;

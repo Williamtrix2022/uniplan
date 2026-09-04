@@ -35,8 +35,7 @@ const getStudentById = async (req, res) => {
     console.error('Error en getStudentById:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener estudiante',
-      error: error.message
+      message: 'Error al obtener estudiante'
     });
   }
 };
@@ -91,8 +90,7 @@ const updateStudent = async (req, res) => {
     console.error('Error en updateStudent:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al actualizar estudiante',
-      error: error.message
+      message: 'Error al actualizar estudiante'
     });
   }
 };
@@ -138,8 +136,7 @@ const deleteStudent = async (req, res) => {
     console.error('Error en deleteStudent:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al eliminar estudiante',
-      error: error.message
+      message: 'Error al eliminar estudiante'
     });
   }
 };

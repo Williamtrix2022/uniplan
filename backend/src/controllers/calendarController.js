@@ -49,8 +49,7 @@ const createEvent = async (req, res) => {
     console.error('Error en createEvent:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al crear evento',
-      error: error.message
+      message: 'Error al crear evento'
     });
   }
 };
@@ -82,8 +81,7 @@ const getMyEvents = async (req, res) => {
     console.error('Error en getMyEvents:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener eventos',
-      error: error.message
+      message: 'Error al obtener eventos'
     });
   }
 };
@@ -104,8 +102,7 @@ const getTodayEvents = async (req, res) => {
     console.error('Error en getTodayEvents:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener eventos de hoy',
-      error: error.message
+      message: 'Error al obtener eventos de hoy'
     });
   }
 };
@@ -126,8 +123,7 @@ const getWeekEvents = async (req, res) => {
     console.error('Error en getWeekEvents:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener eventos de la semana',
-      error: error.message
+      message: 'Error al obtener eventos de la semana'
     });
   }
 };
@@ -157,8 +153,7 @@ const getMonthEvents = async (req, res) => {
     console.error('Error en getMonthEvents:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener eventos del mes',
-      error: error.message
+      message: 'Error al obtener eventos del mes'
     });
   }
 };
@@ -179,8 +174,7 @@ const getEventsWithReminder = async (req, res) => {
     console.error('Error en getEventsWithReminder:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener eventos con recordatorio',
-      error: error.message
+      message: 'Error al obtener eventos con recordatorio'
     });
   }
 };
@@ -214,8 +208,7 @@ const getEventById = async (req, res) => {
     console.error('Error en getEventById:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener evento',
-      error: error.message
+      message: 'Error al obtener evento'
     });
   }
 };
@@ -280,8 +273,7 @@ const updateEvent = async (req, res) => {
     console.error('Error en updateEvent:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al actualizar evento',
-      error: error.message
+      message: 'Error al actualizar evento'
     });
   }
 };
@@ -324,8 +316,7 @@ const deleteEvent = async (req, res) => {
     console.error('Error en deleteEvent:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al eliminar evento',
-      error: error.message
+      message: 'Error al eliminar evento'
     });
   }
 };
@@ -345,8 +336,7 @@ const getCalendarStats = async (req, res) => {
     console.error('Error en getCalendarStats:', error);
     res.status(500).json({
       success: false,
-      message: 'Error al obtener estadísticas',
-      error: error.message
+      message: 'Error al obtener estadísticas'
     });
   }
 };
