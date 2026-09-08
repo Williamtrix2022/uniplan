@@ -207,7 +207,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: 96,
                 height: 96,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryContainer,
+                  color: AppTheme.primaryGreen,
                   shape: BoxShape.circle,
                   border: Border.all(color: AppTheme.surface, width: 4),
                   boxShadow: AppTheme.cardShadow,
@@ -218,7 +218,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     style: const TextStyle(
                       fontSize: 40,
                       fontWeight: FontWeight.bold,
-                      color: AppTheme.darkText,
+                      color: AppTheme.white,
                     ),
                   ),
                 ),
