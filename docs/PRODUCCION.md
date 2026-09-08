@@ -110,7 +110,74 @@ Variables usadas hoy (ver `backend/.env.example` para la lista completa):
 - [ ] Capturas de pantalla, ícono, descripción corta/larga de la ficha de
       Play Store.
 
-## 6. CI/CD
+## 6. Login con Google
+
+Implementado 2026-09-05/06: login/registro con Google verificando el ID token
+en el backend (`google-auth-library`), con vinculación automática a cuentas
+existentes cuando el correo llega verificado por Google (`payload.email_verified`).
+El botón de Google en login solo inicia sesión (rechaza si el correo no existe
+todavía); el de registro sí crea la cuenta.
+
+- [ ] `GOOGLE_CLIENT_ID` (el Web Client ID de Google Cloud Console, no el
+      Android) seteado en Vercel → Environment Variables → Production, **y
+      Redeploy hecho después** — Vercel no aplica variables nuevas a un
+      deployment que ya existe.
+- [x] Migración `20260905000000-add-google-auth` aplicada (columna
+      `google_id` + `contrasena` nullable en `estudiantes`) — verificado en
+      local y en AlwaysData.
+- [ ] La pantalla de consentimiento OAuth sigue en estado **Testing** en
+      Google Cloud Console: solo pueden loguearse con Google las cuentas
+      agregadas a mano en "Test users" (máx. 100). Agregar ahí el Gmail de
+      cada persona que reciba el build por Firebase App Distribution, o el
+      login con Google le va a fallar sin un error claro en pantalla.
+- [x] Los builds de distribución no se generan con
+      `--dart-define=API_URL=http://<ip-local>...` — el default de
+      `mobile/lib/config/api_config.dart` ya apunta a la URL de Vercel.
+- [x] `google_sign_in` fuerza `signOut()` antes de `signIn()`
+      (`auth_service.dart`) para que siempre muestre el selector de cuentas
+      en vez de reautenticar en silencio con la última usada.
+
+### Hallazgo: los builds "release" están firmados con la clave de debug
+
+`mobile/android/app/build.gradle.kts`:
+```kotlin
+release {
+    // TODO: Add your own signing config for the release build.
+    signingConfig = signingConfigs.getByName("debug")
+}
+```
+No rompe nada mientras la distribución sea por Firebase App Distribution — el
+SHA-1 de debug ya está registrado en Google Cloud Console y cubre estos
+builds también. **Hay que resolverlo antes de subir a Play Store** (ver
+sección 5, "Generar el keystore de firma de release"): Play Store espera una
+clave de firma propia, no la de debug.
+
+Pasos para cuando se llegue a ese punto (no ejecutar todavía):
+
+1. Generar el keystore real:
+   `keytool -genkey -v -keystore <ruta>/upload-keystore.jks -keyalg RSA -keysize 2048 -validity 10000 -alias upload`.
+   Guardar la ruta y las contraseñas en un gestor de contraseñas — nunca en
+   el repo (ya protegido en `.gitignore`: `/android/key.properties`, `*.jks`,
+   `*.keystore`).
+2. Crear `mobile/android/key.properties` con `storePassword`, `keyPassword`,
+   `keyAlias=upload`, `storeFile=<ruta al keystore>`.
+3. En `build.gradle.kts`: leer `key.properties`, declarar
+   `signingConfigs { create("release") { ... } }` con esos valores, y
+   cambiar la línea de `release { signingConfig = ... }` para usar
+   `signingConfigs.getByName("release")` en vez de `"debug"`.
+4. Sacar el SHA-1 del keystore nuevo:
+   `keytool -list -v -keystore <ruta>/upload-keystore.jks -alias upload -storepass <password>`.
+5. En Google Cloud Console → Credentials, crear otro cliente OAuth tipo
+   Android (mismo package `com.uniplan.app`, SHA-1 nuevo) — se suma al de
+   debug, no lo reemplaza.
+6. Si se activa **Play App Signing** en Play Console: Google vuelve a
+   re-firmar el APK con su propia clave para distribuirlo. Sacar el SHA-1
+   que Play Console muestra en "Integridad de la app" → "Certificado de
+   firma de la app" y agregarlo también como cliente Android — sin este
+   paso, el login con Google falla solo para quienes instalan desde Play
+   Store, aunque funcione en cualquier otro build.
+
+## 7. CI/CD
 
 - [x] `ci-tests.yml`: corre `flutter analyze` + `flutter test` + `npm test`
       en cada Pull Request a `main` y `dev`.
