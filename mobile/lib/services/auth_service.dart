@@ -13,7 +13,7 @@ class AuthService {
 
   final GoogleSignIn _googleSignIn = GoogleSignIn(
     serverClientId:
-        '1006495541792-ajc6n2nu7ajn5u1b820qrlh1umsb5tji.apps.googleusercontent.com',
+        '332912986350-rtmqe99qvd6g4subh1ah7uh4qa2iodgr.apps.googleusercontent.com',
   );
 
   AuthService() {

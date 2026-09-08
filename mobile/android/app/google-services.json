@@ -12,7 +12,20 @@
           "package_name": "com.uniplan.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "332912986350-bfmibjo6t5kibvumkh5vmme92qa3rnrb.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.uniplan.app",
+            "certificate_hash": "ab00777980c6608667ef2c54fd275c7e0a21f15f"
+          }
+        },
+        {
+          "client_id": "332912986350-rtmqe99qvd6g4subh1ah7uh4qa2iodgr.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyCbrEjSho1ojozw6iUVd4bUt3lIKIds7-k"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "332912986350-rtmqe99qvd6g4subh1ah7uh4qa2iodgr.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

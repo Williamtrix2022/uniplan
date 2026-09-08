@@ -100,17 +100,29 @@ class Task {
   // Actualizar tarea
   static async update(id, taskData) {
     const { titulo, descripcion, fecha_entrega, prioridad, estado, id_materia, es_proyecto } = taskData;
-    
+
+    // `estado` y `completada` guardan el mismo hecho por duplicado, pero los
+    // consumidores no leen el mismo: getStats, getUpcoming y cleanupOld miran
+    // el BOOLEANO, mientras que el formulario de edición solo manda el ENUM.
+    // Derivar el booleano acá evita que completar una tarea desde la edición
+    // deje las estadísticas sin actualizar.
+    const isCompleted = estado === 'completada';
+
+    // COALESCE preserva la fecha de la primera vez que se completó: reeditar
+    // una tarea ya completada no debe reescribir su marca temporal.
     const query = `
-      UPDATE tareas 
-      SET titulo = ?, descripcion = ?, fecha_entrega = ?, 
-          prioridad = ?, estado = ?, id_materia = ?, es_proyecto = ?
+      UPDATE tareas
+      SET titulo = ?, descripcion = ?, fecha_entrega = ?,
+          prioridad = ?, estado = ?, id_materia = ?, es_proyecto = ?,
+          completada = ?,
+          fecha_completada = CASE WHEN ? THEN COALESCE(fecha_completada, NOW()) ELSE NULL END
       WHERE id = ? AND activo = TRUE
     `;
-    
+
     try {
       const [result] = await pool.execute(query, [
-        titulo, descripcion, fecha_entrega, prioridad, estado, id_materia, es_proyecto || false, id
+        titulo, descripcion, fecha_entrega, prioridad, estado, id_materia, es_proyecto || false,
+        isCompleted, isCompleted, id
       ]);
       return result.affectedRows > 0;
     } catch (error) {
