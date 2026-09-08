@@ -1,6 +1,6 @@
 {
   "name": "uniplan-backend",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "API REST para Uniplan - Aplicación de organización académica",
   "main": "server.js",
   "scripts": {
