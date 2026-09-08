@@ -92,6 +92,7 @@ credentials/
 # .agents/ - versioned with custom agents
 # .claude/ - versioned with skills
 skills-lock.json
+.codegraph/
 
 # ========== DOCUMENTACIÓN ==========
 # Mantén los docs pero ignora archivos temporales
