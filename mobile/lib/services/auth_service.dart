@@ -3,12 +3,18 @@
 // ============================================
 
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../config/api_config.dart';
 import 'api_service.dart';
 
 class AuthService {
   final ApiService _apiService = ApiService();
+
+  final GoogleSignIn _googleSignIn = GoogleSignIn(
+    serverClientId:
+        '1006495541792-ajc6n2nu7ajn5u1b820qrlh1umsb5tji.apps.googleusercontent.com',
+  );
 
   AuthService() {
     // ApiService (singleton) reintenta los 401 llamando a este callback.
@@ -48,6 +54,41 @@ class AuthService {
         return response;
       } else {
         throw Exception(response['message'] ?? 'Error al iniciar sesión');
+      }
+    } catch (e) {
+      rethrow;
+    }
+  }
+
+  // ========== LOGIN CON GOOGLE ==========
+  // allowRegister=false (login): si el correo no existe, el backend rechaza
+  // en vez de crear la cuenta. allowRegister=true (registro): la crea.
+  Future<Map<String, dynamic>> loginWithGoogle({bool allowRegister = false}) async {
+    try {
+      // Sin esto, Google reautentica en silencio con la última cuenta usada
+      // en el dispositivo y nunca muestra el selector de cuentas.
+      await _googleSignIn.signOut();
+      final googleUser = await _googleSignIn.signIn();
+      if (googleUser == null) {
+        throw Exception('Inicio de sesión con Google cancelado');
+      }
+
+      final googleAuth = await googleUser.authentication;
+      final idToken = googleAuth.idToken;
+      if (idToken == null) {
+        throw Exception('No se pudo obtener el token de Google');
+      }
+
+      final response = await _apiService.post(
+        ApiConfig.googleLogin,
+        {'idToken': idToken, 'allowRegister': allowRegister},
+      );
+
+      if (response['success'] == true) {
+        await _persistSession(response);
+        return response;
+      } else {
+        throw Exception(response['message'] ?? 'Error al iniciar sesión con Google');
       }
     } catch (e) {
       rethrow;
@@ -312,18 +353,6 @@ class AuthService {
   // ========== GUARDAR DATOS DE USUARIO ==========
   Future<void> _saveUserData(Map<String, dynamic> userData) async {
     await _secureStorage.write(key: _userKey, value: userData.toString());
-  }
-
-  // ========== OBTENER DATOS DE USUARIO ==========
-  Future<Map<String, dynamic>?> getUserData() async {
-    final userDataString = await _secureStorage.read(key: _userKey);
-
-    if (userDataString != null) {
-      // Aquí deberías parsear el string a Map
-      // Por simplicidad, retornamos null por ahora
-      return null;
-    }
-    return null;
   }
 
   // ========== ELIMINAR DATOS DE USUARIO ==========

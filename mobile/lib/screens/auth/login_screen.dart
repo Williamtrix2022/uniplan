@@ -115,6 +115,39 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     }
   }
 
+  Future<void> _handleGoogleLogin() async {
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.loginWithGoogle();
+
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (context) => const HomeScreen(),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppTheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(12),
+            ),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -370,9 +403,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           child: _SocialButton(
                             icon: Icons.g_mobiledata,
                             label: 'Google',
-                            onPressed: () {
-                              // TODO: Login con Google
-                            },
+                            onPressed: _handleGoogleLogin,
                           ),
                         ),
                         const SizedBox(width: 16),

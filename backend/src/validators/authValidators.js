@@ -38,6 +38,16 @@ const login = [
     .notEmpty().withMessage('La contraseña es obligatoria')
 ];
 
+const googleLogin = [
+  body('idToken')
+    .isString().withMessage('idToken es obligatorio')
+    .trim()
+    .notEmpty().withMessage('idToken es obligatorio'),
+  body('allowRegister')
+    .optional()
+    .isBoolean().withMessage('allowRegister debe ser booleano')
+];
+
 const forgotPassword = [
   body('correo')
     .trim()
@@ -78,6 +88,7 @@ const refreshOrLogout = [
 module.exports = {
   register,
   login,
+  googleLogin,
   forgotPassword,
   resetPassword,
   changePassword,

@@ -18,6 +18,9 @@ router.post('/register', authLimiter, v.register, handleValidation, authControll
 // POST /api/auth/login - Iniciar sesión
 router.post('/login', authLimiter, v.login, handleValidation, authController.login);
 
+// POST /api/auth/google - Iniciar sesión (o registrarse) con Google
+router.post('/google', authLimiter, v.googleLogin, handleValidation, authController.loginWithGoogle);
+
 // POST /api/auth/forgot-password - Solicitar recuperación de contraseña
 router.post('/forgot-password', resetLimiter, v.forgotPassword, handleValidation, authController.forgotPassword);
 
