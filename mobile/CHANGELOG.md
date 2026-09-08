@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.3](https://github.com/Williamtrix2022/uniplan/compare/uniplan-v1.0.2...uniplan-v1.0.3) (2026-09-08)
+
+
+### Correcciones
+
+* **android:** firma los builds de release con una keystore propia ([24f1db5](https://github.com/Williamtrix2022/uniplan/commit/24f1db5269ff30aba707c86df0c022c9290017ff))
+* **android:** firma los builds de release con una keystore propia ([98a17ec](https://github.com/Williamtrix2022/uniplan/commit/98a17ec8b60253bb318739400ea76394ae1df025))
+* **android:** firma los builds de release con una keystore propia ([87ce990](https://github.com/Williamtrix2022/uniplan/commit/87ce9902edba7aa627477f3339767561cce7c3c1))
+
 ## [1.0.2](https://github.com/Williamtrix2022/uniplan/compare/uniplan-v1.0.1...uniplan-v1.0.2) (2026-09-08)
 
 
