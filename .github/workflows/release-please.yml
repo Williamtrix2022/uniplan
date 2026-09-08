@@ -31,6 +31,16 @@ jobs:
         id: release
         uses: googleapis/release-please-action@v4
         with:
+          # Con el GITHUB_TOKEN por defecto esto falla con "GitHub Actions is
+          # not permitted to create or approve pull requests", y aunque se
+          # habilite esa opción del repo, las PRs que abre ese token NO
+          # disparan workflows — así que la Release PR quedaría sin checks y
+          # la protección de main nunca la dejaría mergear.
+          #
+          # Un PAT actúa como usuario: puede abrir la PR y además dispara
+          # ci-tests.yml sobre ella. El fallback a github.token deja el
+          # workflow funcional mientras el secret no exista todavía.
+          token: ${{ secrets.RELEASE_PLEASE_TOKEN || github.token }}
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
