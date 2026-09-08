@@ -515,8 +515,6 @@ class _TasksScreenState extends State<TasksScreen> {
               builder: (context, snapshot) {
                 return UserAvatar(
                   name: snapshot.data ?? '',
-                  backgroundColor: AppTheme.surfaceContainerHigh,
-                  foregroundColor: AppTheme.darkText,
                   onTap: () => Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const ProfileScreen()),

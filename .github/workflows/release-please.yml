@@ -1,0 +1,97 @@
+name: Release Please
+
+# Mantiene una "Release PR" viva contra main: cada commit que se mergea a main
+# se acumula en esa PR con su bump de versión y su entrada de changelog, según
+# Conventional Commits (feat -> minor, fix -> patch, ! o BREAKING CHANGE -> major).
+#
+# Al mergear la Release PR, release-please escribe CHANGELOG.md, bumpea las
+# versiones en mobile/pubspec.yaml y backend/package.json, crea los tags y
+# publica las GitHub Releases. Recién ahí se construye y distribuye el APK.
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  release-please:
+    name: Mantener Release PR
+    runs-on: ubuntu-latest
+    outputs:
+      mobile_released: ${{ steps.release.outputs['mobile--release_created'] }}
+      mobile_tag: ${{ steps.release.outputs['mobile--tag_name'] }}
+      mobile_version: ${{ steps.release.outputs['mobile--version'] }}
+
+    steps:
+      - name: Run release-please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  distribute-android:
+    name: Construir y distribuir APK
+    needs: release-please
+    # Solo corre cuando release-please efectivamente publicó una release de la
+    # app móvil, no en cada push a main.
+    if: needs.release-please.outputs.mobile_released == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: "3.32.0"
+          channel: stable
+
+      - name: Install dependencies
+        working-directory: mobile
+        run: flutter pub get
+
+      - name: Analyze
+        working-directory: mobile
+        run: flutter analyze --no-fatal-infos
+
+      - name: Test
+        working-directory: mobile
+        run: flutter test
+
+      - name: Build APK
+        working-directory: mobile
+        # build-name sale de la versión semántica que acaba de publicar
+        # release-please. build-number tiene que ser monótono para que Play
+        # Store e instaladores acepten la actualización, y github.run_number
+        # cumple esa garantía.
+        run: |
+          flutter build apk --release \
+            --build-name=${{ needs.release-please.outputs.mobile_version }} \
+            --build-number=${{ github.run_number }}
+
+      - name: Upload to Firebase App Distribution
+        uses: wzieba/Firebase-Distribution-Github-Action@v1
+        with:
+          appId: ${{ secrets.FIREBASE_APP_ID }}
+          token: ${{ secrets.FIREBASE_TOKEN }}
+          groups: public-uniplan
+          file: mobile/build/app/outputs/flutter-apk/app-release.apk
+          releaseNotes: "Uniplan ${{ needs.release-please.outputs.mobile_tag }}"
+
+      - name: Adjuntar APK a la GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ needs.release-please.outputs.mobile_tag }}
+          files: mobile/build/app/outputs/flutter-apk/app-release.apk
