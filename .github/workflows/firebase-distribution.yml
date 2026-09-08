@@ -68,6 +68,26 @@ jobs:
           BASE_VERSION=$(grep '^version:' pubspec.yaml | sed 's/version: //' | cut -d'+' -f1)
           echo "name=$BASE_VERSION" >> "$GITHUB_OUTPUT"
 
+      - name: Preparar firma de release
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+        run: |
+          if [ -z "$KEYSTORE_BASE64" ]; then
+            echo "::error::Falta el secret ANDROID_KEYSTORE_BASE64."
+            echo "::error::Sin él el APK se firmaría con la keystore de debug efímera del runner, cuya SHA-1 cambia en cada corrida y no está registrada en Firebase. El login con Google fallaría con DEVELOPER_ERROR (10)."
+            exit 1
+          fi
+          echo "$KEYSTORE_BASE64" | base64 -d > mobile/android/app/upload-keystore.jks
+          cat > mobile/android/key.properties <<PROPS
+          storeFile=upload-keystore.jks
+          storePassword=$STORE_PASSWORD
+          keyPassword=$KEY_PASSWORD
+          keyAlias=$KEY_ALIAS
+          PROPS
+
       - name: Build APK
         working-directory: mobile
         run: |
