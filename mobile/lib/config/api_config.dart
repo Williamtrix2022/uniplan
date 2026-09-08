@@ -16,6 +16,7 @@ class ApiConfig {
 
   // Auth
   static const String login = '$apiPrefix/auth/login';
+  static const String googleLogin = '$apiPrefix/auth/google';
   static const String register = '$apiPrefix/auth/register';
   static const String profile = '$apiPrefix/auth/profile';
   static const String forgotPassword = '$apiPrefix/auth/forgot-password';

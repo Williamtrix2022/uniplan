@@ -4,11 +4,14 @@
 
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const { OAuth2Client } = require('google-auth-library');
 const Student = require('../models/Student');
 const RefreshToken = require('../models/RefreshToken');
 const { isValidEmail, isRealEmail } = require('../utils/validators');
 const { sendEmail } = require('../services/mailService');
 const { signAccessToken, generateRefreshToken, hashToken } = require('../services/tokenService');
+
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 // Emite un par access + refresh, persiste el refresh (hash) y devuelve
 // ambos en claro para la respuesta.
@@ -52,7 +55,9 @@ const register = async (req, res) => {
     if (existingStudent) {
       return res.status(400).json({
         success: false,
-        message: 'El correo ya está registrado'
+        message: existingStudent.google_id
+          ? 'Ese correo ya está registrado con Google. Iniciá sesión con Google.'
+          : 'El correo ya está registrado'
       });
     }
 
@@ -136,6 +141,13 @@ const login = async (req, res) => {
     }
 
     // 3. Verificar contraseña
+    if (!student.contrasena) {
+      return res.status(401).json({
+        success: false,
+        message: 'Esta cuenta usa inicio de sesión con Google'
+      });
+    }
+
     const isPasswordValid = await bcrypt.compare(contrasena, student.contrasena);
     if (!isPasswordValid) {
       return res.status(401).json({
@@ -181,6 +193,96 @@ const login = async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Error al iniciar sesión'
+    });
+  }
+};
+
+// ========== INICIAR SESIÓN CON GOOGLE ==========
+const loginWithGoogle = async (req, res) => {
+  try {
+    const { idToken, allowRegister } = req.body;
+
+    if (!idToken) {
+      return res.status(400).json({
+        success: false,
+        message: 'idToken es obligatorio'
+      });
+    }
+
+    // 1. Verificar el ID token contra Google
+    let payload;
+    try {
+      const ticket = await googleClient.verifyIdToken({
+        idToken,
+        audience: process.env.GOOGLE_CLIENT_ID
+      });
+      payload = ticket.getPayload();
+    } catch (verifyError) {
+      return res.status(401).json({
+        success: false,
+        message: 'Token de Google inválido'
+      });
+    }
+
+    // 2. Nunca vincular ni crear cuentas con un correo no verificado por Google
+    if (!payload.email_verified) {
+      return res.status(401).json({
+        success: false,
+        message: 'El correo de Google no está verificado'
+      });
+    }
+
+    const correo = payload.email;
+    const googleId = payload.sub;
+    const nombre = payload.name || correo.split('@')[0];
+
+    // 3. Buscar si el correo ya existe (registrado normal o con Google)
+    let student = await Student.findByEmail(correo);
+    let isNewUser = false;
+
+    if (!student) {
+      // Desde la pantalla de login no se crea cuenta nueva: si el correo no
+      // existe, se manda a la persona a registrarse explícitamente.
+      if (!allowRegister) {
+        return res.status(400).json({
+          success: false,
+          message: 'No existe una cuenta registrada con este correo. Registrate primero.',
+          accountNotFound: true
+        });
+      }
+
+      const studentId = await Student.createWithGoogle({ nombre, correo, googleId });
+      student = await Student.findById(studentId);
+      isNewUser = true;
+    } else if (!student.google_id) {
+      // Cuenta registrada con correo/contraseña: se vincula porque Google
+      // ya confirmó que el correo es verificado.
+      await Student.linkGoogleId(student.id, googleId);
+    }
+
+    // 4. Generar par de tokens (access + refresh)
+    const { token, refreshToken } = await issueTokenPair(student);
+
+    res.json({
+      success: true,
+      message: isNewUser ? 'Cuenta creada con Google' : 'Inicio de sesión exitoso',
+      data: {
+        id: student.id,
+        nombre: student.nombre,
+        correo: student.correo,
+        carrera: student.carrera,
+        universidad: student.universidad
+      },
+      token,
+      refreshToken,
+      isNewUser
+    });
+
+  } catch (error) {
+    console.error('Error en loginWithGoogle:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error al iniciar sesión con Google'
     });
   }
 };
@@ -597,6 +699,7 @@ const logoutAll = async (req, res) => {
 module.exports = {
   register,
   login,
+  loginWithGoogle,
   getProfile,
   forgotPassword,
   resetPassword,

@@ -111,6 +111,36 @@ class _RegisterScreenState extends State<RegisterScreen> {
     }
   }
 
+  Future<void> _handleGoogleRegister() async {
+    setState(() => _isLoading = true);
+
+    try {
+      await _authService.loginWithGoogle(allowRegister: true);
+
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(
+            builder: (context) => const HomeScreen(),
+          ),
+          (route) => false,
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(e.toString()),
+            backgroundColor: AppTheme.error,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isLoading = false);
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -334,9 +364,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       child: _SocialButton(
                         icon: Icons.g_mobiledata,
                         label: 'Google',
-                        onPressed: () {
-                          // TODO: Registro con Google
-                        },
+                        onPressed: _handleGoogleRegister,
                       ),
                     ),
                     const SizedBox(width: 16),

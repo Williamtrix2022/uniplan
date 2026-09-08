@@ -43,9 +43,43 @@ class Student {
     }
   }
 
+  // Crear un nuevo estudiante autenticado con Google (sin contraseña propia)
+  static async createWithGoogle({ nombre, correo, googleId, carrera, universidad }) {
+    const query = `
+      INSERT INTO estudiantes (nombre, correo, contrasena, carrera, universidad, google_id)
+      VALUES (?, ?, NULL, ?, ?, ?)
+    `;
+
+    try {
+      const [result] = await pool.execute(query, [
+        nombre,
+        correo,
+        carrera || null,
+        universidad || 'Universidad de Córdoba',
+        googleId
+      ]);
+
+      return result.insertId;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Vincular una cuenta de Google a un estudiante ya registrado por correo/contraseña
+  static async linkGoogleId(id, googleId) {
+    const query = 'UPDATE estudiantes SET google_id = ? WHERE id = ?';
+
+    try {
+      const [result] = await queryWithRetry(query, [googleId, id]);
+      return result.affectedRows > 0;
+    } catch (error) {
+      throw error;
+    }
+  }
+
   // Buscar estudiante por ID
   static async findById(id) {
-    const query = 'SELECT id, nombre, correo, carrera, universidad, fecha_registro FROM estudiantes WHERE id = ? AND activo = TRUE';
+    const query = 'SELECT id, nombre, correo, carrera, universidad, fecha_registro, google_id FROM estudiantes WHERE id = ? AND activo = TRUE';
     
     try {
       const [rows] = await queryWithRetry(query, [id]);
