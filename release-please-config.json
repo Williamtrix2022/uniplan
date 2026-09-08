@@ -1,0 +1,30 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "separate-pull-requests": false,
+  "bootstrap-sha": "e2b4fba24763e787664117fd1245dc8d8e1090e7",
+  "changelog-sections": [
+    { "type": "feat", "section": "Funcionalidades" },
+    { "type": "fix", "section": "Correcciones" },
+    { "type": "perf", "section": "Rendimiento" },
+    { "type": "refactor", "section": "Refactors" },
+    { "type": "revert", "section": "Reversiones" },
+    { "type": "docs", "section": "Documentación", "hidden": true },
+    { "type": "test", "section": "Tests", "hidden": true },
+    { "type": "build", "section": "Build", "hidden": true },
+    { "type": "ci", "section": "CI", "hidden": true },
+    { "type": "chore", "section": "Mantenimiento", "hidden": true },
+    { "type": "style", "section": "Estilo", "hidden": true }
+  ],
+  "packages": {
+    "mobile": {
+      "release-type": "dart",
+      "package-name": "uniplan",
+      "changelog-path": "CHANGELOG.md"
+    },
+    "backend": {
+      "release-type": "node",
+      "package-name": "uniplan-backend",
+      "changelog-path": "CHANGELOG.md"
+    }
+  }
+}
