@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../../config/theme.dart';
 import '../../services/auth_service.dart';
 import '../../services/dashboard_service.dart';
+import '../../widgets/common/user_avatar.dart';
 import '../auth/login_screen.dart';
 import 'change_password_screen.dart';
 import 'edit_profile_screen.dart';
@@ -104,27 +105,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         title: Row(
           children: [
-            // Avatar circular 40x40 con inicial
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: AppTheme.primaryGreen,
-                shape: BoxShape.circle,
-              ),
-              child: Center(
-                child: _userName.isNotEmpty
-                    ? Text(
-                        _userName[0].toUpperCase(),
-                        style: const TextStyle(
-                          color: AppTheme.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ),
+            UserAvatar(name: _userName, size: 40),
             const SizedBox(width: 12),
             // Título "Agenda"
             const Text(
@@ -203,25 +184,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Stack(
             alignment: Alignment.bottomRight,
             children: [
-              Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: AppTheme.surface, width: 4),
-                  boxShadow: AppTheme.cardShadow,
-                ),
-                child: Center(
-                  child: Text(
-                    nombre.isNotEmpty ? nombre[0].toUpperCase() : 'U',
-                    style: const TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
-                      color: AppTheme.white,
-                    ),
-                  ),
-                ),
+              UserAvatar(
+                name: nombre,
+                size: 96,
+                fallbackInitial: 'U',
+                borderColor: AppTheme.surface,
+                borderWidth: 4,
+                boxShadow: AppTheme.cardShadow,
               ),
               // Badge verified
               Container(
