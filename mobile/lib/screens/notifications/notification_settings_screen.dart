@@ -31,6 +31,10 @@ class _NotificationSettingsScreenState
   bool _loadedDraft = false;
   bool _isSaving = false;
 
+  // Sin alarmas exactas los recordatorios igual llegan, pero con minutos de
+  // desvío. Se arranca en true para no mostrar el aviso antes de comprobarlo.
+  bool _canScheduleExact = true;
+
   @override
   void initState() {
     super.initState();
@@ -40,8 +44,22 @@ class _NotificationSettingsScreenState
       // claro para el usuario (aquí, no a ciegas en el arranque de la app).
       await LocalNotificationService.requestPermission();
       if (!mounted) return;
+      await _refreshExactAlarmsStatus();
+      if (!mounted) return;
       await context.read<NotificationProvider>().initialize();
     });
+  }
+
+  Future<void> _refreshExactAlarmsStatus() async {
+    final canSchedule = await LocalNotificationService.canScheduleExactAlarms();
+    if (!mounted) return;
+    setState(() => _canScheduleExact = canSchedule);
+  }
+
+  Future<void> _requestExactAlarms() async {
+    final granted = await LocalNotificationService.requestExactAlarmsPermission();
+    if (!mounted) return;
+    setState(() => _canScheduleExact = granted);
   }
 
   void _syncDraftFromProvider(NotificationPreferences preferences) {
@@ -71,6 +89,10 @@ class _NotificationSettingsScreenState
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  if (!_canScheduleExact) ...[
+                    _buildExactAlarmsNotice(),
+                    const SizedBox(height: 24),
+                  ],
                   _buildSectionLabel('TIPOS DE NOTIFICACIÓN'),
                   const SizedBox(height: 12),
                   _buildTypesSection(),
@@ -92,6 +114,68 @@ class _NotificationSettingsScreenState
                 ],
               ),
             ),
+    );
+  }
+
+  /// Aviso cuando el sistema no permite alarmas exactas. Sin esto la app
+  /// degradaba en silencio y el usuario no tenía forma de entender por qué
+  /// sus recordatorios llegaban tarde.
+  Widget _buildExactAlarmsNotice() {
+    return Container(
+      padding: const EdgeInsets.all(AppSizes.paddingM),
+      decoration: BoxDecoration(
+        color: AppTheme.warning.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        border: Border.all(color: AppTheme.warning),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Row(
+            children: [
+              Icon(Icons.schedule, color: AppTheme.warning, size: 20),
+              SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  'Los recordatorios pueden llegar tarde',
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    color: AppTheme.darkText,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            'Android no está permitiendo alarmas exactas para Uniplan. Tus '
+            'avisos van a seguir llegando, pero con algunos minutos de '
+            'diferencia respecto a la hora que programaste.',
+            style: TextStyle(
+              fontSize: 13,
+              color: AppTheme.onSurfaceVariant,
+            ),
+          ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: _requestExactAlarms,
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(0, 32),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text(
+              'Permitir alarmas exactas',
+              style: TextStyle(
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+                color: AppTheme.primaryGreen,
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 

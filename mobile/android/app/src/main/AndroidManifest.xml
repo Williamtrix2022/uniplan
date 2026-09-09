@@ -5,9 +5,19 @@
 
     <!-- Notificaciones locales (recordatorios de tareas y clases) -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
-    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
-    <uses-permission android:name="android.permission.USE_EXACT_ALARM"/>
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
+    <!-- Alarmas exactas: el recordatorio de una clase o una entrega pierde
+         sentido si llega tarde, así que se piden.
+
+         Se declara SCHEDULE_EXACT_ALARM y NO USE_EXACT_ALARM. El segundo se
+         concede solo, sin preguntarle al usuario, pero Google Play lo reserva
+         para apps cuya función central es despertador, calendario o
+         temporizador; declararlo acá es riesgo de rechazo sin necesidad.
+         SCHEDULE_EXACT_ALARM lo habilita el usuario desde los ajustes, y
+         LocalNotificationService degrada a alarmas inexactas cuando no está
+         concedido. -->
+    <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM"/>
 
     <!-- El tráfico en texto plano (HTTP) sólo se habilita en los builds de
          debug/profile para poder apuntar a un backend local en la LAN.
