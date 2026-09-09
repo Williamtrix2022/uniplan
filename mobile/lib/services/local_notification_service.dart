@@ -194,6 +194,38 @@ class LocalNotificationService {
     return granted ?? false;
   }
 
+  /// Indica si el sistema permite programar alarmas exactas.
+  ///
+  /// Desde Android 14 `SCHEDULE_EXACT_ALARM` no viene concedido: hay que
+  /// habilitarlo a mano en los ajustes del sistema. Sin él los recordatorios
+  /// siguen llegando —`scheduleAt` degrada a modo inexacto— pero con varios
+  /// minutos de desvío, que para el aviso de una clase es inservible.
+  ///
+  /// Devuelve `true` en plataformas sin este concepto (iOS, escritorio).
+  static Future<bool> canScheduleExactAlarms() async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin == null) return true;
+    return await androidPlugin.canScheduleExactNotifications() ?? false;
+  }
+
+  /// Lleva al usuario a la pantalla de ajustes del sistema donde se concede
+  /// el permiso de alarmas exactas. Devuelve el estado del permiso después
+  /// de volver, para poder refrescar la interfaz.
+  static Future<bool> requestExactAlarmsPermission() async {
+    if (!_isInitialized) {
+      await initialize();
+    }
+    final androidPlugin = _plugin.resolvePlatformSpecificImplementation<
+        AndroidFlutterLocalNotificationsPlugin>();
+    if (androidPlugin == null) return true;
+    await androidPlugin.requestExactAlarmsPermission();
+    return await androidPlugin.canScheduleExactNotifications() ?? false;
+  }
+
   static AndroidNotificationChannel _channelFor(String channel) {
     switch (channel) {
       case channelTareas:
