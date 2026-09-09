@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.5](https://github.com/Williamtrix2022/uniplan/compare/uniplan-v1.0.4...uniplan-v1.0.5) (2026-09-09)
+
+
+### Correcciones
+
+* **android:** agrega reglas de R8 para Gson y flutter_local_notifications ([4350d42](https://github.com/Williamtrix2022/uniplan/commit/4350d42dc0dc691505b4548cf40a324224906209))
+* **android:** agrega reglas de R8 para Gson y flutter_local_notifications ([c67b6d9](https://github.com/Williamtrix2022/uniplan/commit/c67b6d9a68a388dd7ed1f07373e01d57f253ddb1))
+* **android:** agrega reglas de R8 para Gson y flutter_local_notifications ([24428eb](https://github.com/Williamtrix2022/uniplan/commit/24428eb6660a6edfdecce32d49f36813e2a231b5))
+
 ## [1.0.4](https://github.com/Williamtrix2022/uniplan/compare/uniplan-v1.0.3...uniplan-v1.0.4) (2026-09-09)
 
 
