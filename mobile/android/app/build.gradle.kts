@@ -75,6 +75,15 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+
+            // Reglas propias de R8, encima de las que inyecta Flutter. Sin
+            // ellas Gson pierde las firmas genéricas al ofuscar y el plugin
+            // de notificaciones falla al cancelar una notificación — solo en
+            // release, porque en debug R8 no corre.
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
         }
     }
 }
