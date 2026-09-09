@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.0.4](https://github.com/Williamtrix2022/uniplan/compare/uniplan-v1.0.3...uniplan-v1.0.4) (2026-09-09)
+
+
+### Correcciones
+
+* **notifications:** quita USE_EXACT_ALARM y avisa cuando no hay alarmas exactas ([fec2ab9](https://github.com/Williamtrix2022/uniplan/commit/fec2ab9fdeb7fe3692c09bc103e5d5692daaea13))
+* **notifications:** quita USE_EXACT_ALARM y avisa cuando no hay alarmas exactas ([38c2015](https://github.com/Williamtrix2022/uniplan/commit/38c2015c9417dc49aa6ac44230508f54c871bf57))
+* **notifications:** quita USE_EXACT_ALARM y avisa cuando no hay alarmas exactas ([0af2256](https://github.com/Williamtrix2022/uniplan/commit/0af22564d54a90f32a0161ab0a533a0cd1586fd5))
+
 ## [1.0.3](https://github.com/Williamtrix2022/uniplan/compare/uniplan-v1.0.2...uniplan-v1.0.3) (2026-09-08)
 
 
