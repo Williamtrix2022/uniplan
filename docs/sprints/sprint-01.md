@@ -1,145 +1,209 @@
-# Plan de implementación — Sprint 1 (Autenticación y UI Base)
+# Plan de implementación — Sprint 1 (Correcciones y visibilidad de materias)
 
-## Problema
-Completar Sprint 1 desde **69% (24/35)** hasta **35/35** con foco en autenticación completa, UX base consistente y componentes reutilizables listos para escalar los siguientes sprints.
+## Problema y alcance
 
-## Estado actual validado (mobile + backend)
-- Implementado: login, registro, logout, splash, navegación principal base, `AuthService`/`ApiService`, backend Node.js + Express + MySQL + JWT, endpoint de actualización de estudiante (`PUT /api/students/:id`).
-- Pendiente real para cerrar Sprint 1:
-  1. Recuperación de contraseña (UI + endpoint + integración mobile).
-  2. Actualización de perfil real en mobile (hoy está mockeada).
-  3. Onboarding de primera ejecución.
-  4. Componentes base faltantes (`CustomCard`, `LoadingIndicator`, `EmptyState`, `ErrorState`).
-  5. Estandarización de transiciones animadas.
-  6. Soporte offline base en capa `ApiService` (alcance MVP de Sprint 1).
+Este sprint cierra los hallazgos correctivos y de visibilidad más urgentes
+detectados tras la validación de v1.0.0, usando `docs/mvp/UNIPLAN_EVOLUCION.md`
+como fuente de verdad: MJ-01 (las estadísticas no se actualizan al completar
+tareas), MJ-02 (la racha de Pomodoro no se actualiza), MJ-03+MJ-12 (invertir
+la jerarquía Materias/Notas en el menú principal) y MJ-08 (términos y
+condiciones sin contenido real detrás del checkbox). Las cuatro mejoras son
+prioridad "Debe" o "Debería" para la versión **v1.1.0**.
 
-## Decisiones cerradas
-- Stack oficial para Sprint 1: **Node.js + Express + MySQL + JWT**.
-- Recuperación de contraseña: **flujo con correo real** (token seguro + expiración + envío SMTP).
+## Estado actual validado (código vs plan)
 
-## Estrategia de ramas
-- Rama principal de trabajo del sprint:
-  - `feature/sprint-1-auth-ui-base-completion`
-- Sub-ramas recomendadas:
-  1. `feature/s1-password-reset-mvp`
-  2. `feature/s1-profile-update-mobile`
-  3. `feature/s1-onboarding-first-run`
-  4. `feature/s1-shared-ui-components`
-  5. `feature/s1-screen-transitions`
-  6. `feature/s1-offline-foundation`
-  7. `chore/s1-mvp-sync-docs`
+### Ya existente y reutilizable
 
-## Flujo recomendado de git
-1. `git checkout main`
-2. `git pull origin main`
-3. `git checkout -b feature/sprint-1-auth-ui-base-completion`
-4. Implementar por bloques (sub-ramas o commits atómicos).
-5. Merge final a la rama principal del sprint.
-6. Actualizar `UNIPLAN_MVP.md` al cerrar cada bloque.
+- `PATCH /api/tasks/:id/toggle` ya existe en el backend
+  (`backend/src/routes/taskRoutes.js:37`, `taskController.toggleTaskComplete`)
+  y está sin uso desde la app.
+- `Task.getStats` (`backend/src/models/Task.js:194-211`) calcula las
+  estadísticas en vivo sobre `tareas` y se agrega en
+  `GET /api/dashboard` (`backend/src/controllers/dashboardController.js:12-73`).
+- `ManageSubjectsScreen` (`mobile/lib/screens/grades/manage_subjects_screen.dart:12`)
+  ya implementa crear/eliminar materia, con FAB → `_CreateSubjectDialog` (`:314`).
+- `SubjectGradesScreen` (`mobile/lib/screens/grades/subject_grades_screen.dart:17`)
+  ya filtra notas por `idMateria`.
+- El checkbox de aceptación de términos ya existe y ya bloquea el envío del
+  registro (`mobile/lib/screens/auth/register_screen.dart:30` `_acceptedTerms`,
+  validación `:69-72`, widget `:284-291`).
+
+### Brechas detectadas para cerrar Sprint 1
+
+- `TaskProvider.toggleTask` y `TaskProvider.stats`
+  (`mobile/lib/providers/task_provider.dart:131-159`, `:235-245`) son código
+  muerto: ninguna pantalla los invoca. No existe checkbox de completar en
+  ninguna lista; la única vía es el chip de estado dentro del formulario de
+  edición (`mobile/lib/screens/tasks/task_form_screen.dart:471`), que llama
+  `PUT /api/tasks/:id` (`mobile/lib/services/task_service.dart:132-137`), no
+  el endpoint de `toggle`.
+- Home (`mobile/lib/screens/home_screen.dart:147-206`) y Perfil
+  (`mobile/lib/screens/profile_screen.dart:266-305`) solo refrescan sus
+  contadores por navegación (`initState` + `.then()` tras un
+  `Navigator.push`), nunca por un evento disparado por la mutación.
+- `_saveSession(completed: true)` del Pomodoro solo se llama cuando
+  `completedAllCycles` es verdadero, es decir
+  `currentCycle >= cyclesBeforeLongBreak` (default 4,
+  `mobile/lib/screens/pomodoro/pomodoro_screen.dart:235,245` y
+  `mobile/lib/models/pomodoro_preferences.dart:13`). Terminar un solo
+  pomodoro no persiste nada. Si el usuario cierra la pantalla a mitad de
+  sesión (`dispose`, `pomodoro_screen.dart:84-89`), tampoco se guarda nada.
+- No existe ningún cálculo de racha en el repositorio (grep de
+  `racha|streak` en `backend/src` → cero resultados). La tarjeta "Racha
+  actual" (`mobile/lib/screens/home_screen.dart:549-610`) en realidad muestra
+  `sesiones_completadas` de una ventana móvil de 7 días (`Pomodoro.getStats`,
+  `backend/src/models/Pomodoro.js:182,197`), no días consecutivos.
+- "Notas" en el menú inferior (`mobile/lib/widgets/bottom_nav_bar.dart:47-50`,
+  tab índice 3) en realidad abre `GradesScreen` ("Mis Notas") — es
+  calificaciones, no apuntes. `ManageSubjectsScreen` no tiene destino de
+  primer nivel: cuatro pantallas la empujan como paso intermedio
+  (`grades_screen.dart:371`, `grade_form_screen.dart:79`,
+  `schedule_form_screen.dart:69`, `task_form_screen.dart:187`). No existe
+  `SubjectProvider`: cada pantalla instancia `SubjectService()` por su
+  cuenta (al menos 4 instancias distintas).
+- El texto "Términos y Condiciones" del registro es un `TextSpan` sin
+  `recognizer` (`register_screen.dart:297-313`): no es tocable, no existe
+  pantalla ni documento al que apunte, y Perfil no tiene ningún ítem de
+  términos.
+
+## Decisiones de diseño
+
+- **No se escribe en `progreso_academico`.** La tabla existe
+  (`backend/db/schema.sql:172-186`) pero ningún archivo de `backend/src` la
+  lee ni la escribe; las estadísticas ya se calculan en vivo vía
+  `Task.getStats`. Escribir ahí crearía una segunda fuente de verdad sin
+  consumidor y sin sincronización garantizada. Se documenta esta decisión en
+  el propio PR para que no se reabra como pendiente.
+- **Pomodoro se persiste por ciclo real**, no al cerrar el set de
+  `cyclesBeforeLongBreak`. La racha se calcula en el backend sobre sesiones
+  `completada = TRUE` por día, no se reutiliza la ventana de 7 días existente
+  para ese cálculo (se mantiene esa consulta para el conteo semanal, que es
+  un indicador distinto).
+- **Materias sustituye a Notas como tab de primer nivel**; las notas
+  (calificaciones) pasan a vivir dentro de cada materia. No se construye
+  apuntes de texto libre — ese módulo no existe hoy ni está en el alcance de
+  MJ-03/MJ-12. Se introduce `SubjectProvider` siguiendo el mismo patrón que
+  `GradeProvider`/`TaskProvider` (ChangeNotifier + caché en
+  `SharedPreferences`) para eliminar las 4 instancias sueltas de
+  `SubjectService()`.
+- **Términos y condiciones**: se hace tocable el `TextSpan` existente con un
+  `TapGestureRecognizer`, se crea una pantalla nueva con el documento real, y
+  se migra `estudiantes` para guardar versión y fecha de aceptación por
+  usuario — sin tocar el contrato de registro ya existente (el checkbox que
+  bloquea el envío no se regresiona).
+
+## Estrategia de ramas (Git)
+
+```
+git checkout dev
+git pull origin dev
+git checkout -b feature/sprint-1-correcciones-visibilidad-materias
+```
+
+Sin PR por ahora — el usuario prueba la rama localmente antes de decidir el
+paso siguiente.
 
 ## Plan técnico por fases
 
-### Fase 1 — Password Reset con correo real (backend + mobile)
-**Backend**
-- Crear endpoint público `POST /api/auth/forgot-password`.
-- Crear endpoint público `POST /api/auth/reset-password`.
-- Archivo: `backend\src\controllers\authController.js`
-  - Nuevo método `forgotPassword(req, res)`:
-    - Valida formato de correo.
-    - Busca usuario por correo.
-    - Genera token de recuperación seguro (random + hash) con expiración (ej. 15-30 min).
-    - Guarda hash + expiración en BD asociado al usuario.
-    - Envía correo real con enlace/código de recuperación.
-    - Respuesta segura: no revelar si el correo existe.
-  - Nuevo método `resetPassword(req, res)`:
-    - Valida token + nueva contraseña.
-    - Verifica hash y expiración.
-    - Actualiza contraseña (bcrypt), invalida token y registra fecha de cambio.
-- Archivo: `backend\src\routes\authRoutes.js`
-  - Registrar ruta `router.post('/forgot-password', authController.forgotPassword);`
-  - Registrar ruta `router.post('/reset-password', authController.resetPassword);`
-- Variables de entorno nuevas en `backend\.env` / `.env.example`:
-  - `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`, `SMTP_FROM`
-  - `RESET_PASSWORD_URL` (deep link o URL web)
-- Ajustes BD:
-  - Agregar columnas/token table para recuperación (`reset_token_hash`, `reset_token_expires_at`) o tabla dedicada.
+### Fase 1 — MJ-01: estadísticas al completar tareas
 
-**Mobile**
-- Crear pantalla `mobile\lib\screens\auth\forgot_password_screen.dart`.
-- Crear pantalla `mobile\lib\screens\auth\reset_password_screen.dart` (si usarás flujo con código/token manual).
-- En `mobile\lib\screens\auth\login_screen.dart`:
-  - Conectar botón “¿Olvidaste tu contraseña?” a la nueva pantalla.
-- En `mobile\lib\services\auth_service.dart`:
-  - Agregar método `forgotPassword({required String email})` consumiendo nuevo endpoint.
-  - Agregar método `resetPassword({required String token, required String newPassword})`.
-- En `mobile\lib\config\api_config.dart`:
-  - Agregar constante endpoint `forgotPassword`.
-  - Agregar constante endpoint `resetPassword`.
-- Integración de enlace de recuperación:
-  - Manejar deep link/URL para abrir pantalla de nueva contraseña con token precargado.
+- Mobile: agregar un control de completar real (checkbox o swipe) en
+  `tasks_screen.dart` y en `home_screen.dart`, conectado al endpoint
+  `PATCH /api/tasks/:id/toggle` ya existente.
+- Mobile: revivir `TaskProvider.toggleTask`
+  (`mobile/lib/providers/task_provider.dart:131-159`) como fuente única de
+  verdad para completar/revertir tareas.
+- Mobile: emitir un evento/callback desde `TaskProvider` que
+  `home_screen.dart:147-206` y `profile_screen.dart:266-305` escuchen para
+  refrescar sus contadores sin depender de la navegación.
+- Decidir explícitamente el uso (o no) de `GET /api/tasks/stats`
+  (`mobile/lib/config/api_config.dart:39`, hoy sin consumidor) para no dejar
+  código apuntando a un endpoint fantasma.
 
-### Fase 2 — Update Profile real en mobile
-**Mobile**
-- En `mobile\lib\services\auth_service.dart`:
-  - Agregar método `updateProfile({required int id, required String nombre, required String carrera, required String universidad})` usando `PUT /api/students/:id`.
-  - Mantener sincronización de token/sesión y refresco de perfil.
-- En `mobile\lib\screens\profile\edit_profile_screen.dart`:
-  - Reemplazar mock (`Future.delayed`) por llamada real al servicio.
-  - Cargar `id` de perfil autenticado y enviar `PUT`.
-  - Manejar errores 400/403/500 con mensajes claros.
+### Fase 2 — MJ-02: racha de Pomodoro
 
-### Fase 3 — Componentes base reutilizables
-**Mobile (nuevos archivos)**
-- `mobile\lib\widgets\common\custom_card.dart`
-- `mobile\lib\widgets\common\loading_indicator.dart`
-- `mobile\lib\widgets\common\empty_state.dart`
-- `mobile\lib\widgets\common\error_state.dart`
+- Mobile: mover la llamada de guardado al branch trabajo→descanso de
+  `_onTimerComplete` (`mobile/lib/screens/pomodoro/pomodoro_screen.dart:200-264`),
+  con `ciclos_completados` incrementando por ciclo real, no solo al cerrar
+  el set de 4.
+- Backend: nueva consulta en `backend/src/models/Pomodoro.js` que cuente
+  días consecutivos con al menos una sesión `completada = TRUE`, terminando
+  en hoy o ayer.
+- Backend: exponer la racha desde `pomodoroController.js` (nuevo campo en la
+  respuesta de stats, sin romper el contrato existente del conteo semanal).
+- Mobile: corregir la tarjeta "Racha actual" en `home_screen.dart:549-610`
+  para mostrar la racha real junto con el conteo semanal.
 
-**Integración mínima obligatoria**
-- Reemplazar estados vacíos/carga ad-hoc en:
-  - `screens\tasks\tasks_screen.dart`
-  - `screens\calendar\calendar_screen.dart`
-  - `screens\profile\profile_screen.dart`
+### Fase 3 — MJ-03 + MJ-12: Materias de primer nivel, Notas dentro de cada materia
 
-### Fase 4 — Onboarding primera ejecución
-**Mobile**
-- Crear `mobile\lib\screens\auth\onboarding_screen.dart`.
-- En `mobile\lib\screens\splash_screen.dart`:
-  - Agregar decisión de ruta por bandera `SharedPreferences` (`has_seen_onboarding`).
-  - Secuencia: `Splash -> Onboarding (primera vez) -> Login/Home`.
-- Guardar bandera al finalizar onboarding.
+- Mobile: sustituir el tab "Notas" (`mobile/lib/widgets/bottom_nav_bar.dart:47-50`,
+  índice 3) por "Materias", apuntando a una pantalla de primer nivel que
+  promueva o enriquezca `ManageSubjectsScreen`
+  (`mobile/lib/screens/grades/manage_subjects_screen.dart:12`).
+- Mobile: dentro de cada materia, mostrar sus notas reutilizando
+  `SubjectGradesScreen` (`mobile/lib/screens/grades/subject_grades_screen.dart:17`).
+- Mobile: crear `SubjectProvider` (ChangeNotifier + caché en
+  `SharedPreferences`, mismo patrón que `GradeProvider`/`TaskProvider`) y
+  migrar las 4 pantallas que hoy instancian `SubjectService()` suelto:
+  `grades_screen.dart:371`, `grade_form_screen.dart:79`,
+  `schedule_form_screen.dart:69`, `task_form_screen.dart:187`.
+- Mobile: mantener accesos rápidos a "crear materia" desde los formularios de
+  tarea y horario cuando no existan materias (empty state con CTA).
 
-### Fase 5 — Transiciones animadas consistentes
-**Mobile**
-- Crear helper de navegación/transición:
-  - `mobile\lib\config\navigation_transitions.dart` (o helper equivalente).
-- Reemplazar `MaterialPageRoute` directos en flujo auth principal:
-  - Login -> Register / ForgotPassword / Home
-  - Splash -> Login/Home/Onboarding
-- Estándar mínimo: fade + slide corto para coherencia visual.
+### Fase 4 — MJ-08: términos, condiciones y política de datos
 
-### Fase 6 — Offline foundation en ApiService (alcance sprint)
-**Mobile**
-- En `mobile\lib\services\api_service.dart`:
-  - Estandarizar manejo explícito de `SocketException`/timeout con mensajes consistentes.
-  - Agregar base para reintento simple en GET críticos (máx. 1 reintento) o cache mínima de último resultado para pantallas de resumen.
-- Objetivo: cerrar tarea MVP “ApiService — Soporte offline” sin introducir arquitectura pesada.
+- Mobile: redactar términos y política de tratamiento de datos (Ley 1581 de
+  2012); crear pantalla nueva accesible desde el registro y desde Perfil.
+- Mobile: agregar `TapGestureRecognizer` al `TextSpan` de
+  `register_screen.dart:297-313` para que abra la pantalla nueva.
+- Mobile: agregar ítem de términos en `profile_screen.dart`.
+- Backend: migración sobre `estudiantes` para guardar versión y fecha de
+  aceptación:
 
-### Fase 7 — Cierre de sprint y documentación
-- Actualizar `UNIPLAN_MVP.md` (Sprint 1 a 35/35 si se completa todo).
-- Verificar sección “Próximas 5 tareas” alineada al siguiente cuello de botella (Sprint 2/3).
-- Dejar lista rama `feature/sprint-1-auth-ui-base-completion` para PR.
+```sql
+ALTER TABLE estudiantes
+  ADD COLUMN version_terminos_aceptados VARCHAR(20) DEFAULT NULL,
+  ADD COLUMN fecha_aceptacion_terminos TIMESTAMP NULL DEFAULT NULL;
+```
 
-## Dependencias y orden
-1. Password reset (Fase 1) y Update profile (Fase 2) primero.
-2. Componentes base (Fase 3) antes de pulido de transiciones (Fase 5).
-3. Onboarding (Fase 4) puede ir en paralelo con Fase 3.
-4. Offline foundation (Fase 6) al final del sprint para estabilización.
-5. Documentación y sync MVP (Fase 7) al cierre.
+- Backend: guardar `version_terminos_aceptados` y
+  `fecha_aceptacion_terminos` en el flujo de registro existente, sin cambiar
+  el contrato de los campos ya validados (`_acceptedTerms` sigue bloqueando
+  el envío).
 
-## Definition of Done — Sprint 1
-- Login, registro, logout, recuperación y edición de perfil funcionando extremo a extremo.
-- Onboarding funcional de primera ejecución.
-- Componentes base reutilizables integrados en pantallas clave.
-- Transiciones consistentes en flujo principal.
-- `UNIPLAN_MVP.md` actualizado a estado real y sin desalineaciones.
+## Verificación
+
+```
+cd mobile && flutter analyze
+cd mobile && flutter test
+cd backend && npm test
+```
+
+Regresión manual:
+
+- [ ] CP-008 y CP-013 (validación v1.0.0) — MJ-01.
+- [ ] CP-011 (validación v1.0.0) — MJ-02.
+- [ ] Al completar una tarea desde la lista o desde Home, el contador de
+  tareas del perfil y del dashboard cambia sin salir de la pantalla.
+- [ ] Al revertir una tarea a pendiente, los indicadores se recalculan igual.
+- [ ] No queda código apuntando a `GET /api/tasks/stats` sin decisión
+  explícita documentada.
+- [ ] Al completar un ciclo de concentración (no los 4), el contador sube de
+  inmediato.
+- [ ] La racha aumenta una vez por día y se reinicia si pasa un día
+  calendario sin ningún pomodoro completado.
+- [ ] Las sesiones detenidas antes de tiempo no suman ni a la racha ni al
+  conteo.
+- [ ] Desde el menú inferior, "Materias" lleva a la lista de materias en un
+  toque.
+- [ ] Un usuario nuevo llega a "Nueva materia" en máximo dos toques desde el
+  inicio.
+- [ ] Dentro de una materia se ven sus notas; no hay acceso a notas sin pasar
+  por una materia.
+- [ ] Si no hay materias, los formularios de tarea y horario muestran un
+  acceso directo para crearlas.
+- [ ] No es posible crear una cuenta sin aceptar los términos (no
+  regresionar).
+- [ ] El enlace del registro abre el documento real de términos.
+- [ ] Se almacena versión y fecha de aceptación por usuario.
+- [ ] El documento de términos se puede consultar desde el perfil.

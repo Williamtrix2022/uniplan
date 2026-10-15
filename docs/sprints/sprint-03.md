@@ -1,245 +1,144 @@
-# Plan de implementación — Sprint 3 (Gestión de Horarios)
+# Plan de implementación — Sprint 3 (Calendario, ayuda y temas)
 
 ## Problema y alcance
-Construir el módulo de **Gestión de Horarios** desde 0, siguiendo `UNIPLAN_MVP.md` como fuente de verdad. El objetivo es llevar Sprint 3 de **0% (0/31)** a un cierre completo con vistas de día/semana, widgets reutilizables, backend de horarios, detección de conflictos y exportación.
 
-El horario semanal académico es un concepto separado del calendario de eventos: representa la **grilla repetitiva de clases semanales** (Lunes 8-10 AM Álgebra, Martes 2-4 PM Física, etc.), no eventos puntuales.
+Este sprint cierra los hallazgos perfectivos restantes de
+`docs/mvp/UNIPLAN_EVOLUCION.md` antes de abordar el modo offline: MJ-04
+(reordenar Calendario, con alcance reducido), MJ-09 (sección de ayuda
+funcional + reporte de problemas) y MJ-10 (temas de apariencia / modo
+oscuro). Las tres mejoras llevan a la versión **v1.3.0**.
 
-## Estado actual validado (código vs MVP)
+## Estado actual validado (código vs plan)
 
 ### Ya existente y reutilizable
-- **Backend**: Modelo `Subject` completo con campos `profesor`, `horario` (JSON), `color` y CRUD operativo.
-- **Backend**: Modelo `Calendar` con soporte de eventos tipo `'clase'`, `eventos_calendario` tabla activa.
-- **Mobile**: `CalendarEvent` model con `tipo`, `horaInicio`, `horaFin`, `color`, `materiaNombre`.
-- **Mobile**: `CalendarService` con CRUD y filtros por tipo/fecha/materia.
-- **Mobile**: `SubjectService` con `getSubjects()`, `createSubject()`, `deleteSubject()`.
-- **Mobile**: `TaskProvider` como patrón de referencia para `ScheduleProvider` (ChangeNotifier + cache local).
-- **Mobile**: Pantalla `CalendarScreen` con `table_calendar`, vista mensual, eventos del día.
-- **Mobile**: `EventFormScreen` para crear/editar eventos.
+
+- Calendario y Horario ya conviven en una sola pantalla con un selector
+  (`mobile/lib/screens/calendar/calendar_screen.dart`); el FAB ya tiene
+  comportamiento contextual según la pestaña activa.
+- El ítem "Ayuda" de Perfil ya existe como entrada de menú, aunque hoy es un
+  stub (`profile_screen.dart:445-450`, `SnackBar('Próximamente')`).
+- El ítem "Temas" de Perfil ya existe como entrada de menú, también como
+  stub idéntico (`profile_screen.dart:416-421`).
+- Android ya tiene `res/values-night/` — falta verificar que sea consistente
+  con el nuevo `darkTheme`, no construirlo desde cero.
 
 ### Brechas detectadas para cerrar Sprint 3
-- No existe modelo/tabla de **horarios recurrentes** (horario semanal con días de la semana).
-- No existe API dedicada para horarios (`/api/schedules`).
-- No existe `ScheduleProvider` ni cache local de horarios.
-- No existe grilla visual semanal (`ScheduleGrid`, `WeekView`).
-- No existe vista por día del horario semanal.
-- No existe detección de conflictos de horario.
-- No existe exportación PDF/imagen del horario.
-- El `Subject` model backend tiene campo `horario` como JSON opaco — hay que migrarlo a una tabla dedicada o usarlo como respaldo.
 
-## Decisión sobre diseño
+- `calendar_screen.dart:43` inicializa
+  `int _viewIndex = 0; // 0 = Eventos, 1 = Horario` — la pantalla abre
+  siempre en Eventos. El toggle visual es un
+  `SegmentedPillControl(labels: ['Eventos', 'Horario'])` (`:229-232`).
+- No existe ninguna FAQ ni flujo de reporte de problemas; el stub de Ayuda no
+  tiene contenido detrás.
+- No existe ninguna base de theming dinámico: sin `darkTheme`, sin
+  `ThemeMode`, sin provider, sin preferencia persistida
+  (`mobile/lib/config/theme.dart:42-44` define solo `AppTheme.lightTheme`;
+  grep de `ThemeMode|darkTheme|ThemeProvider` en `lib/` → cero resultados).
+  Los widgets leen colores como constantes estáticas
+  (`AppTheme.primaryColor`, etc. — ej. `bottom_nav_bar.dart:21,26,27`) en vez
+  de `Theme.of(context)`.
 
-**Tabla separada vs campo JSON en Subject:** Se usará **tabla dedicada `horarios`** con fila por bloque horario (día, hora_inicio, hora_fin, id_materia, aula). Esto permite:
-- Consultas nativas por día/semana sin parsear JSON.
-- Detección de conflictos con SQL (`WHERE dia = ? AND hora_inicio < ? AND hora_fin > ?`).
-- CRUD independiente sin tocar la materia.
-- El campo `horario` en `materias` queda como histórico/legado.
+## Decisiones de diseño
+
+- **MJ-04 queda reducido a un cambio de orden por defecto**, a pedido
+  explícito del usuario del proyecto. No se separan los modelos `Schedule` y
+  `CalendarEvent`: la superposición conceptual de `CalendarEvent.tipo: 'clase'`
+  con los bloques recurrentes de `Schedule` queda explícitamente fuera de
+  alcance de esta mejora y de este sprint. Solo se invierte el valor inicial
+  de `_viewIndex` y, si corresponde visualmente, el orden de las etiquetas
+  del `SegmentedPillControl`.
+- **MJ-10 se reclasifica de esfuerzo M a L** porque no hay ninguna base de
+  theming sobre la que construir: agregar un `darkTheme` sin migrar los
+  widgets que leen `AppTheme.*` como constantes estáticas no se propagaría a
+  la UI. Es un refactor transversal que toca cada widget themed, no solo una
+  pantalla nueva de preferencias.
+- **MJ-09 introduce la primera tabla y endpoint nuevos de este ciclo**
+  (`reportes` / `/api/reports`), y reutiliza el onboarding del Sprint 2
+  (MJ-07) como contenido accesible desde Ayuda — cerrando la dependencia que
+  quedó documentada como pendiente en `docs/sprints/sprint-02.md`.
 
 ## Estrategia de ramas (Git)
 
-### Rama umbrella del sprint
-- `feature/sprint-3-schedule-management`
+```
+git checkout dev
+git pull origin dev
+git checkout -b feature/sprint-3-calendario-ayuda-temas
+```
 
-### Sub-ramas recomendadas
-1. `feature/s3-schedule-model-migration` — Tabla `horarios` + migración + modelo
-2. `feature/s3-schedule-api` — CRUD rutas + controlador + ScheduleService backend
-3. `feature/s3-schedule-widgets` — ScheduleGrid, ClassCard, TimeSlot, DaySelector, WeekView
-4. `feature/s3-schedule-screens` — ScheduleScreen, vista día, vista semana, formulario crear/editar
-5. `feature/s3-schedule-provider` — ScheduleProvider + cache local + integración con SubjectProvider
-6. `feature/s3-conflict-detection` — Detección visual de conflictos en UI
-7. `feature/s3-schedule-export` — Exportación PDF/imagen + compartir
-8. `chore/s3-mvp-sync-docs` — Actualizar UNIPLAN_MVP.md y cierre
-
-### Flujo de trabajo recomendado
-1. `git checkout main`
-2. `git pull origin main`
-3. `git checkout -b feature/sprint-3-schedule-management`
-4. Crear sub-ramas desde la umbrella.
-5. Merge de sub-ramas hacia la umbrella con commits atómicos.
-6. PR final de la umbrella a `main`.
+Sin PR por ahora — el usuario prueba la rama localmente antes de decidir el
+paso siguiente.
 
 ## Plan técnico por fases
 
-### Fase 1 — Modelo de base de datos + migración
-**Backend**
+### Fase 1 — MJ-04: orden del Calendario (alcance reducido)
 
-- Crear tabla `horarios` con migración SQL:
-  ```sql
-  CREATE TABLE horarios (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    id_estudiante INT NOT NULL,
-    id_materia INT NOT NULL,
-    dia ENUM('lunes','martes','miercoles','jueves','viernes','sabado','domingo') NOT NULL,
-    hora_inicio TIME NOT NULL,
-    hora_fin TIME NOT NULL,
-    aula VARCHAR(100),
-    activo BOOLEAN DEFAULT TRUE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_estudiante) REFERENCES estudiantes(id),
-    FOREIGN KEY (id_materia) REFERENCES materias(id)
-  );
-  ```
-- Crear `backend/src/models/Schedule.js` con métodos:
-  - `create(data)` — Insertar bloque horario
-  - `findByStudent(id_estudiante, filters)` — Obtener horarios con JOIN a materias (nombre, color, profesor)
-  - `findById(id)` — Obtener un bloque
-  - `findByDay(id_estudiante, dia)` — Horarios de un día específico
-  - `findWeekSchedule(id_estudiante)` — Horario semanal completo (lunes a domingo)
-  - `update(id, data)` — Actualizar bloque
-  - `delete(id)` — Soft delete
-  - `detectConflicts(id_estudiante, dia, hora_inicio, hora_fin, excludeId?)` — Detectar superposición
+- Mobile: en `mobile/lib/screens/calendar/calendar_screen.dart:43`, cambiar
+  `_viewIndex = 0` a `_viewIndex = 1` para que la pantalla abra en Horario.
+- Mobile: si corresponde visualmente, invertir el orden de las etiquetas del
+  `SegmentedPillControl` en `:229-232` para que "Horario" aparezca primero.
+- Sin cambios en formularios, modelos ni endpoints. No se toca
+  `CalendarEvent.tipo` ni `Schedule`.
 
-### Fase 2 — API de horarios (backend)
-**Backend — `scheduleController.js`**
-- `createSchedule(req, res)` — Crear bloque con validación de conflictos
-- `getMySchedules(req, res)` — Obtener horarios con filtros (dia, id_materia)
-- `getScheduleByDay(req, res)` — Horario de un día específico
-- `getWeekSchedule(req, res)` — Horario semanal completo
-- `getScheduleById(req, res)` — Un bloque específico
-- `updateSchedule(req, res)` — Actualizar con re-detección de conflictos
-- `deleteSchedule(req, res)` — Eliminar bloque
-- `getScheduleConflicts(req, res)` — Listar todos los conflictos del estudiante
+### Fase 2 — MJ-09: ayuda funcional y reporte de problemas
 
-**Backend — `scheduleRoutes.js`**
-```
-POST   /api/schedules
-GET    /api/schedules
-GET    /api/schedules/day/:dia
-GET    /api/schedules/week
-GET    /api/schedules/conflicts
-GET    /api/schedules/:id
-PUT    /api/schedules/:id
-DELETE /api/schedules/:id
+- Mobile: reemplazar el stub de `profile_screen.dart:445-450` por una
+  pantalla de ayuda nueva con FAQ por módulo principal y guía rápida.
+- Mobile: agregar el flujo "Reportar un problema o sugerencia" dentro de esa
+  pantalla, con selección de módulo de origen y envío a `POST /api/reports`.
+- Mobile: enlazar el onboarding del Sprint 2 (MJ-07) desde esta pantalla de
+  ayuda, para que sea accesible de nuevo fuera de la primera apertura.
+- Backend: nueva tabla `reportes`:
+
+```sql
+CREATE TABLE IF NOT EXISTS reportes (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  id_estudiante INT NOT NULL,
+  modulo VARCHAR(50) NOT NULL,
+  mensaje TEXT NOT NULL,
+  fecha_creacion TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  KEY idx_estudiante (id_estudiante),
+  CONSTRAINT reportes_ibfk_1 FOREIGN KEY (id_estudiante) REFERENCES estudiantes (id) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 ```
 
-**Backend — `scheduleService.js`** (capa de lógica)
-- `createSchedule(data)` + validación de conflictos antes de insertar
-- `getWeekSchedule(id_estudiante)` — Ordenado por día y hora
-- `detectAndReportConflicts(id_estudiante)` — Escanear todo el horario en busca de superposiciones
-- Todas las rutas protegidas con `authMiddleware`
+- Backend: nuevo modelo `Report.js`, controlador y ruta `POST /api/reports`
+  (más un `GET` si se necesita listar para soporte interno), siguiendo el
+  mismo patrón de los modelos existentes (`Task.js`, `Pomodoro.js`).
 
-### Fase 3 — Widgets base de horario (mobile)
-**Mobile — Nuevos archivos en `mobile/lib/widgets/schedule/`:**
-1. **`schedule_grid.dart`** — `ScheduleGrid` widget:
-   - Grilla con días como columnas (o filas, según diseño) y horas como filas
-   - Celdas que contienen bloques de clase
-   - Scroll horizontal y vertical sincronizado
-   - Altura de hora configurable (ej. 60px por hora)
-   - Línea de hora actual (opcional, mejora)
+### Fase 3 — MJ-10: temas de apariencia (modo oscuro)
 
-2. **`class_card.dart`** — `ClassCard` widget:
-   - Tarjeta que representa un bloque de clase dentro del grid
-   - Muestra: nombre materia, aula, profesor (opcional)
-   - Color de fondo según color de materia
-   - Borde izquierdo con el color de materia (mayor contraste)
-   - Texto truncado si el bloque es muy angosto
-   - `onTap` para ver detalle / editar
+- Mobile: crear `ThemeProvider` (`ChangeNotifier`, preferencia persistida en
+  `SharedPreferences`), con modo claro/oscuro/según sistema.
+- Mobile: completar `darkTheme` en `AppTheme` (`mobile/lib/config/theme.dart`,
+  hoy solo define `lightTheme` en `:42-44`).
+- Mobile: migrar los widgets que leen `AppTheme.*` como constantes
+  estáticas a `Theme.of(context)`, empezando por
+  `bottom_nav_bar.dart:21,26,27` y auditando pantalla por pantalla el resto
+  de la app.
+- Mobile: reemplazar el stub de `profile_screen.dart:416-421` por el
+  selector real de tema.
+- Mobile/Android: revisar que `res/values-night/` sea consistente con el
+  `darkTheme` nuevo.
 
-3. **`time_slot.dart`** — `TimeSlot` widget:
-   - Etiqueta de hora (ej. "8:00", "9:00") para el eje Y del grid
-   - Formato de 12h o 24h según locale
+## Verificación
 
-4. **`day_selector.dart`** — `DaySelector` widget:
-   - Fila horizontal de días de la semana
-   - Día actual resaltado
-   - `onDaySelected` callback para cambiar vista
-   - Versión compacta para vista semana, versión expandida para vista día
+```
+cd mobile && flutter analyze
+cd mobile && flutter test
+cd backend && npm test
+```
 
-5. **`week_view.dart`** — `WeekView` widget:
-   - Contenedor que integra `ScheduleGrid` + `DaySelector`
-   - Vista completa de la semana laboral (lunes a viernes o lunes a sábado)
-   - Scroll horizontal para ver todos los días
+Regresión manual (sin CP numerado en `UNIPLAN_EVOLUCION.md` para estos
+ítems — verificar directamente contra los criterios de aceptación):
 
-### Fase 4 — Pantallas de horario (mobile)
-**Mobile — Nuevos archivos en `mobile/lib/screens/schedule/`:**
-
-1. **`schedule_screen.dart`** — Pantalla principal de horarios:
-   - `WeekView` como contenido principal
-   - Tabs para alternar entre vista semana y vista día
-   - FAB para agregar nuevo bloque de clase
-   - Pull-to-refresh
-   - Bottom sheet de filtro por materia
-   - Integración con BottomNavBar existente (reemplazar o agregar pestaña)
-
-2. **`schedule_day_view.dart`** — Vista por día:
-   - `DaySelector` + grid vertical de un solo día
-   - Lista de clases del día con horarios
-   - Scroll vertical
-
-3. **`class_detail_screen.dart`** — Detalle de clase:
-   - Información completa: materia, aula, horario, profesor
-   - Editar / Eliminar acciones
-   - Color de materia como acento visual
-   - Botón para ver en el mapa (si aplica)
-
-4. **`schedule_form_screen.dart`** — Crear/Editar bloque de clase:
-   - Selector de materia (desde `SubjectService`)
-   - Selector de día de la semana (Lun-Dom)
-   - Selector de hora inicio y hora fin (`TimePicker`)
-   - Campo de aula
-   - Detección de conflictos en tiempo real al seleccionar horario
-   - Validación: hora_fin > hora_inicio, materia obligatoria
-
-### Fase 5 — ScheduleProvider y estado (mobile)
-**Mobile — `mobile/lib/providers/schedule_provider.dart`:**
-- `ChangeNotifier` siguiendo el patrón de `TaskProvider`
-- Estado: `schedules`, `selectedDay`, `currentView` (week/day), `isLoading`, `error`, `conflicts`
-- Acciones: `loadWeek()`, `loadDay(dia)`, `createSchedule()`, `updateSchedule()`, `deleteSchedule()`
-- Caché local con `SharedPreferences` (lista de horarios serializada)
-- Detección de conflictos del lado mobile (refuerzo)
-- Integración con `SubjectProvider` para mapear materia a color
-
-### Fase 6 — Detección de conflictos (UI)
-- Al crear/editar un bloque:
-  - Si hay superposición con otro bloque existente, mostrar alerta visual: "Este horario se superpone con [Materia] (Lunes 10:00-12:00)"
-  - Opciones: ignorar y guardar, o cancelar y ajustar
-- En la grilla semanal: bloques que se superponen se muestran con un patrón de advertencia (borde rojo, tooltip)
-- Badge de conflictos en la pantalla principal de horarios
-
-### Fase 7 — Exportación de horario
-**Mobile (opciones):**
-1. **PDF** — Usar `pdf` package + `printing` package:
-   - Generar PDF con la grilla semanal
-   - Incluir nombre de materias, colores, aula
-   - Encabezado con nombre del estudiante y semestre
-2. **Imagen** — Capturar widget como imagen (`RepaintBoundary` + `RenderRepaintBoundary.toImage()`):
-   - Guardar en galería o compartir
-3. **Compartir** — Compartir imagen/PDF vía share sheet nativo (`share_plus`)
-
-### Fase 8 — Cierre de sprint y documentación
-- Revisar `UNIPLAN_MVP.md` y marcar Sprint 3 como completado (31/31)
-- Actualizar "Próximas 5 tareas prioritarias" apuntando a Sprint 4
-- Preparar PR final con checklist de cumplimiento
-
-## Orden y dependencias
-1. **Fase 1 + Fase 2** primero (backend: modelo + API) — pueden ir en paralelo
-2. **Fase 3** (widgets) después de Fase 1, puede empezar con datos mockeados
-3. **Fase 4** (pantallas) después de Fase 2 + Fase 3
-4. **Fase 5** (provider) después de Fase 2, puede integrarse en paralelo con Fase 4
-5. **Fase 6** (conflictos UI) después de Fase 4 + Fase 5
-6. **Fase 7** (exportación) al final, después de tener el horario funcional
-7. **Fase 8** al cierre
-
-## Definition of Done — Sprint 3
-- Backend: tabla `horarios` creada, modelo + controlador + rutas operativas, detección de conflictos funcional
-- Mobile: `ScheduleGrid`, `ClassCard`, `TimeSlot`, `DaySelector`, `WeekView` implementados y reutilizables
-- Mobile: Vista semana y vista día funcionales con scroll horizontal y vertical
-- Mobile: Formulario crear/editar bloque con selector de materia, día, hora inicio/fin, aula y detección de conflictos en tiempo real
-- Mobile: `ScheduleProvider` activo con ChangeNotifier, caché local y estado reactivo
-- Mobile: Exportación PDF básica del horario semanal
-- Mobile: Integración con BottomNavBar o entrada dedicada desde el menú principal
-- `UNIPLAN_MVP.md` actualizado con Sprint 3 al 100%
-
-## Riesgos y mitigación
-- **Riesgo**: La grilla semanal es técnicamente compleja (scroll síncrono X/Y, solapamiento visual de bloques).
-  **Mitigación**: Prototipar el `ScheduleGrid` con datos mockeados primero, usar `CustomScrollView` con `SliverPersistentHeader` para fijar encabezados.
-
-- **Riesgo**: Confusión entre `CalendarEvent` existente (eventos puntuales) y `Schedule` (bloques recurrentes).
-  **Mitigación**: Nomenclatura clara: `Schedule` = horario semanal recurrente, `CalendarEvent` = eventos en fecha específica. El schedule alimentará sugerencias al calendario pero no se mezcla.
-
-- **Riesgo**: Detección de conflictos puede tener falsos positivos (ej. una materia que ocupa 2 bloques contiguos).
-  **Mitigación**: El `detectConflicts` permite `excludeId` para omitir el propio registro al editar, y el umbral de conflicto es superposición estricta (no bloques consecutivos).
-
-- **Riesgo**: Exportación PDF puede ser pesada de implementar.
-  **Mitigación**: Priorizar exportación como imagen primero (más simple, usa herramientas de Flutter sin packages externos pesados), PDF queda como mejora si el tiempo lo permite.
+- [ ] Al entrar a Calendario, la vista inicial es Horario.
+- [ ] El usuario puede cambiar a Eventos con un toque, igual que antes.
+- [ ] El FAB conserva su comportamiento contextual según la pestaña activa.
+- [ ] Existe al menos una FAQ por módulo principal.
+- [ ] Los reportes enviados quedan registrados con fecha y módulo.
+- [ ] El onboarding es accesible de nuevo desde Ayuda.
+- [ ] El cambio de tema se aplica de inmediato en todas las pantallas, no
+  solo las migradas parcialmente.
+- [ ] La preferencia de tema se conserva al cerrar y abrir la aplicación.
+- [ ] Ningún texto queda ilegible en modo oscuro (auditoría manual pantalla
+  por pantalla).

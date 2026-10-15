@@ -1,109 +1,123 @@
-# Plan de implementación — Sprint 2 (Gestión de Tareas)
+# Plan de implementación — Sprint 2 (Acceso)
 
 ## Problema y alcance
-Construir y cerrar **Sprint 2** del módulo de tareas usando `UNIPLAN_MVP.md` como fuente de verdad, sin mezclar pendientes de Sprint 1 (por decisión de alcance). El objetivo es llevar Sprint 2 de su estado actual a una entrega lista para PR con funcionalidades completas de filtros, búsqueda, ordenamiento, selector de materia, animaciones y capa de estado/caché local.
 
-## Estado actual validado (código vs MVP)
-### Ya implementado (real)
-- Backend Task CRUD: crear, listar, actualizar, eliminar, próximas, stats.
-- Backend soporta filtro por `estado`, `prioridad` y `id_materia` vía query en `GET /api/tasks`.
-- Mobile: pantalla base de lista, formulario crear/editar, swipe para eliminar, prioridad visual, checkbox de completar, refresco.
-- Modelo `Task` con serialización/deserialización y soporte de materia (`id_materia`, `materia_nombre`).
+Con las correcciones de visibilidad del Sprint 1 cerradas, este sprint ataca
+el módulo de Acceso completo, según `docs/mvp/UNIPLAN_EVOLUCION.md`: MJ-05
+(registro de usuario más intuitivo), MJ-06 (rediseño moderno del inicio de
+sesión, que incluye arreglar "recordar sesión") y MJ-07 (onboarding antes del
+registro). Las tres mejoras son prioridad "Debería" para la versión
+**v1.2.0**.
+
+## Estado actual validado (código vs plan)
+
+### Ya existente y reutilizable
+
+- Login, registro y recuperación de contraseña ya son funcionales en la app.
+- `AuthService.loadToken()` y `AuthService.isAuthenticated()`
+  (`mobile/lib/services/auth_service.dart:364-371,289-292`) ya están
+  implementados — solo falta invocarlos desde el flujo de arranque.
+- El checkbox de aceptación de términos del registro (Sprint 1, MJ-08) ya
+  bloquea el envío; este sprint no toca ese contrato.
 
 ### Brechas detectadas para cerrar Sprint 2
-- Filtros UI en lista (hay botón con `TODO` pero sin implementación).
-- Búsqueda de tareas.
-- Ordenamiento explícito configurable desde UI.
-- Selector de materia en formulario de tarea.
-- `TaskFilter` widget reutilizable (no existe).
-- Animaciones del módulo (transición de estado, completar, lista animada, skeleton loading).
-- `TaskProvider` (state management reactivo), caché local y estadísticas en capa de estado.
-- Ajuste funcional: endpoint/servicio actual de “completar” marca solo `TRUE`; falta comportamiento real de **toggle** (completar/desmarcar) para alineación completa al MVP.
 
-## Decisión sobre planes previos
-- **No borrar** `plan.md` del repositorio (Sprint 1), se mantiene como histórico.
-- Este plan de Sprint 2 vive en el archivo de sesión (`.copilot/session-state/.../plan.md`) para planificación activa.
+- El registro es un único `Form` (`mobile/lib/screens/auth/register_screen.dart:21,158`)
+  con 4 campos simultáneos, sin pasos. Esto coincide con la dimensión peor
+  valorada en la validación de v1.0.0: protección frente a errores (72,5 %).
+- "Recordar sesión" está roto de raíz: `AuthService.loadToken()` y
+  `isAuthenticated()` están definidos pero nunca se llaman.
+  `SplashScreen` (`mobile/lib/screens/splash_screen.dart:55-65`) espera
+  2500 ms y hace `pushReplacement` a `LoginScreen` sin condición — un usuario
+  con sesión válida vuelve a ver el login cada vez que abre la app.
+- No existe ningún onboarding ni flag de primera apertura. Grep de
+  `onboard|welcome|bienvenid|tutorial` en `lib/` → una sola coincidencia
+  textual sin relación (`login_screen.dart:256`, literal "Bienvenido de
+  nuevo").
+
+## Decisiones de diseño
+
+- **"Recordar sesión" se trata como corrección funcional, no solo visual.**
+  Se conecta `SplashScreen` a `loadToken()`/`isAuthenticated()` como parte de
+  MJ-06; el rediseño visual del login no se considera completo sin esto,
+  porque es la causa raíz del hallazgo H04 además de un defecto de
+  comportamiento.
+- **El onboarding se muestra solo en la primera apertura**, controlado por un
+  flag en `SharedPreferences`, y queda accesible después desde Ayuda — ese
+  punto de acceso lo construye MJ-09 en el Sprint 3; aquí solo se deja el
+  enlace pendiente documentado, no se bloquea el cierre del sprint por una
+  dependencia de un sprint futuro.
+- **MJ-05 no cambia el contrato de la API de autenticación.** El registro
+  por pasos es una reestructuración de la UI (cuenta → perfil académico) con
+  validación en línea, no un cambio de payload.
 
 ## Estrategia de ramas (Git)
-### Rama umbrella del sprint
-- `feature/sprint-2-task-management-completion`
 
-### Sub-ramas recomendadas
-1. `feature/s2-task-provider-state-cache`
-2. `feature/s2-task-filters-search-sort`
-3. `feature/s2-task-subject-selector`
-4. `feature/s2-task-animations-skeleton`
-5. `feature/s2-task-toggle-complete-backend`
-6. `chore/s2-mvp-sync-docs`
+```
+git checkout dev
+git pull origin dev
+git checkout -b feature/sprint-2-acceso
+```
 
-### Flujo de trabajo recomendado
-1. `git checkout main`
-2. `git pull origin main`
-3. `git checkout -b feature/sprint-2-task-management-completion`
-4. Crear cada sub-rama desde la rama umbrella.
-5. Merge de sub-ramas hacia la umbrella con commits pequeños.
-6. PR final de la umbrella a `main`.
+Sin PR por ahora — el usuario prueba la rama localmente antes de decidir el
+paso siguiente.
 
 ## Plan técnico por fases
-### Fase 1 — Capa de estado y caché (base del sprint)
-- Crear `TaskProvider` (ChangeNotifier o patrón ya usado en app) con:
-  - `tasks`, `filteredTasks`, `isLoading`, `error`.
-  - carga inicial, refresh, operaciones CRUD sincronizadas.
-  - filtros, búsqueda y ordenamiento centralizados.
-  - cálculo de estadísticas básicas.
-- Integrar provider en `main.dart` y en `TasksScreen`.
-- Agregar caché local mínima para tareas (persistencia liviana) y estrategia de invalidación al mutar datos.
 
-### Fase 2 — Filtros, búsqueda y ordenamiento
-- Implementar `TaskFilter` widget reutilizable.
-- Conectar icono de filtros en `TasksScreen` a UI real (bottom sheet o panel).
-- Agregar búsqueda por título/descripción.
-- Agregar ordenamiento configurable (fecha, prioridad, estado).
-- Asegurar convivencia entre tabs (Hoy/Semana/Próximamente/Proyectos) y filtros globales.
+### Fase 1 — MJ-06: rediseño del login y restauración de sesión
 
-### Fase 3 — Selector de materia y relación tarea↔materia
-- Crear servicio/modelo mínimo para materias en mobile (si aún no existe).
-- Consumir `/api/subjects` para poblar selector en `TaskFormScreen`.
-- Enviar `id_materia` al crear/editar tarea.
-- Mostrar materia seleccionada en formulario y reflejarla en tarjetas/listados.
+- Mobile: rediseño visual de `login_screen.dart` — contraste AA, jerarquía
+  "Iniciar sesión" vs "Crear cuenta", mostrar/ocultar contraseña, indicador
+  de carga con botón deshabilitado durante la validación.
+- Mobile: en `splash_screen.dart:55-65`, reemplazar el `pushReplacement`
+  incondicional a `LoginScreen` por una decisión basada en
+  `AuthService.isAuthenticated()`/`loadToken()`: sesión válida → Home,
+  sesión inválida o ausente → Login.
+- No se modifica `auth_service.dart` más allá de invocar lo ya existente; sin
+  cambios de contrato con el backend.
 
-### Fase 4 — Ajuste backend toggle completo/incompleto
-- Extender backend para soportar toggling real:
-  - opción A: nuevo endpoint `PATCH /api/tasks/:id/toggle`.
-  - opción B: reutilizar `/complete` con payload de estado.
-- Actualizar `TaskService.completeTask` en mobile para usar toggle real.
-- Mantener compatibilidad y permisos de usuario existentes.
+### Fase 2 — MJ-07: onboarding antes del registro
 
-### Fase 5 — Animaciones y carga progresiva
-- Transición visual al cambiar estado de tarea.
-- Animación al completar (feedback inmediato y no intrusivo).
-- Lista animada al agregar/eliminar (`AnimatedList` o alternativa consistente).
-- Skeleton loading en carga inicial/refresh.
+- Mobile: construir secuencia de 3–4 pantallas nuevas (organiza materias y
+  tareas · planifica con el calendario · estudia con Pomodoro · mide tu
+  progreso), con botones "Saltar"/"Comenzar".
+- Mobile: flag de primera apertura en `SharedPreferences`; la ruta inicial de
+  `splash_screen.dart` decide entre onboarding (primera vez) y la lógica de
+  sesión de la Fase 1 (aperturas siguientes).
+- Mobile: "Comenzar" al final del onboarding lleva a "Crear cuenta"
+  (`register_screen.dart`).
+- El acceso posterior al onboarding desde Ayuda queda como dependencia
+  explícita de MJ-09 (Sprint 3); se documenta en el PR de este sprint para no
+  perderla.
 
-### Fase 6 — Cierre de sprint y documentación
-- Revisar `UNIPLAN_MVP.md` y actualizar estados reales de Sprint 2.
-- Limpiar “Próximas 5 tareas” para reflejar el siguiente cuello de botella.
-- Preparar PR final con checklist de cumplimiento de objetivo Sprint 2.
+### Fase 3 — MJ-05: registro por pasos
 
-## Orden y dependencias
-1. Fase 1 primero (foundation de estado).
-2. Fase 2 y Fase 3 pueden avanzar en paralelo tras Fase 1.
-3. Fase 4 en paralelo con Fase 2/3, pero cerrada antes de QA final.
-4. Fase 5 después de tener comportamiento funcional estable.
-5. Fase 6 al final.
+- Mobile: dividir `register_screen.dart:21,158` en pasos (cuenta → perfil
+  académico) en lugar del `Form` único con 4 campos simultáneos.
+- Mobile: validación en línea por campo, indicador de seguridad de
+  contraseña, mensajes de error específicos antes de enviar, listas de
+  selección en vez de texto libre donde aplique (p. ej. carrera/universidad).
+- Sin cambios en la API de autenticación.
 
-## Definition of Done — Sprint 2
-- CRUD + toggle real funcionando extremo a extremo.
-- Filtros, búsqueda y ordenamiento operativos en UI.
-- Selector de materia integrado y persistiendo `id_materia`.
-- Provider de tareas activo con estado reactivo y caché local básica.
-- Animaciones clave y skeleton loading implementados.
-- `UNIPLAN_MVP.md` alineado al estado real de Sprint 2.
+## Verificación
 
-## Riesgos y mitigación
-- Riesgo: acoplar demasiada lógica al widget de pantalla.  
-  Mitigación: centralizar en `TaskProvider`.
-- Riesgo: inconsistencias entre cache local y backend.  
-  Mitigación: invalidación explícita tras mutaciones + refresh controlado.
-- Riesgo: animaciones afecten rendimiento.  
-  Mitigación: animaciones ligeras, medir en listas reales y ajustar.
+```
+cd mobile && flutter analyze
+cd mobile && flutter test
+cd backend && npm test
+```
+
+Regresión manual:
+
+- [ ] CP-001 (validación v1.0.0) — MJ-05.
+- [ ] CP-002, CP-003, CP-004 (validación v1.0.0) — MJ-06.
+- [ ] Cada campo inválido del registro muestra un mensaje específico antes de
+  enviar.
+- [ ] El registro completo toma menos de 90 segundos en prueba con usuarios.
+- [ ] Contraste de textos y botones del login cumple WCAG 2.1 nivel AA.
+- [ ] Con un token válido guardado, abrir la app no pasa por Login.
+- [ ] Durante la validación del login se muestra un indicador de carga y el
+  botón se deshabilita.
+- [ ] El onboarding aparece solo en la primera apertura.
+- [ ] El onboarding se puede omitir en cualquier momento.
+- [ ] Al finalizar el onboarding, se llega a "Crear cuenta".
