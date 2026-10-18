@@ -14,7 +14,7 @@ import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/common/user_avatar.dart';
 import '../home/home_screen.dart';
 import '../calendar/calendar_screen.dart';
-import '../grades/grades_screen.dart';
+import '../grades/manage_subjects_screen.dart';
 import '../profile/profile_screen.dart';
 import 'task_form_screen.dart';
 
@@ -498,7 +498,7 @@ class _TasksScreenState extends State<TasksScreen> {
       case 3:
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const GradesScreen()),
+          MaterialPageRoute(builder: (context) => const ManageSubjectsScreen()),
           (route) => false,
         );
         break;

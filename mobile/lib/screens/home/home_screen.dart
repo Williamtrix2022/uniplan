@@ -26,7 +26,7 @@ import '../pomodoro/pomodoro_screen.dart';
 import '../profile/pomodoro_settings_screen.dart';
 import '../calendar/calendar_screen.dart';
 import '../profile/profile_screen.dart';
-import '../grades/grades_screen.dart';
+import '../grades/manage_subjects_screen.dart';
 import '../notifications/notifications_screen.dart';
 
 import 'dart:math' as math;
@@ -94,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 3:
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const GradesScreen()),
+          MaterialPageRoute(builder: (context) => const ManageSubjectsScreen()),
           (route) => false,
         );
         break;

@@ -10,19 +10,18 @@ import '../../config/theme.dart';
 import '../../models/grade.dart';
 import '../../providers/grade_provider.dart';
 import '../../services/auth_service.dart';
-import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/common/user_avatar.dart';
 import '../../widgets/grades/average_indicator.dart';
 import '../../widgets/grades/grade_chart.dart';
 import '../../widgets/grades/subject_grades_list.dart';
-import '../calendar/calendar_screen.dart';
-import '../home/home_screen.dart';
 import '../profile/profile_screen.dart';
-import '../tasks/tasks_screen.dart';
 import 'grade_form_screen.dart';
 import 'manage_subjects_screen.dart';
 import 'subject_grades_screen.dart';
 
+/// Resumen y tendencia de calificaciones. Ya no es un destino de primer nivel
+/// del menú inferior (ver MJ-03/MJ-12 en docs/mvp/UNIPLAN_EVOLUCION.md) — se
+/// alcanza desde "Materias" (`ManageSubjectsScreen`), que es ahora el tab.
 class GradesScreen extends StatefulWidget {
   const GradesScreen({super.key});
 
@@ -32,7 +31,6 @@ class GradesScreen extends StatefulWidget {
 
 class _GradesScreenState extends State<GradesScreen> {
   final AuthService _authService = AuthService();
-  int _selectedIndex = 3;
   late final Future<String> _userNameFuture;
 
   @override
@@ -42,42 +40,6 @@ class _GradesScreenState extends State<GradesScreen> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<GradeProvider>().initialize();
     });
-  }
-
-  void _onItemTapped(int index) {
-    if (index == _selectedIndex) return;
-
-    setState(() {
-      _selectedIndex = index;
-    });
-
-    switch (index) {
-      case 0:
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const HomeScreen()),
-          (route) => false,
-        );
-        break;
-      case 1:
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const TasksScreen()),
-          (route) => false,
-        );
-        break;
-      case 2:
-        Navigator.pushAndRemoveUntil(
-          context,
-          MaterialPageRoute(builder: (context) => const CalendarScreen()),
-          (route) => false,
-        );
-        break;
-      case 3:
-        // Ya estamos en Calificaciones, solo refrescar datos
-        context.read<GradeProvider>().refresh();
-        break;
-    }
   }
 
   @override
@@ -113,10 +75,6 @@ class _GradesScreenState extends State<GradesScreen> {
         onPressed: () => _navigateToForm(context),
         backgroundColor: AppTheme.primaryGreen,
         child: const Icon(Icons.add, color: AppTheme.white),
-      ),
-      bottomNavigationBar: BottomNavBar(
-        currentIndex: _selectedIndex,
-        onItemSelected: _onItemTapped,
       ),
     );
   }

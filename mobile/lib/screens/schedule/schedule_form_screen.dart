@@ -10,8 +10,8 @@ import '../../config/theme.dart';
 import '../../models/schedule.dart';
 import '../../models/subject.dart';
 import '../../providers/schedule_provider.dart';
+import '../../providers/subject_provider.dart';
 import '../../services/schedule_service.dart';
-import '../../services/subject_service.dart';
 import '../../widgets/schedule/day_selector.dart';
 import '../grades/manage_subjects_screen.dart';
 
@@ -26,10 +26,6 @@ class ScheduleFormScreen extends StatefulWidget {
 
 class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
   final _aulaController = TextEditingController();
-  final _subjectService = SubjectService();
-
-  List<Subject> _subjects = [];
-  bool _isLoadingSubjects = false;
 
   int? _selectedSubjectId;
   String? _selectedDay;
@@ -52,7 +48,7 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
       _horaFin           = s.horaFinTime;
       _aulaController.text = s.aula ?? '';
     }
-    _loadSubjects();
+    context.read<SubjectProvider>().initialize();
   }
 
   @override
@@ -69,19 +65,7 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
       MaterialPageRoute(builder: (_) => const ManageSubjectsScreen()),
     );
     if (!mounted) return;
-    await _loadSubjects();
-  }
-
-  Future<void> _loadSubjects() async {
-    setState(() => _isLoadingSubjects = true);
-    try {
-      final list = await _subjectService.getSubjects();
-      if (mounted) setState(() => _subjects = list);
-    } catch (e) {
-      if (mounted) _showSnack('Error cargando materias: $e', isError: true);
-    } finally {
-      if (mounted) setState(() => _isLoadingSubjects = false);
-    }
+    await context.read<SubjectProvider>().refresh();
   }
 
   // ── Pickers ──────────────────────────────────────────────────────────────
@@ -523,11 +507,14 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
   }
 
   Widget _buildSubjectSelector(ColorScheme colorScheme) {
-    if (_isLoadingSubjects) {
+    final subjectProvider = context.watch<SubjectProvider>();
+    final subjects = subjectProvider.subjects;
+
+    if (subjectProvider.isLoading && subjects.isEmpty) {
       return const LinearProgressIndicator(color: AppTheme.primaryGreen);
     }
 
-    if (_subjects.isEmpty) {
+    if (subjects.isEmpty) {
       return Container(
         padding: const EdgeInsets.all(AppSizes.paddingM),
         decoration: BoxDecoration(
@@ -553,9 +540,9 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
       );
     }
 
-    final selected = _subjects.firstWhere(
+    final selected = subjects.firstWhere(
       (s) => s.id == _selectedSubjectId,
-      orElse: () => _subjects.first,
+      orElse: () => subjects.first,
     );
     _selectedSubjectId ??= selected.id;
 
@@ -575,10 +562,10 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
             child: Icon(Icons.keyboard_arrow_down_rounded,
                 color: AppTheme.greyText),
           ),
-          selectedItemBuilder: (_) => _subjects
+          selectedItemBuilder: (_) => subjects
               .map((s) => _buildSubjectRow(s, colorScheme))
               .toList(),
-          items: _subjects
+          items: subjects
               .map((s) => DropdownMenuItem<int>(
                     value: s.id,
                     child: _buildSubjectRow(s, colorScheme),
