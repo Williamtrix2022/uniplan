@@ -12,6 +12,7 @@ import 'change_password_screen.dart';
 import 'edit_profile_screen.dart';
 import 'pomodoro_settings_screen.dart';
 import '../notifications/notification_settings_screen.dart';
+import '../legal/terms_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -447,6 +448,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   content: Text('Próximamente'),
                   backgroundColor: AppTheme.info,
                 ),
+              );
+            },
+          ),
+          const Divider(height: 1, color: AppTheme.surfaceContainerHighest),
+          _buildMenuItem(
+            icon: Icons.description_outlined,
+            iconColor: AppTheme.primaryGreen,
+            title: 'Términos y condiciones',
+            subtitle: 'Política de datos y uso del servicio',
+            onTap: () {
+              Navigator.of(context).push(
+                MaterialPageRoute(builder: (context) => const TermsScreen()),
               );
             },
           ),
