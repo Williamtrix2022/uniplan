@@ -297,7 +297,21 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         );
       }
     } catch (e) {
+      // No se reintenta ni se persiste localmente (fuera de alcance de este
+      // sprint, ver MJ-11/offline). Pero sin este aviso, el ciclo se pierde en
+      // el backend sin que el estudiante se entere: el contador en pantalla
+      // sigue subiendo aunque la racha/stats nunca reciban ese ciclo.
       print('Error saving session: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'No se pudo guardar este ciclo. Revisá tu conexión.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 
