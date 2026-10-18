@@ -4,6 +4,15 @@
 
 const { pool } = require('../config/database');
 
+// Formatea una fecha local como 'YYYY-MM-DD', evitando el corrimiento de día
+// que introduce `toISOString()` (que convierte a UTC).
+const formatLocalDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 class Pomodoro {
   
   // Crear nueva sesión Pomodoro
@@ -202,6 +211,42 @@ class Pomodoro {
     try {
       const [rows] = await pool.execute(query, [id_estudiante]);
       return rows[0];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Racha actual: días calendario consecutivos con al menos una sesión
+  // completada (completada = TRUE y al menos un ciclo real), terminando hoy
+  // o ayer — si hoy todavía no tiene sesión, la racha sigue vigente hasta
+  // que pase un día completo sin actividad.
+  static async getStreak(id_estudiante) {
+    const daysQuery = `
+      SELECT DISTINCT DATE_FORMAT(fecha_inicio, '%Y-%m-%d') as dia
+      FROM sesiones_pomodoro
+      WHERE id_estudiante = ? AND completada = TRUE AND ciclos_completados > 0
+    `;
+
+    try {
+      const [dayRows] = await pool.execute(daysQuery, [id_estudiante]);
+      if (dayRows.length === 0) return 0;
+
+      const completedDays = new Set(dayRows.map((row) => row.dia));
+
+      const cursor = new Date();
+      cursor.setHours(0, 0, 0, 0);
+
+      if (!completedDays.has(formatLocalDate(cursor))) {
+        cursor.setDate(cursor.getDate() - 1);
+      }
+
+      let streak = 0;
+      while (completedDays.has(formatLocalDate(cursor))) {
+        streak++;
+        cursor.setDate(cursor.getDate() - 1);
+      }
+
+      return streak;
     } catch (error) {
       throw error;
     }

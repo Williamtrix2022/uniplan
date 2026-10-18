@@ -179,6 +179,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
 
   void _resetTimer() {
     _timer?.cancel();
+    final hadProgress = currentCycle > 0;
     setState(() {
       currentState = PomodoroState.idle;
       currentCycle = 0;
@@ -186,8 +187,10 @@ class _PomodoroScreenState extends State<PomodoroScreen>
       totalSeconds = workDuration * 60;
     });
 
-    // Guardar sesión incompleta si existe
-    if (currentSession != null) {
+    // Solo guardar si hubo al menos un ciclo completo. Una sesión reiniciada
+    // sin terminar ningún ciclo no debe contar como completada ni aportar a
+    // la racha (ver backend: `completada` solo se marca TRUE con ciclos > 0).
+    if (currentSession != null && hadProgress) {
       _saveSession(completed: false);
     }
   }
@@ -208,6 +211,12 @@ class _PomodoroScreenState extends State<PomodoroScreen>
       setState(() {
         currentCycle++;
       });
+
+      // Persistir el ciclo recién completado de inmediato — antes solo se
+      // guardaba al cerrar el set completo de `cyclesBeforeLongBreak`, así
+      // que un solo pomodoro terminado no contaba ni para las estadísticas
+      // ni para la racha.
+      _saveSession(completed: true);
 
       // Determinar tipo de descanso
       final isLongBreak = currentCycle % cyclesBeforeLongBreak == 0;
@@ -240,9 +249,9 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         totalSeconds = workDuration * 60;
       });
 
-      // Si completó todos los ciclos
+      // Si completó todos los ciclos — ya se persistió por ciclo arriba, acá
+      // solo queda mostrar el diálogo de cierre y reiniciar el contador.
       if (completedAllCycles) {
-        _saveSession(completed: true);
         _showCompletionDialog();
         setState(() {
           currentCycle = 0;

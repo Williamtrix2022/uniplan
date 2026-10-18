@@ -48,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Task> dashboardTasks = [];
   List<Task> _allTasks = [];
   int pomodorosThisWeek = 0;
+  int _streakDays = 0;
   int _pomodoroWorkDuration = 25;
   bool isLoading = true;
   int _selectedIndex = 0;
@@ -212,8 +213,12 @@ class _HomeScreenState extends State<HomeScreen> {
         if (pomodoroData != null && pomodoroData['semana'] != null) {
           pomodorosThisWeek = pomodoroData['semana']['sesiones_completadas'] ?? 0;
         }
+        if (pomodoroData != null) {
+          _streakDays = pomodoroData['racha_actual'] ?? 0;
+        }
       } catch (e) {
         pomodorosThisWeek = 0;
+        _streakDays = 0;
       }
     } catch (e) {
       print('Error loading dashboard: $e');
@@ -613,11 +618,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$pomodorosThisWeek pomodoros esta semana',
+                  _streakDays == 0
+                      ? 'Sin racha todavía'
+                      : '$_streakDays ${_streakDays == 1 ? 'día' : 'días'} seguidos',
                   style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.darkText,
+                  ),
+                ),
+                Text(
+                  '$pomodorosThisWeek pomodoros esta semana',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppTheme.greyText,
                   ),
                 ),
               ],
