@@ -4,8 +4,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../models/task.dart';
+import '../../providers/task_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/task_service.dart';
 import '../../widgets/bottom_nav_bar.dart';
@@ -190,6 +192,25 @@ class _TasksScreenState extends State<TasksScreen> {
         ),
       );
     } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+    }
+  }
+
+  // `TaskProvider.toggleTask` es la fuente única de verdad para completar o
+  // revertir una tarea (actualización optimista + reintento en el backend).
+  // Esta pantalla mantiene su propia copia local para filtros/orden, así que
+  // tras delegar en el provider recarga esa copia desde el backend.
+  Future<void> _toggleTask(Task task) async {
+    try {
+      await context.read<TaskProvider>().toggleTask(task);
+      await _loadTasks();
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
@@ -881,6 +902,27 @@ class _TasksScreenState extends State<TasksScreen> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 2, right: 4),
+                                                child: GestureDetector(
+                                                  behavior:
+                                                      HitTestBehavior.opaque,
+                                                  onTap: () =>
+                                                      _toggleTask(task),
+                                                  child: Icon(
+                                                    task.isCompleted
+                                                        ? Icons.check_circle
+                                                        : Icons
+                                                            .radio_button_unchecked,
+                                                    color: task.isCompleted
+                                                        ? AppTheme.primaryGreen
+                                                        : AppTheme
+                                                            .onSurfaceVariant,
+                                                    size: 24,
+                                                  ),
+                                                ),
+                                              ),
                                               Expanded(
                                                 child: Column(
                                                   crossAxisAlignment:
