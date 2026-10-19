@@ -205,15 +205,21 @@ class _HomeScreenState extends State<HomeScreen> {
       try {
         final dashboardData = await _dashboardService.getDashboard();
         final pomodoroData = dashboardData['pomodoro'];
+        // Los agregados SQL (SUM/COUNT) llegan como String desde MySQL
+        // ("sesiones_completadas": "2"), no como número — asignarlos
+        // directo a un campo `int` tira un TypeError en tiempo de
+        // ejecución que este mismo catch tragaba en silencio, sin
+        // imprimir nada, dejando la racha y el conteo semanal en 0 sin
+        // ninguna pista de qué pasó.
         if (pomodoroData != null && pomodoroData['semana'] != null) {
-          pomodorosThisWeek = pomodoroData['semana']['sesiones_completadas'] ?? 0;
+          pomodorosThisWeek =
+              _asInt(pomodoroData['semana']['sesiones_completadas']);
         }
         if (pomodoroData != null) {
-          _streakDays = pomodoroData['racha_actual'] ?? 0;
+          _streakDays = _asInt(pomodoroData['racha_actual']);
         }
       } catch (e) {
-        pomodorosThisWeek = 0;
-        _streakDays = 0;
+        print('Error loading pomodoro stats: $e');
       }
     } catch (e) {
       print('Error loading dashboard: $e');
@@ -222,6 +228,13 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() => isLoading = false);
       }
     }
+  }
+
+  int _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
   }
 
   String _getGreeting() {
