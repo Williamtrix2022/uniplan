@@ -13,9 +13,12 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../models/subject.dart';
 import '../../providers/subject_provider.dart';
+import '../../services/auth_service.dart';
 import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/user_avatar.dart';
 import '../calendar/calendar_screen.dart';
 import '../home/home_screen.dart';
+import '../profile/profile_screen.dart';
 import '../tasks/tasks_screen.dart';
 import 'grades_screen.dart';
 import 'subject_grades_screen.dart';
@@ -29,10 +32,13 @@ class ManageSubjectsScreen extends StatefulWidget {
 
 class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
   int _selectedIndex = 3;
+  final AuthService _authService = AuthService();
+  late final Future<String> _userNameFuture;
 
   @override
   void initState() {
     super.initState();
+    _userNameFuture = _authService.getUserName();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       context.read<SubjectProvider>().initialize();
     });
@@ -207,7 +213,22 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
             color: AppTheme.darkText,
             tooltip: 'Resumen y tendencia de notas',
           ),
-          const SizedBox(width: 4),
+          Padding(
+            padding: const EdgeInsets.only(right: 16, left: 4),
+            child: FutureBuilder<String>(
+              future: _userNameFuture,
+              builder: (context, snapshot) {
+                return UserAvatar(
+                  name: snapshot.data ?? '',
+                  size: 36,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  ),
+                );
+              },
+            ),
+          ),
         ],
       ),
       body: isLoading

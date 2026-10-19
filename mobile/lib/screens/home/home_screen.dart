@@ -193,18 +193,13 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return weight(b.prioridad).compareTo(weight(a.prioridad));
       });
-      final today = DateTime.now();
-      final dayStart = DateTime(today.year, today.month, today.day);
-      dashboardTasks = allTasks.where((task) {
-        final due = DateTime(
-          task.fechaEntrega.year,
-          task.fechaEntrega.month,
-          task.fechaEntrega.day,
-        );
-        final isCompleted = task.isCompleted;
-        final isOverdue = due.isBefore(dayStart);
-        return !isCompleted && !isOverdue;
-      }).toList();
+      // Antes excluía tareas vencidas (`due.isBefore(dayStart)`) además de
+      // las completadas — así que una tarea vencida, al revertirla de
+      // completada a pendiente, desaparecía de Inicio en vez de reaparecer:
+      // seguía "vencida" y el filtro la tapaba igual. Una tarea pendiente
+      // vencida es justamente la que más necesita aparecer acá, no menos;
+      // `_getTaskStatusColor` ya la resalta en rojo cuando corresponde.
+      dashboardTasks = allTasks.where((task) => !task.isCompleted).toList();
 
       // Cargar estadísticas de pomodoro
       try {
@@ -351,57 +346,57 @@ class _HomeScreenState extends State<HomeScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              UserAvatar(
-                name: userName,
-                size: 44,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ProfileScreen(),
-                    ),
-                  ).then((_) => _loadDashboardData());
-                },
+              Text(
+                _getGreeting(),
+                style: GoogleFonts.inter(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.darkText,
+                ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _getGreeting(),
-                      style: GoogleFonts.inter(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.darkText,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Hola, $firstName',
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.darkText,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _getFormattedDate(),
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: AppTheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: 4),
+              Text(
+                'Hola, $firstName',
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.darkText,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _getFormattedDate(),
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: AppTheme.onSurfaceVariant,
                 ),
               ),
             ],
           ),
         ),
-        _buildNotificationsButton(),
+        // Campana y, enseguida, el logo del usuario — siempre a la derecha.
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildNotificationsButton(),
+            const SizedBox(width: 8),
+            UserAvatar(
+              name: userName,
+              size: 44,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                ).then((_) => _loadDashboardData());
+              },
+            ),
+          ],
+        ),
       ],
     );
   }

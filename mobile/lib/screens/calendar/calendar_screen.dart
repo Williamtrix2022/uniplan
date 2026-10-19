@@ -219,6 +219,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       appBar: AppBar(
         backgroundColor: AppTheme.surface,
         elevation: 0,
+        centerTitle: false,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(80),
           child: Column(

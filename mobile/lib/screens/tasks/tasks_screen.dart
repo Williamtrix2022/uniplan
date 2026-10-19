@@ -529,9 +529,22 @@ class _TasksScreenState extends State<TasksScreen> {
             color: AppTheme.surfaceContainerHighest,
           ),
         ),
-        title: Row(
-          children: [
-            FutureBuilder<String>(
+        title: const Text(
+          'Mis Tareas',
+          style: TextStyle(
+            color: AppTheme.primaryGreen,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: AppTheme.primaryGreen),
+            onPressed: _showFilterModal,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 16, left: 4),
+            child: FutureBuilder<String>(
               future: _userNameFuture,
               builder: (context, snapshot) {
                 return UserAvatar(
@@ -543,21 +556,6 @@ class _TasksScreenState extends State<TasksScreen> {
                 );
               },
             ),
-            const SizedBox(width: 12),
-            const Text(
-              'Mis Tareas',
-              style: TextStyle(
-                color: AppTheme.primaryGreen,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list, color: AppTheme.primaryGreen),
-            onPressed: _showFilterModal,
           ),
         ],
       ),
