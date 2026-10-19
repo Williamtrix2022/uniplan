@@ -13,6 +13,25 @@ const formatLocalDate = (date) => {
   return `${year}-${month}-${day}`;
 };
 
+// `getStreak` no puede usar `new Date()` del proceso Node para "hoy": el
+// servidor corre con su propio timezone local (p. ej. America/Bogota,
+// UTC-5), mientras que `fecha_inicio` se guarda y compara con DATE_FORMAT en
+// el timezone de la sesión de MySQL (UTC por defecto en el contenedor dev).
+// Comparar un "hoy" calculado en hora local contra días calculados en UTC
+// rompe la racha todas las tardes/noches (~5h diarias en Bogotá). Por eso acá
+// se opera siempre en UTC, parseando y formateando con los métodos `getUTC*`.
+const parseUtcDateString = (dayString) => {
+  const [year, month, day] = dayString.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+};
+
+const formatUtcDate = (date) => {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 class Pomodoro {
   
   // Crear nueva sesión Pomodoro
@@ -233,17 +252,19 @@ class Pomodoro {
 
       const completedDays = new Set(dayRows.map((row) => row.dia));
 
-      const cursor = new Date();
-      cursor.setHours(0, 0, 0, 0);
+      const [[{ hoy }]] = await pool.execute(
+        "SELECT DATE_FORMAT(NOW(), '%Y-%m-%d') as hoy"
+      );
+      const cursor = parseUtcDateString(hoy);
 
-      if (!completedDays.has(formatLocalDate(cursor))) {
-        cursor.setDate(cursor.getDate() - 1);
+      if (!completedDays.has(formatUtcDate(cursor))) {
+        cursor.setUTCDate(cursor.getUTCDate() - 1);
       }
 
       let streak = 0;
-      while (completedDays.has(formatLocalDate(cursor))) {
+      while (completedDays.has(formatUtcDate(cursor))) {
         streak++;
-        cursor.setDate(cursor.getDate() - 1);
+        cursor.setUTCDate(cursor.getUTCDate() - 1);
       }
 
       return streak;
