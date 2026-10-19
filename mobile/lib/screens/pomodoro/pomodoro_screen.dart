@@ -134,18 +134,24 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         return;
       }
 
-      // Crear sesión en el backend
-      try {
-        final session = PomodoroSession(
-          duracionTrabajo: workDuration,
-          duracionDescanso: breakDuration,
-          fechaInicio: DateTime.now(),
-          idMateria: selectedTask?.idMateria,
-        );
+      // Crear sesión en el backend — solo si no hay una ya en curso. El
+      // estado vuelve a `idle` después de CADA descanso (no solo del
+      // último), así que antes de este fix cada ciclo del mismo set
+      // terminaba creando su propia sesión en vez de actualizar una sola
+      // (ver `currentSession = null` al cerrar o reiniciar el set, abajo).
+      if (currentSession == null) {
+        try {
+          final session = PomodoroSession(
+            duracionTrabajo: workDuration,
+            duracionDescanso: breakDuration,
+            fechaInicio: DateTime.now(),
+            idMateria: selectedTask?.idMateria,
+          );
 
-        currentSession = await _pomodoroService.createSession(session);
-      } catch (e) {
-        print('Error creating session: $e');
+          currentSession = await _pomodoroService.createSession(session);
+        } catch (e) {
+          print('Error creating session: $e');
+        }
       }
 
       setState(() {
@@ -193,6 +199,9 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     if (currentSession != null && hadProgress) {
       _saveSession(completed: false);
     }
+    // El set se abandona por completo: la próxima vez que se toque
+    // "Iniciar" debe ser una sesión nueva, no seguir sumando a esta.
+    currentSession = null;
   }
 
   void _skipTimer() {
@@ -256,6 +265,9 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         setState(() {
           currentCycle = 0;
         });
+        // Set completo: la próxima vez que se toque "Iniciar" debe crear
+        // una sesión nueva, no seguir sumando ciclos a la que ya cerró.
+        currentSession = null;
       }
 
       // Auto-iniciar el siguiente pomodoro, solo si el usuario lo activó en
