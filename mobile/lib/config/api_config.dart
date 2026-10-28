@@ -36,7 +36,6 @@ class ApiConfig {
   // Tasks
   static const String tasks = '$apiPrefix/tasks';
   static const String tasksUpcoming = '$apiPrefix/tasks/upcoming';
-  static const String tasksStats = '$apiPrefix/tasks/stats';
 
   // Notes
   static const String notes = '$apiPrefix/notes';

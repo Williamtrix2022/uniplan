@@ -134,18 +134,24 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         return;
       }
 
-      // Crear sesión en el backend
-      try {
-        final session = PomodoroSession(
-          duracionTrabajo: workDuration,
-          duracionDescanso: breakDuration,
-          fechaInicio: DateTime.now(),
-          idMateria: selectedTask?.idMateria,
-        );
+      // Crear sesión en el backend — solo si no hay una ya en curso. El
+      // estado vuelve a `idle` después de CADA descanso (no solo del
+      // último), así que antes de este fix cada ciclo del mismo set
+      // terminaba creando su propia sesión en vez de actualizar una sola
+      // (ver `currentSession = null` al cerrar o reiniciar el set, abajo).
+      if (currentSession == null) {
+        try {
+          final session = PomodoroSession(
+            duracionTrabajo: workDuration,
+            duracionDescanso: breakDuration,
+            fechaInicio: DateTime.now(),
+            idMateria: selectedTask?.idMateria,
+          );
 
-        currentSession = await _pomodoroService.createSession(session);
-      } catch (e) {
-        print('Error creating session: $e');
+          currentSession = await _pomodoroService.createSession(session);
+        } catch (e) {
+          print('Error creating session: $e');
+        }
       }
 
       setState(() {
@@ -179,6 +185,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
 
   void _resetTimer() {
     _timer?.cancel();
+    final hadProgress = currentCycle > 0;
     setState(() {
       currentState = PomodoroState.idle;
       currentCycle = 0;
@@ -186,10 +193,15 @@ class _PomodoroScreenState extends State<PomodoroScreen>
       totalSeconds = workDuration * 60;
     });
 
-    // Guardar sesión incompleta si existe
-    if (currentSession != null) {
+    // Solo guardar si hubo al menos un ciclo completo. Una sesión reiniciada
+    // sin terminar ningún ciclo no debe contar como completada ni aportar a
+    // la racha (ver backend: `completada` solo se marca TRUE con ciclos > 0).
+    if (currentSession != null && hadProgress) {
       _saveSession(completed: false);
     }
+    // El set se abandona por completo: la próxima vez que se toque
+    // "Iniciar" debe ser una sesión nueva, no seguir sumando a esta.
+    currentSession = null;
   }
 
   void _skipTimer() {
@@ -208,6 +220,12 @@ class _PomodoroScreenState extends State<PomodoroScreen>
       setState(() {
         currentCycle++;
       });
+
+      // Persistir el ciclo recién completado de inmediato — antes solo se
+      // guardaba al cerrar el set completo de `cyclesBeforeLongBreak`, así
+      // que un solo pomodoro terminado no contaba ni para las estadísticas
+      // ni para la racha.
+      _saveSession(completed: true);
 
       // Determinar tipo de descanso
       final isLongBreak = currentCycle % cyclesBeforeLongBreak == 0;
@@ -240,13 +258,16 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         totalSeconds = workDuration * 60;
       });
 
-      // Si completó todos los ciclos
+      // Si completó todos los ciclos — ya se persistió por ciclo arriba, acá
+      // solo queda mostrar el diálogo de cierre y reiniciar el contador.
       if (completedAllCycles) {
-        _saveSession(completed: true);
         _showCompletionDialog();
         setState(() {
           currentCycle = 0;
         });
+        // Set completo: la próxima vez que se toque "Iniciar" debe crear
+        // una sesión nueva, no seguir sumando ciclos a la que ya cerró.
+        currentSession = null;
       }
 
       // Auto-iniciar el siguiente pomodoro, solo si el usuario lo activó en
@@ -288,7 +309,21 @@ class _PomodoroScreenState extends State<PomodoroScreen>
         );
       }
     } catch (e) {
+      // No se reintenta ni se persiste localmente (fuera de alcance de este
+      // sprint, ver MJ-11/offline). Pero sin este aviso, el ciclo se pierde en
+      // el backend sin que el estudiante se entere: el contador en pantalla
+      // sigue subiendo aunque la racha/stats nunca reciban ese ciclo.
       print('Error saving session: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text(
+              'No se pudo guardar este ciclo. Revisá tu conexión.',
+            ),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
     }
   }
 

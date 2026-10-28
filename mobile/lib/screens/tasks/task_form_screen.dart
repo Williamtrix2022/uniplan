@@ -4,10 +4,10 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import '../../models/subject.dart';
+import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../models/task.dart';
-import '../../services/subject_service.dart';
+import '../../providers/subject_provider.dart';
 import '../../services/task_service.dart';
 import '../grades/manage_subjects_screen.dart';
 
@@ -23,7 +23,6 @@ class TaskFormScreen extends StatefulWidget {
 class _TaskFormScreenState extends State<TaskFormScreen> {
   final _formKey = GlobalKey<FormState>();
   final TaskService _taskService = TaskService();
-  final SubjectService _subjectService = SubjectService();
 
   late TextEditingController _titleController;
   late TextEditingController _descriptionController;
@@ -34,8 +33,6 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
   String selectedStatus = 'pendiente';
   bool selectedIsProject = false;
   int? selectedSubjectId;
-  bool _isLoadingSubjects = false;
-  List<Subject> _subjects = [];
 
   bool isLoading = false;
   bool get isEditing => widget.task != null;
@@ -58,7 +55,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
       _descriptionController = TextEditingController();
     }
 
-    _loadSubjects();
+    context.read<SubjectProvider>().initialize();
   }
 
   @override
@@ -155,39 +152,13 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     }
   }
 
-  Future<void> _loadSubjects() async {
-    setState(() => _isLoadingSubjects = true);
-
-    try {
-      final subjects = await _subjectService.getSubjects();
-      if (mounted) {
-        setState(() {
-          _subjects = subjects;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error cargando materias: ${e.toString()}'),
-            backgroundColor: AppTheme.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoadingSubjects = false);
-      }
-    }
-  }
-
   Future<void> _openManageSubjects() async {
     await Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const ManageSubjectsScreen()),
     );
     if (!mounted) return;
-    await _loadSubjects();
+    await context.read<SubjectProvider>().refresh();
   }
 
   Widget _buildSectionLabel(String text, BuildContext context) {
@@ -244,6 +215,9 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final textTheme = theme.textTheme;
+    final subjectProvider = context.watch<SubjectProvider>();
+    final subjects = subjectProvider.subjects;
+    final isLoadingSubjects = subjectProvider.isLoading && subjects.isEmpty;
 
     return Scaffold(
       backgroundColor: AppTheme.white,
@@ -327,7 +301,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                     const SizedBox(height: 32),
                     _buildSectionLabel('Materia asociada', context),
                     const SizedBox(height: 8),
-                    if (_subjects.isEmpty && !_isLoadingSubjects)
+                    if (subjects.isEmpty && !isLoadingSubjects)
                       Container(
                         decoration: _selectorDecoration(context),
                         padding: const EdgeInsets.all(16),
@@ -349,7 +323,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                           ],
                         ),
                       )
-                    else if (_isLoadingSubjects)
+                    else if (isLoadingSubjects)
                       const LinearProgressIndicator(
                           color: AppTheme.primaryGreen)
                     else
@@ -378,7 +352,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                                 'Sin materia',
                                 'Sin código',
                               ),
-                              ..._subjects.map(
+                              ...subjects.map(
                                 (subject) => _buildSelectedSubjectRow(
                                   context,
                                   subject.nombre,
@@ -397,7 +371,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                                   'Sin código',
                                 ),
                               ),
-                              ..._subjects.map(
+                              ...subjects.map(
                                 (subject) => DropdownMenuItem<int?>(
                                   value: subject.id,
                                   child: _buildSelectedSubjectRow(

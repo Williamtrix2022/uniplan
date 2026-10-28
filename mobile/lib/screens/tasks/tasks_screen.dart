@@ -4,15 +4,17 @@
 
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../models/task.dart';
+import '../../providers/task_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/task_service.dart';
 import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/common/user_avatar.dart';
 import '../home/home_screen.dart';
 import '../calendar/calendar_screen.dart';
-import '../grades/grades_screen.dart';
+import '../grades/manage_subjects_screen.dart';
 import '../profile/profile_screen.dart';
 import 'task_form_screen.dart';
 
@@ -190,6 +192,25 @@ class _TasksScreenState extends State<TasksScreen> {
         ),
       );
     } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+    }
+  }
+
+  // `TaskProvider.toggleTask` es la fuente única de verdad para completar o
+  // revertir una tarea (actualización optimista + reintento en el backend).
+  // Esta pantalla mantiene su propia copia local para filtros/orden, así que
+  // tras delegar en el provider recarga esa copia desde el backend.
+  Future<void> _toggleTask(Task task) async {
+    try {
+      await context.read<TaskProvider>().toggleTask(task);
+      await _loadTasks();
+    } catch (e) {
+      if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
@@ -477,7 +498,7 @@ class _TasksScreenState extends State<TasksScreen> {
       case 3:
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const GradesScreen()),
+          MaterialPageRoute(builder: (context) => const ManageSubjectsScreen()),
           (route) => false,
         );
         break;
@@ -508,9 +529,22 @@ class _TasksScreenState extends State<TasksScreen> {
             color: AppTheme.surfaceContainerHighest,
           ),
         ),
-        title: Row(
-          children: [
-            FutureBuilder<String>(
+        title: const Text(
+          'Mis Tareas',
+          style: TextStyle(
+            color: AppTheme.primaryGreen,
+            fontSize: 20,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.filter_list, color: AppTheme.primaryGreen),
+            onPressed: _showFilterModal,
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 16, left: 4),
+            child: FutureBuilder<String>(
               future: _userNameFuture,
               builder: (context, snapshot) {
                 return UserAvatar(
@@ -522,21 +556,6 @@ class _TasksScreenState extends State<TasksScreen> {
                 );
               },
             ),
-            const SizedBox(width: 12),
-            const Text(
-              'Mis Tareas',
-              style: TextStyle(
-                color: AppTheme.primaryGreen,
-                fontSize: 20,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.filter_list, color: AppTheme.primaryGreen),
-            onPressed: _showFilterModal,
           ),
         ],
       ),
@@ -881,6 +900,27 @@ class _TasksScreenState extends State<TasksScreen> {
                                             crossAxisAlignment:
                                                 CrossAxisAlignment.start,
                                             children: [
+                                              Padding(
+                                                padding: const EdgeInsets.only(
+                                                    top: 2, right: 4),
+                                                child: GestureDetector(
+                                                  behavior:
+                                                      HitTestBehavior.opaque,
+                                                  onTap: () =>
+                                                      _toggleTask(task),
+                                                  child: Icon(
+                                                    task.isCompleted
+                                                        ? Icons.check_circle
+                                                        : Icons
+                                                            .radio_button_unchecked,
+                                                    color: task.isCompleted
+                                                        ? AppTheme.primaryGreen
+                                                        : AppTheme
+                                                            .onSurfaceVariant,
+                                                    size: 24,
+                                                  ),
+                                                ),
+                                              ),
                                               Expanded(
                                                 child: Column(
                                                   crossAxisAlignment:

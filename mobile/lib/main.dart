@@ -13,6 +13,7 @@ import 'providers/task_provider.dart';
 import 'providers/schedule_provider.dart';
 import 'providers/grade_provider.dart';
 import 'providers/notification_provider.dart';
+import 'providers/subject_provider.dart';
 import 'screens/auth/reset_password_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/local_notification_service.dart';
@@ -110,6 +111,7 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_) => TaskProvider()),
         ChangeNotifierProvider(create: (_) => ScheduleProvider()),
         ChangeNotifierProvider(create: (_) => GradeProvider()),
+        ChangeNotifierProvider(create: (_) => SubjectProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
       ],
       child: MaterialApp(

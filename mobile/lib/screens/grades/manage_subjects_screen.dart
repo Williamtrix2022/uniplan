@@ -1,13 +1,27 @@
 // ============================================
-// PANTALLA: GESTIONAR MATERIAS
+// PANTALLA: MATERIAS (destino de primer nivel del menú inferior)
 // ============================================
+//
+// Ver MJ-03/MJ-12 en docs/mvp/UNIPLAN_EVOLUCION.md: "Materias" reemplaza a
+// "Notas" como tab de primer nivel; las calificaciones de cada materia viven
+// dentro de ella (SubjectGradesScreen), no al revés.
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:provider/provider.dart';
 
 import '../../config/theme.dart';
 import '../../models/subject.dart';
-import '../../services/subject_service.dart';
+import '../../providers/subject_provider.dart';
+import '../../services/auth_service.dart';
+import '../../widgets/bottom_nav_bar.dart';
+import '../../widgets/common/user_avatar.dart';
+import '../calendar/calendar_screen.dart';
+import '../home/home_screen.dart';
+import '../profile/profile_screen.dart';
+import '../tasks/tasks_screen.dart';
+import 'grades_screen.dart';
+import 'subject_grades_screen.dart';
 
 class ManageSubjectsScreen extends StatefulWidget {
   const ManageSubjectsScreen({super.key});
@@ -17,32 +31,52 @@ class ManageSubjectsScreen extends StatefulWidget {
 }
 
 class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
-  final SubjectService _subjectService = SubjectService();
-
-  List<Subject> _subjects = [];
-  bool _isLoading = true;
+  int _selectedIndex = 3;
+  final AuthService _authService = AuthService();
+  late final Future<String> _userNameFuture;
 
   @override
   void initState() {
     super.initState();
-    _loadSubjects();
+    _userNameFuture = _authService.getUserName();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      context.read<SubjectProvider>().initialize();
+    });
   }
 
-  Future<void> _loadSubjects() async {
-    setState(() => _isLoading = true);
-    try {
-      final subjects = await _subjectService.getSubjects();
-      if (mounted) {
-        setState(() {
-          _subjects = subjects..sort((a, b) => a.nombre.compareTo(b.nombre));
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        _showSnack('Error cargando materias: $e', isError: true);
-      }
-    } finally {
-      if (mounted) setState(() => _isLoading = false);
+  void _onItemTapped(int index) {
+    if (index == _selectedIndex) return;
+
+    setState(() {
+      _selectedIndex = index;
+    });
+
+    switch (index) {
+      case 0:
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const HomeScreen()),
+          (route) => false,
+        );
+        break;
+      case 1:
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const TasksScreen()),
+          (route) => false,
+        );
+        break;
+      case 2:
+        Navigator.pushAndRemoveUntil(
+          context,
+          MaterialPageRoute(builder: (context) => const CalendarScreen()),
+          (route) => false,
+        );
+        break;
+      case 3:
+        // Ya estamos en Materias, solo refrescar datos.
+        context.read<SubjectProvider>().refresh();
+        break;
     }
   }
 
@@ -69,15 +103,11 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
     }
 
     try {
-      final created = await _subjectService.createSubject(
-        nombre: name,
-        codigo: draft['codigo'],
-      );
+      await context.read<SubjectProvider>().createSubject(
+            nombre: name,
+            codigo: draft['codigo'],
+          );
       if (!mounted) return;
-      setState(() {
-        _subjects = [..._subjects, created]
-          ..sort((a, b) => a.nombre.compareTo(b.nombre));
-      });
       _showSnack('Materia creada correctamente');
     } catch (e) {
       if (mounted) _showSnack('Error creando materia: $e', isError: true);
@@ -113,21 +143,41 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
     if (confirm != true || !mounted) return;
 
     try {
-      await _subjectService.deleteSubject(subject.id);
+      await context.read<SubjectProvider>().deleteSubject(subject.id);
       if (!mounted) return;
-      setState(() {
-        _subjects = _subjects.where((item) => item.id != subject.id).toList();
-      });
       _showSnack('Materia "${subject.nombre}" eliminada');
     } catch (e) {
       if (mounted) _showSnack('Error eliminando materia: $e', isError: true);
     }
   }
 
+  void _openSubjectGrades(Subject subject) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => SubjectGradesScreen(
+          idMateria: subject.id,
+          materiaNombre: subject.nombre,
+          materiaColor: subject.color,
+        ),
+      ),
+    );
+  }
+
+  void _openGradesOverview() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const GradesScreen()),
+    );
+  }
+
   // ── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
+    final provider = context.watch<SubjectProvider>();
+    final isLoading = provider.isLoading && !provider.isInitialized;
+
     return Scaffold(
       backgroundColor: AppTheme.white,
       appBar: AppBar(
@@ -135,17 +185,19 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
         elevation: 0,
         surfaceTintColor: Colors.transparent,
         scrolledUnderElevation: 0,
-        leading: Padding(
-          padding: const EdgeInsets.only(left: 8),
-          child: IconButton(
-            onPressed: () => Navigator.pop(context),
-            style: IconButton.styleFrom(
-              shape: const CircleBorder(),
-              hoverColor: AppTheme.surfaceContainerHighest,
-            ),
-            icon: const Icon(Icons.arrow_back),
-          ),
-        ),
+        leading: Navigator.canPop(context)
+            ? Padding(
+                padding: const EdgeInsets.only(left: 8),
+                child: IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  style: IconButton.styleFrom(
+                    shape: const CircleBorder(),
+                    hoverColor: AppTheme.surfaceContainerHighest,
+                  ),
+                  icon: const Icon(Icons.arrow_back),
+                ),
+              )
+            : null,
         title: Text(
           'Mis materias',
           style: GoogleFonts.inter(
@@ -154,23 +206,51 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
             color: AppTheme.darkText,
           ),
         ),
+        actions: [
+          IconButton(
+            onPressed: _openGradesOverview,
+            icon: const Icon(Icons.insights_outlined),
+            color: AppTheme.darkText,
+            tooltip: 'Resumen y tendencia de notas',
+          ),
+          Padding(
+            padding: const EdgeInsets.only(right: 16, left: 4),
+            child: FutureBuilder<String>(
+              future: _userNameFuture,
+              builder: (context, snapshot) {
+                return UserAvatar(
+                  name: snapshot.data ?? '',
+                  size: 36,
+                  onTap: () => Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const ProfileScreen()),
+                  ),
+                );
+              },
+            ),
+          ),
+        ],
       ),
-      body: _isLoading
+      body: isLoading
           ? const Center(
               child: CircularProgressIndicator(color: AppTheme.primaryGreen),
             )
           : RefreshIndicator(
-              onRefresh: _loadSubjects,
+              onRefresh: provider.refresh,
               color: AppTheme.primaryGreen,
-              child: _subjects.isEmpty
+              child: provider.subjects.isEmpty
                   ? _buildEmptyState()
-                  : _buildSubjectsList(),
+                  : _buildSubjectsList(provider.subjects),
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showCreateSubjectDialog,
         backgroundColor: AppTheme.primaryGreen,
         tooltip: 'Nueva materia',
         child: const Icon(Icons.add, color: AppTheme.white),
+      ),
+      bottomNavigationBar: BottomNavBar(
+        currentIndex: _selectedIndex,
+        onItemSelected: _onItemTapped,
       ),
     );
   }
@@ -223,7 +303,7 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
     );
   }
 
-  Widget _buildSubjectsList() {
+  Widget _buildSubjectsList(List<Subject> subjects) {
     return SingleChildScrollView(
       physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.fromLTRB(
@@ -233,7 +313,7 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
         96,
       ),
       child: Column(
-        children: _subjects.map(_buildSubjectRow).toList(),
+        children: subjects.map(_buildSubjectRow).toList(),
       ),
     );
   }
@@ -249,61 +329,69 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
-      padding: const EdgeInsets.all(AppSizes.paddingM),
       decoration: BoxDecoration(
         color: AppTheme.surface,
         borderRadius: BorderRadius.circular(AppSizes.radiusM),
         border: Border.all(color: AppTheme.outlineVariant),
         boxShadow: AppTheme.softShadow,
       ),
-      child: Row(
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: BoxDecoration(
-              color: subjectColor,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  subject.nombre,
-                  overflow: TextOverflow.ellipsis,
-                  maxLines: 1,
-                  style: GoogleFonts.inter(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: AppTheme.darkText,
-                  ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(AppSizes.radiusM),
+        onTap: () => _openSubjectGrades(subject),
+        child: Padding(
+          padding: const EdgeInsets.all(AppSizes.paddingM),
+          child: Row(
+            children: [
+              Container(
+                width: 10,
+                height: 10,
+                decoration: BoxDecoration(
+                  color: subjectColor,
+                  shape: BoxShape.circle,
                 ),
-                if (subject.codigo != null && subject.codigo!.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    subject.codigo!,
-                    overflow: TextOverflow.ellipsis,
-                    maxLines: 1,
-                    style:
-                        GoogleFonts.inter(fontSize: 12, color: AppTheme.greyText),
-                  ),
-                ],
-              ],
-            ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      subject.nombre,
+                      overflow: TextOverflow.ellipsis,
+                      maxLines: 1,
+                      style: GoogleFonts.inter(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: AppTheme.darkText,
+                      ),
+                    ),
+                    if (subject.codigo != null &&
+                        subject.codigo!.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        subject.codigo!,
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                        style: GoogleFonts.inter(
+                            fontSize: 12, color: AppTheme.greyText),
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+              const Icon(Icons.chevron_right, color: AppTheme.greyText),
+              IconButton(
+                onPressed: () => _confirmAndDeleteSubject(subject),
+                icon: const Icon(Icons.delete_outline),
+                color: AppTheme.error,
+                style: IconButton.styleFrom(
+                  hoverColor: AppTheme.errorContainer,
+                  shape: const CircleBorder(),
+                ),
+              ),
+            ],
           ),
-          IconButton(
-            onPressed: () => _confirmAndDeleteSubject(subject),
-            icon: const Icon(Icons.delete_outline),
-            color: AppTheme.error,
-            style: IconButton.styleFrom(
-              hoverColor: AppTheme.errorContainer,
-              shape: const CircleBorder(),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

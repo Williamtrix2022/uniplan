@@ -41,6 +41,8 @@ CREATE TABLE IF NOT EXISTS estudiantes (
   universidad VARCHAR(150) DEFAULT 'Universidad de Córdoba',
   fecha_registro TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
   activo TINYINT(1) DEFAULT 1,
+  version_terminos_aceptados VARCHAR(20) DEFAULT NULL,
+  fecha_aceptacion_terminos TIMESTAMP NULL DEFAULT NULL,
   UNIQUE KEY correo (correo)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 

@@ -198,13 +198,10 @@ const completeSession = async (req, res) => {
       });
     }
 
-    if (session.completada) {
-      return res.status(400).json({
-        success: false,
-        message: 'La sesión ya está completada'
-      });
-    }
-
+    // Nota: ya no se rechaza una sesión que ya está `completada`. El mobile
+    // ahora llama este endpoint una vez por cada ciclo de concentración
+    // terminado (no solo al cerrar el set completo), así que debe poder
+    // actualizar `ciclos_completados` varias veces para la misma sesión.
     const completed = await Pomodoro.complete(
       id, 
       ciclos_completados || session.ciclos_completados,
@@ -284,12 +281,15 @@ const getStats = async (req, res) => {
     const id_estudiante = req.user.id;
     const { periodo } = req.query; // today, week, month
 
-    const stats = await Pomodoro.getStats(id_estudiante, periodo || 'week');
+    const [stats, racha_actual] = await Promise.all([
+      Pomodoro.getStats(id_estudiante, periodo || 'week'),
+      Pomodoro.getStreak(id_estudiante)
+    ]);
 
     res.json({
       success: true,
       periodo: periodo || 'week',
-      data: stats
+      data: { ...stats, racha_actual }
     });
 
   } catch (error) {

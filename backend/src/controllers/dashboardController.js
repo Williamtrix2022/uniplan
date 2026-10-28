@@ -23,7 +23,8 @@ const getDashboard = async (req, res) => {
       calendarStats,
       upcomingTasks,
       todayEvents,
-      pomodoroBySubject
+      pomodoroBySubject,
+      pomodoroStreak
     ] = await Promise.all([
       Subject.getStats(id_estudiante),
       Task.getStats(id_estudiante),
@@ -33,7 +34,8 @@ const getDashboard = async (req, res) => {
       Calendar.getStats(id_estudiante),
       Task.getUpcoming(id_estudiante),
       Calendar.getToday(id_estudiante),
-      Pomodoro.getBySubject(id_estudiante)
+      Pomodoro.getBySubject(id_estudiante),
+      Pomodoro.getStreak(id_estudiante)
     ]);
 
     // Calcular porcentaje de productividad
@@ -54,7 +56,8 @@ const getDashboard = async (req, res) => {
         pomodoro: {
           hoy: pomodoroStatsToday,
           semana: pomodoroStatsWeek,
-          por_materia: pomodoroBySubject
+          por_materia: pomodoroBySubject,
+          racha_actual: pomodoroStreak
         },
         proximas_actividades: {
           tareas: upcomingTasks,

@@ -4,6 +4,34 @@
 
 const { pool } = require('../config/database');
 
+// Formatea una fecha local como 'YYYY-MM-DD', evitando el corrimiento de día
+// que introduce `toISOString()` (que convierte a UTC).
+const formatLocalDate = (date) => {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
+// `getStreak` no puede usar `new Date()` del proceso Node para "hoy": el
+// servidor corre con su propio timezone local (p. ej. America/Bogota,
+// UTC-5), mientras que `fecha_inicio` se guarda y compara con DATE_FORMAT en
+// el timezone de la sesión de MySQL (UTC por defecto en el contenedor dev).
+// Comparar un "hoy" calculado en hora local contra días calculados en UTC
+// rompe la racha todas las tardes/noches (~5h diarias en Bogotá). Por eso acá
+// se opera siempre en UTC, parseando y formateando con los métodos `getUTC*`.
+const parseUtcDateString = (dayString) => {
+  const [year, month, day] = dayString.split('-').map(Number);
+  return new Date(Date.UTC(year, month - 1, day));
+};
+
+const formatUtcDate = (date) => {
+  const year = date.getUTCFullYear();
+  const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date.getUTCDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 class Pomodoro {
   
   // Crear nueva sesión Pomodoro
@@ -202,6 +230,44 @@ class Pomodoro {
     try {
       const [rows] = await pool.execute(query, [id_estudiante]);
       return rows[0];
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  // Racha actual: días calendario consecutivos con al menos una sesión
+  // completada (completada = TRUE y al menos un ciclo real), terminando hoy
+  // o ayer — si hoy todavía no tiene sesión, la racha sigue vigente hasta
+  // que pase un día completo sin actividad.
+  static async getStreak(id_estudiante) {
+    const daysQuery = `
+      SELECT DISTINCT DATE_FORMAT(fecha_inicio, '%Y-%m-%d') as dia
+      FROM sesiones_pomodoro
+      WHERE id_estudiante = ? AND completada = TRUE AND ciclos_completados > 0
+    `;
+
+    try {
+      const [dayRows] = await pool.execute(daysQuery, [id_estudiante]);
+      if (dayRows.length === 0) return 0;
+
+      const completedDays = new Set(dayRows.map((row) => row.dia));
+
+      const [[{ hoy }]] = await pool.execute(
+        "SELECT DATE_FORMAT(NOW(), '%Y-%m-%d') as hoy"
+      );
+      const cursor = parseUtcDateString(hoy);
+
+      if (!completedDays.has(formatUtcDate(cursor))) {
+        cursor.setUTCDate(cursor.getUTCDate() - 1);
+      }
+
+      let streak = 0;
+      while (completedDays.has(formatUtcDate(cursor))) {
+        streak++;
+        cursor.setUTCDate(cursor.getUTCDate() - 1);
+      }
+
+      return streak;
     } catch (error) {
       throw error;
     }

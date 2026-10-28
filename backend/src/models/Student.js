@@ -5,26 +5,35 @@
 const { pool } = require('../config/database');
 const queryWithRetry = require('../utils/queryWithRetry');
 
+// Versión del documento de términos vigente (debe coincidir con
+// `kTerminosVersion` en `mobile/lib/screens/legal/terms_screen.dart`).
+const TERMINOS_VERSION = '1.0';
+
 class Student {
-  
-  // Crear un nuevo estudiante
+
+  // Crear un nuevo estudiante. El registro desde la app móvil solo llega acá
+  // si el usuario ya aceptó el checkbox de términos (validado en el cliente),
+  // así que se registra versión y fecha de aceptación en el mismo insert.
   static async create(studentData) {
     const { nombre, correo, contrasena, carrera, universidad } = studentData;
-    
+
     const query = `
-      INSERT INTO estudiantes (nombre, correo, contrasena, carrera, universidad)
-      VALUES (?, ?, ?, ?, ?)
+      INSERT INTO estudiantes
+        (nombre, correo, contrasena, carrera, universidad,
+         version_terminos_aceptados, fecha_aceptacion_terminos)
+      VALUES (?, ?, ?, ?, ?, ?, NOW())
     `;
-    
+
     try {
       const [result] = await pool.execute(query, [
-        nombre, 
-        correo, 
-        contrasena, 
-        carrera, 
-        universidad || 'Universidad de Córdoba'
+        nombre,
+        correo,
+        contrasena,
+        carrera,
+        universidad || 'Universidad de Córdoba',
+        TERMINOS_VERSION
       ]);
-      
+
       return result.insertId;
     } catch (error) {
       throw error;

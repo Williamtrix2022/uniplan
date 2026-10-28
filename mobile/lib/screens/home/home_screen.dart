@@ -9,6 +9,7 @@ import 'package:provider/provider.dart';
 import '../../config/theme.dart';
 import '../../providers/schedule_provider.dart';
 import '../../providers/notification_provider.dart';
+import '../../providers/task_provider.dart';
 import '../../services/auth_service.dart';
 import '../../services/calendar_service.dart';
 import '../../services/task_service.dart';
@@ -25,7 +26,7 @@ import '../pomodoro/pomodoro_screen.dart';
 import '../profile/pomodoro_settings_screen.dart';
 import '../calendar/calendar_screen.dart';
 import '../profile/profile_screen.dart';
-import '../grades/grades_screen.dart';
+import '../grades/manage_subjects_screen.dart';
 import '../notifications/notifications_screen.dart';
 
 import 'dart:math' as math;
@@ -47,6 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Task> dashboardTasks = [];
   List<Task> _allTasks = [];
   int pomodorosThisWeek = 0;
+  int _streakDays = 0;
   int _pomodoroWorkDuration = 25;
   bool isLoading = true;
   int _selectedIndex = 0;
@@ -92,7 +94,7 @@ class _HomeScreenState extends State<HomeScreen> {
       case 3:
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const GradesScreen()),
+          MaterialPageRoute(builder: (context) => const ManageSubjectsScreen()),
           (route) => false,
         );
         break;
@@ -135,6 +137,24 @@ class _HomeScreenState extends State<HomeScreen> {
     await _scheduleNotificationReminders();
   }
 
+  // Igual que el toggle de `TasksScreen`: `TaskProvider.toggleTask` es la
+  // fuente única de verdad; esta pantalla recarga su propio dashboard después
+  // para reflejar el cambio sin tener que navegar.
+  Future<void> _toggleTask(Task task) async {
+    try {
+      await context.read<TaskProvider>().toggleTask(task);
+      await _loadDashboardData();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: ${e.toString()}'),
+          backgroundColor: AppTheme.error,
+        ),
+      );
+    }
+  }
+
   /// Refleja en la card del Home la duración de trabajo configurada en
   /// PomodoroSettingsScreen — antes de esto la card mostraba "25:00" fijo
   /// sin importar lo que el usuario guardara ahí.
@@ -173,28 +193,33 @@ class _HomeScreenState extends State<HomeScreen> {
 
         return weight(b.prioridad).compareTo(weight(a.prioridad));
       });
-      final today = DateTime.now();
-      final dayStart = DateTime(today.year, today.month, today.day);
-      dashboardTasks = allTasks.where((task) {
-        final due = DateTime(
-          task.fechaEntrega.year,
-          task.fechaEntrega.month,
-          task.fechaEntrega.day,
-        );
-        final isCompleted = task.isCompleted;
-        final isOverdue = due.isBefore(dayStart);
-        return !isCompleted && !isOverdue;
-      }).toList();
+      // Antes excluía tareas vencidas (`due.isBefore(dayStart)`) además de
+      // las completadas — así que una tarea vencida, al revertirla de
+      // completada a pendiente, desaparecía de Inicio en vez de reaparecer:
+      // seguía "vencida" y el filtro la tapaba igual. Una tarea pendiente
+      // vencida es justamente la que más necesita aparecer acá, no menos;
+      // `_getTaskStatusColor` ya la resalta en rojo cuando corresponde.
+      dashboardTasks = allTasks.where((task) => !task.isCompleted).toList();
 
       // Cargar estadísticas de pomodoro
       try {
         final dashboardData = await _dashboardService.getDashboard();
         final pomodoroData = dashboardData['pomodoro'];
+        // Los agregados SQL (SUM/COUNT) llegan como String desde MySQL
+        // ("sesiones_completadas": "2"), no como número — asignarlos
+        // directo a un campo `int` tira un TypeError en tiempo de
+        // ejecución que este mismo catch tragaba en silencio, sin
+        // imprimir nada, dejando la racha y el conteo semanal en 0 sin
+        // ninguna pista de qué pasó.
         if (pomodoroData != null && pomodoroData['semana'] != null) {
-          pomodorosThisWeek = pomodoroData['semana']['sesiones_completadas'] ?? 0;
+          pomodorosThisWeek =
+              _asInt(pomodoroData['semana']['sesiones_completadas']);
+        }
+        if (pomodoroData != null) {
+          _streakDays = _asInt(pomodoroData['racha_actual']);
         }
       } catch (e) {
-        pomodorosThisWeek = 0;
+        print('Error loading pomodoro stats: $e');
       }
     } catch (e) {
       print('Error loading dashboard: $e');
@@ -203,6 +228,13 @@ class _HomeScreenState extends State<HomeScreen> {
         setState(() => isLoading = false);
       }
     }
+  }
+
+  int _asInt(dynamic value) {
+    if (value is int) return value;
+    if (value is num) return value.toInt();
+    if (value is String) return int.tryParse(value) ?? 0;
+    return 0;
   }
 
   String _getGreeting() {
@@ -327,57 +359,57 @@ class _HomeScreenState extends State<HomeScreen> {
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Expanded(
-          child: Row(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              UserAvatar(
-                name: userName,
-                size: 44,
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const ProfileScreen(),
-                    ),
-                  ).then((_) => _loadDashboardData());
-                },
+              Text(
+                _getGreeting(),
+                style: GoogleFonts.inter(
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  color: AppTheme.darkText,
+                ),
               ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      _getGreeting(),
-                      style: GoogleFonts.inter(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: AppTheme.darkText,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Hola, $firstName',
-                      style: GoogleFonts.inter(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: AppTheme.darkText,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      _getFormattedDate(),
-                      style: GoogleFonts.inter(
-                        fontSize: 14,
-                        color: AppTheme.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
+              const SizedBox(height: 4),
+              Text(
+                'Hola, $firstName',
+                style: GoogleFonts.inter(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: AppTheme.darkText,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                _getFormattedDate(),
+                style: GoogleFonts.inter(
+                  fontSize: 14,
+                  color: AppTheme.onSurfaceVariant,
                 ),
               ),
             ],
           ),
         ),
-        _buildNotificationsButton(),
+        // Campana y, enseguida, el logo del usuario — siempre a la derecha.
+        Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _buildNotificationsButton(),
+            const SizedBox(width: 8),
+            UserAvatar(
+              name: userName,
+              size: 44,
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => const ProfileScreen(),
+                  ),
+                ).then((_) => _loadDashboardData());
+              },
+            ),
+          ],
+        ),
       ],
     );
   }
@@ -594,11 +626,20 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 const SizedBox(height: 2),
                 Text(
-                  '$pomodorosThisWeek pomodoros esta semana',
+                  _streakDays == 0
+                      ? 'Sin racha todavía'
+                      : '$_streakDays ${_streakDays == 1 ? 'día' : 'días'} seguidos',
                   style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
                     color: AppTheme.darkText,
+                  ),
+                ),
+                Text(
+                  '$pomodorosThisWeek pomodoros esta semana',
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppTheme.greyText,
                   ),
                 ),
               ],
@@ -724,6 +765,22 @@ class _HomeScreenState extends State<HomeScreen> {
               padding: const EdgeInsets.fromLTRB(24, 16, 16, 16),
               child: Row(
                 children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2, right: 8),
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => _toggleTask(task),
+                      child: Icon(
+                        task.isCompleted
+                            ? Icons.check_circle
+                            : Icons.radio_button_unchecked,
+                        color: task.isCompleted
+                            ? AppTheme.primaryGreen
+                            : AppTheme.onSurfaceVariant,
+                        size: 24,
+                      ),
+                    ),
+                  ),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,

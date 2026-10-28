@@ -2,12 +2,14 @@
 // PANTALLA DE REGISTRO
 // ============================================
 
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import '../../config/theme.dart';
 import '../../services/auth_service.dart';
 import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../home/home_screen.dart';
+import '../legal/terms_screen.dart';
 
 
 class RegisterScreen extends StatefulWidget {
@@ -29,6 +31,18 @@ class _RegisterScreenState extends State<RegisterScreen> {
   bool _isLoading = false;
   bool _acceptedTerms = false;
   double _passwordStrength = 0;
+  late final TapGestureRecognizer _termsRecognizer;
+
+  @override
+  void initState() {
+    super.initState();
+    _termsRecognizer = TapGestureRecognizer()
+      ..onTap = () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (context) => const TermsScreen()),
+        );
+      };
+  }
 
   @override
   void dispose() {
@@ -36,6 +50,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     _emailController.dispose();
     _passwordController.dispose();
     _universityController.dispose();
+    _termsRecognizer.dispose();
     super.dispose();
   }
 
@@ -295,19 +310,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     ),
                     Expanded(
                       child: RichText(
-                        text: const TextSpan(
-                          style: TextStyle(
+                        text: TextSpan(
+                          style: const TextStyle(
                             fontSize: 13,
                             color: AppTheme.darkText,
                           ),
                           children: [
-                            TextSpan(text: 'Acepto los '),
+                            const TextSpan(text: 'Acepto los '),
                             TextSpan(
                               text: 'Términos y Condiciones',
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: AppTheme.primaryGreen,
                                 fontWeight: FontWeight.w600,
                               ),
+                              recognizer: _termsRecognizer,
                             ),
                           ],
                         ),

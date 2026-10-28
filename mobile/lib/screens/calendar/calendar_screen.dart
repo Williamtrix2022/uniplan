@@ -16,7 +16,7 @@ import '../../widgets/bottom_nav_bar.dart';
 import '../../widgets/common/segmented_pill_control.dart';
 import '../../widgets/common/user_avatar.dart';
 import '../../widgets/schedule/week_view.dart';
-import '../grades/grades_screen.dart';
+import '../grades/manage_subjects_screen.dart';
 import '../home/home_screen.dart';
 import '../profile/profile_screen.dart';
 import '../schedule/class_detail_screen.dart';
@@ -219,6 +219,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       appBar: AppBar(
         backgroundColor: AppTheme.surface,
         elevation: 0,
+        centerTitle: false,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(80),
           child: Column(
@@ -377,7 +378,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
       case 3:
         Navigator.pushAndRemoveUntil(
           context,
-          MaterialPageRoute(builder: (context) => const GradesScreen()),
+          MaterialPageRoute(builder: (context) => const ManageSubjectsScreen()),
           (route) => false,
         );
         break;

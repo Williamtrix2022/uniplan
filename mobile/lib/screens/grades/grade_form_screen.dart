@@ -8,9 +8,8 @@ import 'package:provider/provider.dart';
 
 import '../../config/theme.dart';
 import '../../models/grade.dart';
-import '../../models/subject.dart';
 import '../../providers/grade_provider.dart';
-import '../../services/subject_service.dart';
+import '../../providers/subject_provider.dart';
 import 'manage_subjects_screen.dart';
 
 class GradeFormScreen extends StatefulWidget {
@@ -25,7 +24,6 @@ class GradeFormScreen extends StatefulWidget {
 
 class _GradeFormScreenState extends State<GradeFormScreen> {
   final _formKey = GlobalKey<FormState>();
-  final SubjectService _subjectService = SubjectService();
 
   late TextEditingController _valorController;
   late TextEditingController _porcentajeController;
@@ -34,8 +32,6 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
   int? selectedSubjectId;
   String selectedTipo = 'parcial';
   DateTime? selectedDate;
-  bool _isLoadingSubjects = false;
-  List<Subject> _subjects = [];
 
   bool isLoading = false;
   bool get isEditing => widget.grade != null;
@@ -62,7 +58,7 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
       selectedSubjectId = widget.initialSubjectId;
     }
 
-    _loadSubjects();
+    context.read<SubjectProvider>().initialize();
   }
 
   @override
@@ -79,31 +75,7 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
       MaterialPageRoute(builder: (_) => const ManageSubjectsScreen()),
     );
     if (!mounted) return;
-    await _loadSubjects();
-  }
-
-  Future<void> _loadSubjects() async {
-    setState(() => _isLoadingSubjects = true);
-
-    try {
-      final subjects = await _subjectService.getSubjects();
-      if (mounted) {
-        setState(() => _subjects = subjects);
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Error cargando materias: ${e.toString()}'),
-            backgroundColor: AppTheme.error,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isLoadingSubjects = false);
-      }
-    }
+    await context.read<SubjectProvider>().refresh();
   }
 
   Future<void> _selectDate() async {
@@ -499,11 +471,14 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
   }
 
   Widget _buildSubjectSelector(BuildContext context, TextTheme textTheme) {
-    if (_isLoadingSubjects) {
+    final subjectProvider = context.watch<SubjectProvider>();
+    final subjects = subjectProvider.subjects;
+
+    if (subjectProvider.isLoading && subjects.isEmpty) {
       return const LinearProgressIndicator(color: AppTheme.primaryGreen);
     }
 
-    if (_subjects.isEmpty) {
+    if (subjects.isEmpty) {
       return Container(
         decoration: _selectorDecoration(context),
         padding: const EdgeInsets.all(16),
@@ -536,7 +511,7 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
             child: Text('Selecciona una materia'),
           ),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          items: _subjects
+          items: subjects
               .map(
                 (subject) => DropdownMenuItem<int?>(
                   value: subject.id,
