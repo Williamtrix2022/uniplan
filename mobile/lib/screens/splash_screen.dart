@@ -6,7 +6,9 @@ import 'package:flutter/material.dart';
 
 import 'dart:async';
 import '../config/theme.dart';
+import '../services/auth_service.dart';
 import 'auth/login_screen.dart';
+import 'home/home_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -54,13 +56,20 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _initializeApp() async {
-    // Esperar animación
-    await Future.delayed(const Duration(milliseconds: 2500));
+    final authService = AuthService();
+
+    // Esperar animación y cargar sesión guardada en paralelo.
+    final results = await Future.wait([
+      Future.delayed(const Duration(milliseconds: 2500)),
+      authService.loadToken().then((_) => authService.isAuthenticated()),
+    ]);
+    final isAuthenticated = results[1] as bool;
 
     if (mounted) {
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
+          builder: (context) =>
+              isAuthenticated ? const HomeScreen() : const LoginScreen(),
         ),
       );
     }
