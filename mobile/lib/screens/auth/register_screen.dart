@@ -10,6 +10,7 @@ import '../../widgets/common/custom_button.dart';
 import '../../widgets/common/custom_text_field.dart';
 import '../home/home_screen.dart';
 import '../legal/terms_screen.dart';
+import 'login_screen.dart';
 
 const _universityOptions = [
   'Universidad de Córdoba',
@@ -104,6 +105,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   void _goToAccountStep() {
     setState(() => _currentStep = 0);
+  }
+
+  // Si se llegó aquí desde el onboarding (Splash → Onboarding → Register,
+  // todo con pushReplacement), no queda ninguna pantalla debajo en el stack:
+  // un pop() dejaría el Navigator vacío (pantalla en negro).
+  void _goToLogin() {
+    if (Navigator.of(context).canPop()) {
+      Navigator.pop(context);
+    } else {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (context) => const LoginScreen()),
+      );
+    }
   }
 
   Future<void> _handleRegister() async {
@@ -411,7 +425,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 GestureDetector(
-                  onTap: () => Navigator.pop(context),
+                  onTap: _goToLogin,
                   child: const Text(
                     'Inicia sesión',
                     style: TextStyle(
@@ -466,10 +480,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
             initialValue: _selectedUniversity,
+            isExpanded: true,
             items: _universityOptions
                 .map((option) => DropdownMenuItem(
                       value: option,
-                      child: Text(option),
+                      child: Text(
+                        option,
+                        overflow: TextOverflow.ellipsis,
+                      ),
                     ))
                 .toList(),
             onChanged: (value) {
@@ -576,7 +594,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           icon: const Icon(Icons.arrow_back),
           onPressed: () {
             if (_currentStep == 0) {
-              Navigator.pop(context);
+              _goToLogin();
             } else {
               _goToAccountStep();
             }
