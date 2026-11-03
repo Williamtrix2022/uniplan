@@ -14,6 +14,7 @@ import 'pomodoro_settings_screen.dart';
 import '../notifications/notification_settings_screen.dart';
 import '../legal/terms_screen.dart';
 import 'help_screen.dart';
+import 'theme_settings_screen.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -415,10 +416,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             title: 'Temas',
             subtitle: 'Personaliza la apariencia',
             onTap: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Próximamente'),
-                  backgroundColor: AppTheme.info,
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const ThemeSettingsScreen(),
                 ),
               );
             },
