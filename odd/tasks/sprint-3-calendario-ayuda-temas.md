@@ -15,11 +15,12 @@ el PR #53 se mergee. Runner: `cd mobile && flutter analyze && flutter test`,
 
 ## Tasks
 
-- T1 (S1): Cambiar `_viewIndex` inicial en `calendar_screen.dart` de 0 a 1 (abrir en Horario). Route: inline. Risk: none. Status: pending.
-- T2 (S3): Backend — tabla `reportes`, modelo `Report.js`, ruta `POST /api/reports`. Route: inline. Risk: item 3 (nuevo endpoint/contrato) — aditivo, no rompe contratos existentes. Status: pending.
+- T1 (S1): Cambiar `_viewIndex` inicial en `calendar_screen.dart` de 0 a 1 (abrir en Horario). Route: inline. Risk: none. Status: done (commit 8c111df).
+- T2 (S3): Backend — tabla `reportes`, modelo `Report.js`, validador, controlador, ruta `POST /api/reports` + `GET /api/reports` (scoped al propio estudiante vía `req.user.id`). Route: inline. Risk: item 3 (nuevo endpoint/contrato) — aditivo, no rompe contratos existentes. Status: done.
 - T3 (S2): Mobile — pantalla de Ayuda con FAQ + reporte, enlace al onboarding. Route: inline. Risk: none. Status: pending.
 - T4 (S4): `ThemeProvider` + `darkTheme` + migración de `AppTheme.*` estático a `Theme.of(context)` + selector real de tema. Route: TBD (posible writer si el alcance de migración de pantallas es grande). Risk: item 6 (cambio transversal — un error de migración podría dejar texto ilegible en modo oscuro sin que ningún test lo detecte). Status: pending.
 
 ## Log
 
 - L1: Usuario pidió el PR de Sprint 2 a dev (creado: https://github.com/Williamtrix2022/uniplan/pull/53, aún no mergeado — su amigo lo prueba primero) y luego "empecemos con el sprint3".
+- L2: El plan de Sprint 3 sugería un `GET` "si se necesita listar para soporte interno" (ver `findAll` en el plan original). Se descartó: este backend no tiene ningún concepto de rol/admin (`grep rol|role|admin` en `authMiddleware.js`/`schema.sql` → cero resultados), así que un endpoint que devuelva reportes de todos los estudiantes no tendría ninguna barrera de autorización — sería una fuga de datos entre usuarios. El `GET /api/reports` quedó scoped a `req.user.id`.
