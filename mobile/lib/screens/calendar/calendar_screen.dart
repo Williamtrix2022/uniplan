@@ -40,7 +40,7 @@ class _CalendarScreenState extends State<CalendarScreen> {
   DateTime _focusedDay = DateTime.now();
   DateTime? _selectedDay;
   int _selectedIndex = 2;
-  int _viewIndex = 0; // 0 = Eventos, 1 = Horario
+  int _viewIndex = 1; // 0 = Eventos, 1 = Horario
 
   Map<DateTime, List<CalendarEvent>> _events = {};
   List<CalendarEvent> _selectedEvents = [];
