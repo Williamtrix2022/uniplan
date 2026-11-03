@@ -17,7 +17,7 @@ el PR #53 se mergee. Runner: `cd mobile && flutter analyze && flutter test`,
 
 - T1 (S1): Cambiar `_viewIndex` inicial en `calendar_screen.dart` de 0 a 1 (abrir en Horario). Route: inline. Risk: none. Status: done (commit 8c111df).
 - T2 (S3): Backend — tabla `reportes`, modelo `Report.js`, validador, controlador, ruta `POST /api/reports` + `GET /api/reports` (scoped al propio estudiante vía `req.user.id`). Route: inline. Risk: item 3 (nuevo endpoint/contrato) — aditivo, no rompe contratos existentes. Status: done.
-- T3 (S2): Mobile — pantalla de Ayuda con FAQ + reporte, enlace al onboarding. Route: inline. Risk: none. Status: pending.
+- T3 (S2): Mobile — `help_screen.dart` con FAQ por módulo (materias/tareas, horario/calendario, pomodoro, calificaciones), formulario de reporte (`ReportService` → `POST /api/reports`) y botón "Ver introducción" que reabre `OnboardingScreen`. Enlazado desde el stub de Ayuda en `profile_screen.dart`. Route: inline. Risk: none. Status: done.
 - T4 (S4): `ThemeProvider` + `darkTheme` + migración de `AppTheme.*` estático a `Theme.of(context)` + selector real de tema. Route: TBD (posible writer si el alcance de migración de pantallas es grande). Risk: item 6 (cambio transversal — un error de migración podría dejar texto ilegible en modo oscuro sin que ningún test lo detecte). Status: pending.
 
 ## Log
