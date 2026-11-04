@@ -80,9 +80,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Color _getStrengthColor() {
-    if (_passwordStrength < 0.33) return AppTheme.error;
-    if (_passwordStrength < 0.66) return AppTheme.warning;
-    return AppTheme.success;
+    if (_passwordStrength < 0.33) return context.colors.error;
+    if (_passwordStrength < 0.66) return context.colors.warning;
+    return context.colors.success;
   }
 
   String _getStrengthLabel() {
@@ -125,9 +125,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     if (!_acceptedTerms) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Debes aceptar los términos y condiciones'),
-          backgroundColor: AppTheme.error,
+        SnackBar(
+          content: const Text('Debes aceptar los términos y condiciones'),
+          backgroundColor: context.colors.error,
         ),
       );
       return;
@@ -157,7 +157,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: AppTheme.error,
+            backgroundColor: context.colors.error,
           ),
         );
       }
@@ -187,7 +187,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: AppTheme.error,
+            backgroundColor: context.colors.error,
           ),
         );
       }
@@ -208,10 +208,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
       children: [
         Text(
           stepLabel,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 13,
             fontWeight: FontWeight.w600,
-            color: AppTheme.primaryGreen,
+            color: context.colors.primaryGreen,
           ),
         ),
         const SizedBox(height: 8),
@@ -226,8 +226,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 ),
                 decoration: BoxDecoration(
                   color: isActiveOrDone
-                      ? AppTheme.primaryGreen
-                      : AppTheme.borderGrey,
+                      ? context.colors.primaryGreen
+                      : context.colors.borderGrey,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -244,20 +244,20 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Únete a Uniplan',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: AppTheme.darkText,
+              color: context.colors.darkText,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Tu camino hacia una productividad brillante comienza aquí',
             style: TextStyle(
               fontSize: 14,
-              color: AppTheme.greyText,
+              color: context.colors.greyText,
             ),
           ),
 
@@ -325,7 +325,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 Expanded(
                   child: LinearProgressIndicator(
                     value: _passwordStrength,
-                    backgroundColor: AppTheme.lightGrey,
+                    backgroundColor: context.colors.lightGrey,
                     valueColor: AlwaysStoppedAnimation<Color>(
                       _getStrengthColor(),
                     ),
@@ -363,15 +363,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Expanded(
                 child: Container(
                   height: 1,
-                  color: AppTheme.borderGrey,
+                  color: context.colors.borderGrey,
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   'O regístrate con',
                   style: TextStyle(
-                    color: AppTheme.greyText,
+                    color: context.colors.greyText,
                     fontSize: 14,
                   ),
                 ),
@@ -379,7 +379,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Expanded(
                 child: Container(
                   height: 1,
-                  color: AppTheme.borderGrey,
+                  color: context.colors.borderGrey,
                 ),
               ),
             ],
@@ -417,19 +417,19 @@ class _RegisterScreenState extends State<RegisterScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   '¿Ya tienes cuenta? ',
                   style: TextStyle(
-                    color: AppTheme.darkText,
+                    color: context.colors.darkText,
                     fontSize: 14,
                   ),
                 ),
                 GestureDetector(
                   onTap: _goToLogin,
-                  child: const Text(
+                  child: Text(
                     'Inicia sesión',
                     style: TextStyle(
-                      color: AppTheme.primaryGreen,
+                      color: context.colors.primaryGreen,
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
                     ),
@@ -449,32 +449,32 @@ class _RegisterScreenState extends State<RegisterScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Text(
+          Text(
             'Tu perfil académico',
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.bold,
-              color: AppTheme.darkText,
+              color: context.colors.darkText,
             ),
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Para terminar, cuéntanos en qué universidad estudias',
             style: TextStyle(
               fontSize: 14,
-              color: AppTheme.greyText,
+              color: context.colors.greyText,
             ),
           ),
 
           const SizedBox(height: 32),
 
           // Universidad (lista de selección)
-          const Text(
+          Text(
             'Universidad',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppTheme.darkText,
+              color: context.colors.darkText,
             ),
           ),
           const SizedBox(height: 8),
@@ -529,7 +529,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     _acceptedTerms = value ?? false;
                   });
                 },
-                activeColor: AppTheme.primaryGreen,
+                activeColor: context.colors.primaryGreen,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(4),
                 ),
@@ -537,16 +537,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
               Expanded(
                 child: RichText(
                   text: TextSpan(
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 13,
-                      color: AppTheme.darkText,
+                      color: context.colors.darkText,
                     ),
                     children: [
                       const TextSpan(text: 'Acepto los '),
                       TextSpan(
                         text: 'Términos y Condiciones',
-                        style: const TextStyle(
-                          color: AppTheme.primaryGreen,
+                        style: TextStyle(
+                          color: context.colors.primaryGreen,
                           fontWeight: FontWeight.w600,
                         ),
                         recognizer: _termsRecognizer,
@@ -588,7 +588,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back),
@@ -637,8 +637,8 @@ class _SocialButton extends StatelessWidget {
       icon: Icon(icon, size: 20),
       label: Text(label),
       style: OutlinedButton.styleFrom(
-        foregroundColor: AppTheme.darkText,
-        side: const BorderSide(color: AppTheme.borderGrey),
+        foregroundColor: context.colors.darkText,
+        side: BorderSide(color: context.colors.borderGrey),
         padding: const EdgeInsets.symmetric(vertical: 14),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusM),

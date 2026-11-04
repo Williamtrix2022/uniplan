@@ -40,7 +40,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
               response['message'] ??
                   'Si el correo existe, recibirás instrucciones de recuperación',
             ),
-            backgroundColor: AppTheme.success,
+            backgroundColor: context.colors.success,
           ),
         );
       }
@@ -49,7 +49,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: AppTheme.error,
+            backgroundColor: context.colors.error,
           ),
         );
       }
@@ -63,7 +63,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       appBar: AppBar(
         title: const Text('Recuperar contraseña'),
       ),
@@ -75,20 +75,20 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'Ingresa tu correo institucional',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Te enviaremos un enlace para restablecer tu contraseña.',
                 style: TextStyle(
                   fontSize: 14,
-                  color: AppTheme.greyText,
+                  color: context.colors.greyText,
                 ),
               ),
               const SizedBox(height: 28),

@@ -95,16 +95,16 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       body: Container(
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: [
-              AppTheme.lightGreen.withOpacity(0.3),
-              AppTheme.white,
-              AppTheme.lightGreen.withOpacity(0.2),
+              context.colors.lightGreen.withOpacity(0.3),
+              context.colors.white,
+              context.colors.lightGreen.withOpacity(0.2),
             ],
           ),
         ),
@@ -131,32 +131,32 @@ class _SplashScreenState extends State<SplashScreen>
                         width: 120,
                         height: 120,
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryGreen,
+                          color: context.colors.primaryGreen,
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: AppTheme.primaryGreen.withOpacity(0.3),
+                              color: context.colors.primaryGreen.withOpacity(0.3),
                               blurRadius: 30,
                               offset: const Offset(0, 10),
                             ),
                           ],
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.lightbulb_outline,
                           size: 60,
-                          color: AppTheme.white,
+                          color: context.colors.white,
                         ),
                       ),
 
                       const SizedBox(height: 32),
 
                       // Nombre de la app
-                      const Text(
+                      Text(
                         'Uniplan',
                         style: TextStyle(
                           fontSize: 36,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.darkText,
+                          color: context.colors.darkText,
                           letterSpacing: 1.2,
                         ),
                       ),
@@ -164,11 +164,11 @@ class _SplashScreenState extends State<SplashScreen>
                       const SizedBox(height: 8),
 
                       // Subtítulo
-                      const Text(
+                      Text(
                         'Organiza tu vida académica',
                         style: TextStyle(
                           fontSize: 16,
-                          color: AppTheme.greyText,
+                          color: context.colors.greyText,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -182,7 +182,7 @@ class _SplashScreenState extends State<SplashScreen>
                         child: CircularProgressIndicator(
                           strokeWidth: 3,
                           valueColor: AlwaysStoppedAnimation<Color>(
-                            AppTheme.primaryGreen.withOpacity(0.8),
+                            context.colors.primaryGreen.withOpacity(0.8),
                           ),
                         ),
                       ),

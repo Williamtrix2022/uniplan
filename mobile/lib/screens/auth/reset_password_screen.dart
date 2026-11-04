@@ -52,9 +52,9 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Contraseña restablecida correctamente'),
-            backgroundColor: AppTheme.success,
+          SnackBar(
+            content: const Text('Contraseña restablecida correctamente'),
+            backgroundColor: context.colors.success,
           ),
         );
         Navigator.popUntil(context, (route) => route.isFirst);
@@ -64,7 +64,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: AppTheme.error,
+            backgroundColor: context.colors.error,
           ),
         );
       }
@@ -78,7 +78,7 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       appBar: AppBar(
         title: const Text('Restablecer contraseña'),
       ),
@@ -90,20 +90,20 @@ class _ResetPasswordScreenState extends State<ResetPasswordScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'Ingresá tu código y nueva contraseña',
                 style: TextStyle(
                   fontSize: 24,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Revisá tu correo — te enviamos un código de 6 dígitos.',
                 style: TextStyle(
                   fontSize: 14,
-                  color: AppTheme.greyText,
+                  color: context.colors.greyText,
                 ),
               ),
               const SizedBox(height: 28),
