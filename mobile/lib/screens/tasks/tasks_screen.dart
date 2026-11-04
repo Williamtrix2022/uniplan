@@ -186,16 +186,16 @@ class _TasksScreenState extends State<TasksScreen> {
       await _loadTasks();
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Tarea eliminada'),
-          backgroundColor: AppTheme.success,
+        SnackBar(
+          content: const Text('Tarea eliminada'),
+          backgroundColor: context.colors.success,
         ),
       );
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
-          backgroundColor: AppTheme.error,
+          backgroundColor: context.colors.error,
         ),
       );
     }
@@ -214,7 +214,7 @@ class _TasksScreenState extends State<TasksScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
-          backgroundColor: AppTheme.error,
+          backgroundColor: context.colors.error,
         ),
       );
     }
@@ -224,7 +224,7 @@ class _TasksScreenState extends State<TasksScreen> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      backgroundColor: AppTheme.surface,
+      backgroundColor: context.colors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
@@ -243,21 +243,21 @@ class _TasksScreenState extends State<TasksScreen> {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Filtrar tareas',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.darkText,
+                        color: context.colors.darkText,
                       ),
                     ),
                     const SizedBox(height: 24),
-                    const Text(
+                    Text(
                       'Estado',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.darkText,
+                        color: context.colors.darkText,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -318,12 +318,12 @@ class _TasksScreenState extends State<TasksScreen> {
                       },
                     ),
                     const SizedBox(height: 24),
-                    const Text(
+                    Text(
                       'Prioridad',
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.darkText,
+                        color: context.colors.darkText,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -400,8 +400,8 @@ class _TasksScreenState extends State<TasksScreen> {
                           Navigator.pop(context);
                         },
                         style: TextButton.styleFrom(
-                          backgroundColor: AppTheme.surface,
-                          foregroundColor: AppTheme.onSurfaceVariant,
+                          backgroundColor: context.colors.surface,
+                          foregroundColor: context.colors.onSurfaceVariant,
                           padding: const EdgeInsets.symmetric(vertical: 12),
                         ),
                         child: const Text('Limpiar filtros'),
@@ -425,11 +425,11 @@ class _TasksScreenState extends State<TasksScreen> {
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? AppTheme.primaryContainer : AppTheme.surface,
+            color: isSelected ? context.colors.primaryContainer : context.colors.surface,
             borderRadius: BorderRadius.circular(8),
             border: Border.all(
               color:
-                  isSelected ? AppTheme.primaryGreen : AppTheme.outlineVariant,
+                  isSelected ? context.colors.primaryGreen : context.colors.outlineVariant,
             ),
           ),
           child: Row(
@@ -441,12 +441,12 @@ class _TasksScreenState extends State<TasksScreen> {
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
                   color: isSelected
-                      ? AppTheme.primaryGreen
-                      : AppTheme.onSurfaceVariant,
+                      ? context.colors.primaryGreen
+                      : context.colors.onSurfaceVariant,
                 ),
               ),
               if (isSelected)
-                Icon(Icons.check, color: AppTheme.primaryGreen, size: 18),
+                Icon(Icons.check, color: context.colors.primaryGreen, size: 18),
             ],
           ),
         ),
@@ -506,40 +506,40 @@ class _TasksScreenState extends State<TasksScreen> {
   }
 
   Color _getSideBarColor(Task task, bool isOverdue) {
-    if (isOverdue) return AppTheme.error;
+    if (isOverdue) return context.colors.error;
     if (task.isCompleted) {
-      return AppTheme.onSurfaceVariant.withOpacity(0.4);
+      return context.colors.onSurfaceVariant.withOpacity(0.4);
     }
-    if (task.estado == 'en_progreso') return AppTheme.info; // Azul
+    if (task.estado == 'en_progreso') return context.colors.info; // Azul
 
-    return AppTheme.primaryGreen; // Verde = pendiente
+    return context.colors.primaryGreen; // Verde = pendiente
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: context.colors.surface,
       appBar: AppBar(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: context.colors.surface,
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(
             height: 1,
-            color: AppTheme.surfaceContainerHighest,
+            color: context.colors.surfaceContainerHighest,
           ),
         ),
-        title: const Text(
+        title: Text(
           'Mis Tareas',
           style: TextStyle(
-            color: AppTheme.primaryGreen,
+            color: context.colors.primaryGreen,
             fontSize: 20,
             fontWeight: FontWeight.w600,
           ),
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.filter_list, color: AppTheme.primaryGreen),
+            icon: Icon(Icons.filter_list, color: context.colors.primaryGreen),
             onPressed: _showFilterModal,
           ),
           Padding(
@@ -563,7 +563,7 @@ class _TasksScreenState extends State<TasksScreen> {
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadTasks,
-              color: AppTheme.primaryGreen,
+              color: context.colors.primaryGreen,
               child: SingleChildScrollView(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 96),
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -574,7 +574,7 @@ class _TasksScreenState extends State<TasksScreen> {
                     // Tabs de navegación
                     Container(
                       decoration: BoxDecoration(
-                        color: AppTheme.surfaceContainer,
+                        color: context.colors.surfaceContainer,
                         borderRadius: BorderRadius.circular(12),
                       ),
                       padding: const EdgeInsets.all(4),
@@ -593,7 +593,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                     const EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
                                   color: _selectedTab == 0
-                                      ? AppTheme.surface
+                                      ? context.colors.surface
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(8),
                                   boxShadow: _selectedTab == 0
@@ -607,8 +607,8 @@ class _TasksScreenState extends State<TasksScreen> {
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                     color: _selectedTab == 0
-                                        ? AppTheme.primaryGreen
-                                        : AppTheme.onSurfaceVariant,
+                                        ? context.colors.primaryGreen
+                                        : context.colors.onSurfaceVariant,
                                   ),
                                 ),
                               ),
@@ -627,7 +627,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                     const EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
                                   color: _selectedTab == 1
-                                      ? AppTheme.surface
+                                      ? context.colors.surface
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(8),
                                   boxShadow: _selectedTab == 1
@@ -641,8 +641,8 @@ class _TasksScreenState extends State<TasksScreen> {
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                     color: _selectedTab == 1
-                                        ? AppTheme.primaryGreen
-                                        : AppTheme.onSurfaceVariant,
+                                        ? context.colors.primaryGreen
+                                        : context.colors.onSurfaceVariant,
                                   ),
                                 ),
                               ),
@@ -661,7 +661,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                     const EdgeInsets.symmetric(vertical: 12),
                                 decoration: BoxDecoration(
                                   color: _selectedTab == 2
-                                      ? AppTheme.surface
+                                      ? context.colors.surface
                                       : Colors.transparent,
                                   borderRadius: BorderRadius.circular(8),
                                   boxShadow: _selectedTab == 2
@@ -675,8 +675,8 @@ class _TasksScreenState extends State<TasksScreen> {
                                     fontSize: 14,
                                     fontWeight: FontWeight.w600,
                                     color: _selectedTab == 2
-                                        ? AppTheme.primaryGreen
-                                        : AppTheme.onSurfaceVariant,
+                                        ? context.colors.primaryGreen
+                                        : context.colors.onSurfaceVariant,
                                   ),
                                 ),
                               ),
@@ -693,28 +693,28 @@ class _TasksScreenState extends State<TasksScreen> {
                       controller: _searchController,
                       decoration: InputDecoration(
                         hintText: 'Buscar por título, descripción o materia...',
-                        hintStyle: const TextStyle(
+                        hintStyle: TextStyle(
                           fontSize: 12,
-                          color: AppTheme.outline,
+                          color: context.colors.outline,
                         ),
                         prefixIcon:
-                            const Icon(Icons.search, color: AppTheme.outline),
+                            Icon(Icons.search, color: context.colors.outline),
                         filled: true,
-                        fillColor: AppTheme.surface,
+                        fillColor: context.colors.surface,
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide:
-                              const BorderSide(color: AppTheme.outlineVariant),
+                              BorderSide(color: context.colors.outlineVariant),
                         ),
                         enabledBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
                           borderSide:
-                              const BorderSide(color: AppTheme.outlineVariant),
+                              BorderSide(color: context.colors.outlineVariant),
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(12),
-                          borderSide: const BorderSide(
-                              color: AppTheme.primaryContainer, width: 2),
+                          borderSide: BorderSide(
+                              color: context.colors.primaryContainer, width: 2),
                         ),
                         contentPadding: const EdgeInsets.symmetric(
                             horizontal: 16, vertical: 12),
@@ -733,7 +733,7 @@ class _TasksScreenState extends State<TasksScreen> {
                             Icon(
                               Icons.task_alt,
                               size: 80,
-                              color: AppTheme.onSurfaceVariant.withOpacity(0.3),
+                              color: context.colors.onSurfaceVariant.withOpacity(0.3),
                             ),
                             const SizedBox(height: 16),
                             Text(
@@ -742,10 +742,10 @@ class _TasksScreenState extends State<TasksScreen> {
                                   : _selectedTab == 1
                                       ? 'No hay tareas esta semana'
                                       : 'No hay tareas de proyecto',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
-                                color: AppTheme.onSurfaceVariant,
+                                color: context.colors.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -776,14 +776,14 @@ class _TasksScreenState extends State<TasksScreen> {
                             direction: DismissDirection.endToStart,
                             background: Container(
                               decoration: BoxDecoration(
-                                color: AppTheme.error,
+                                color: context.colors.error,
                                 borderRadius: BorderRadius.circular(12),
                               ),
                               alignment: Alignment.centerRight,
                               padding: const EdgeInsets.only(right: 20),
-                              child: const Icon(
+                              child: Icon(
                                 Icons.delete,
-                                color: AppTheme.white,
+                                color: context.colors.white,
                               ),
                             ),
                             confirmDismiss: (direction) async {
@@ -802,7 +802,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                       onPressed: () =>
                                           Navigator.pop(context, true),
                                       style: TextButton.styleFrom(
-                                          foregroundColor: AppTheme.error),
+                                          foregroundColor: context.colors.error),
                                       child: const Text('Eliminar'),
                                     ),
                                   ],
@@ -814,10 +814,10 @@ class _TasksScreenState extends State<TasksScreen> {
                               onTap: () => _openTaskForm(task: task),
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: AppTheme.surface,
+                                  color: context.colors.surface,
                                   borderRadius: BorderRadius.circular(12),
                                   border: Border.all(
-                                    color: AppTheme.outlineVariant,
+                                    color: context.colors.outlineVariant,
                                     width: 1,
                                   ),
                                   boxShadow: AppTheme.softShadow,
@@ -861,18 +861,18 @@ class _TasksScreenState extends State<TasksScreen> {
                                                       vertical: 2),
                                                   decoration: BoxDecoration(
                                                     color:
-                                                        AppTheme.errorContainer,
+                                                        context.colors.errorContainer,
                                                     borderRadius:
                                                         BorderRadius.circular(
                                                             4),
                                                   ),
-                                                  child: const Text(
+                                                  child: Text(
                                                     'VENCIDA',
                                                     style: TextStyle(
                                                       fontSize: 10,
                                                       fontWeight:
                                                           FontWeight.w600,
-                                                      color: AppTheme.error,
+                                                      color: context.colors.error,
                                                     ),
                                                   ),
                                                 ),
@@ -914,7 +914,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                                         : Icons
                                                             .radio_button_unchecked,
                                                     color: task.isCompleted
-                                                        ? AppTheme.primaryGreen
+                                                        ? context.colors.primaryGreen
                                                         : AppTheme
                                                             .onSurfaceVariant,
                                                     size: 24,
@@ -935,7 +935,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                                         color: task.isCompleted
                                                             ? AppTheme
                                                                 .onSurfaceVariant
-                                                            : AppTheme.darkText,
+                                                            : context.colors.darkText,
                                                         decoration:
                                                             task.isCompleted
                                                                 ? TextDecoration
@@ -967,7 +967,7 @@ class _TasksScreenState extends State<TasksScreen> {
                                                           Icons.calendar_today,
                                                           size: 18,
                                                           color: isOverdue
-                                                              ? AppTheme.error
+                                                              ? context.colors.error
                                                               : AppTheme
                                                                   .onSurfaceVariant,
                                                         ),
@@ -1017,17 +1017,17 @@ class _TasksScreenState extends State<TasksScreen> {
             ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () => _openTaskForm(),
-        backgroundColor: AppTheme.primaryGreen,
+        backgroundColor: context.colors.primaryGreen,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(100),
         ),
-        icon: const Icon(Icons.add, color: AppTheme.white),
-        label: const Text(
+        icon: Icon(Icons.add, color: context.colors.white),
+        label: Text(
           'Nueva tarea',
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.bold,
-            color: AppTheme.white,
+            color: context.colors.white,
           ),
         ),
       ),
