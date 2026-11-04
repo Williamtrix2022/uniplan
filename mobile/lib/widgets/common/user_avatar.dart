@@ -50,7 +50,7 @@ class UserAvatar extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: backgroundColor ?? AppTheme.primaryGreen,
+        color: backgroundColor ?? context.colors.primaryGreen,
         shape: BoxShape.circle,
         border: borderColor != null
             ? Border.all(color: borderColor!, width: borderWidth)
@@ -63,7 +63,7 @@ class UserAvatar extends StatelessWidget {
             : Text(
                 initial,
                 style: TextStyle(
-                  color: foregroundColor ?? AppTheme.white,
+                  color: foregroundColor ?? context.colors.white,
                   fontSize: size * 0.45,
                   fontWeight: FontWeight.bold,
                 ),

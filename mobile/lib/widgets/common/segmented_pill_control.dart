@@ -25,7 +25,7 @@ class SegmentedPillControl extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surfaceContainer,
+        color: context.colors.surfaceContainer,
         borderRadius: BorderRadius.circular(12),
       ),
       padding: const EdgeInsets.all(4),
@@ -38,7 +38,9 @@ class SegmentedPillControl extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppTheme.surface : Colors.transparent,
+                  color: isSelected
+                      ? context.colors.surface
+                      : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                   boxShadow: isSelected ? AppTheme.softShadow : null,
                 ),
@@ -49,8 +51,8 @@ class SegmentedPillControl extends StatelessWidget {
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     color: isSelected
-                        ? AppTheme.primaryGreen
-                        : AppTheme.onSurfaceVariant,
+                        ? context.colors.primaryGreen
+                        : context.colors.onSurfaceVariant,
                   ),
                 ),
               ),

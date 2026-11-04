@@ -44,21 +44,22 @@ class CustomButton extends StatelessWidget {
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: backgroundColor ?? AppTheme.primaryGreen,
-          foregroundColor: textColor ?? AppTheme.white,
+          backgroundColor: backgroundColor ?? context.colors.primaryGreen,
+          foregroundColor: textColor ?? context.colors.white,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizes.radiusM),
           ),
-          disabledBackgroundColor: AppTheme.primaryGreen.withOpacity(0.5),
+          disabledBackgroundColor:
+              context.colors.primaryGreen.withOpacity(0.5),
         ),
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 height: 24,
                 width: 24,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(AppTheme.white),
+                  valueColor: AlwaysStoppedAnimation<Color>(context.colors.white),
                 ),
               )
             : Row(
@@ -88,9 +89,9 @@ class CustomButton extends StatelessWidget {
       child: OutlinedButton(
         onPressed: isLoading ? null : onPressed,
         style: OutlinedButton.styleFrom(
-          foregroundColor: backgroundColor ?? AppTheme.primaryGreen,
+          foregroundColor: backgroundColor ?? context.colors.primaryGreen,
           side: BorderSide(
-            color: backgroundColor ?? AppTheme.primaryGreen,
+            color: backgroundColor ?? context.colors.primaryGreen,
             width: 2,
           ),
           shape: RoundedRectangleBorder(
@@ -104,7 +105,7 @@ class CustomButton extends StatelessWidget {
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
                   valueColor: AlwaysStoppedAnimation<Color>(
-                    backgroundColor ?? AppTheme.primaryGreen,
+                    backgroundColor ?? context.colors.primaryGreen,
                   ),
                 ),
               )
