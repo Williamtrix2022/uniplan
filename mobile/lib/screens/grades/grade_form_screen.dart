@@ -87,10 +87,10 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppTheme.primaryGreen,
-              onPrimary: AppTheme.white,
-              onSurface: AppTheme.darkText,
+            colorScheme: ColorScheme.light(
+              primary: context.colors.primaryGreen,
+              onPrimary: context.colors.white,
+              onSurface: context.colors.darkText,
             ),
           ),
           child: child!,
@@ -108,9 +108,9 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
 
     if (selectedSubjectId == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Selecciona una materia'),
-          backgroundColor: AppTheme.error,
+        SnackBar(
+          content: const Text('Selecciona una materia'),
+          backgroundColor: context.colors.error,
         ),
       );
       return;
@@ -152,7 +152,7 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
           content: Text(
             isEditing ? 'Calificación actualizada' : 'Calificación creada',
           ),
-          backgroundColor: AppTheme.success,
+          backgroundColor: context.colors.success,
         ),
       );
     } catch (e) {
@@ -160,7 +160,7 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppTheme.error,
+            backgroundColor: context.colors.error,
           ),
         );
       }
@@ -227,7 +227,7 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
     final textTheme = theme.textTheme;
 
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -247,7 +247,7 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
         title: Text(
           isEditing ? 'Editar calificación' : 'Nueva calificación',
           style: textTheme.headlineMedium?.copyWith(
-            color: AppTheme.darkText,
+            color: context.colors.darkText,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -370,8 +370,8 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
                             horizontal: 12, vertical: 14),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_today,
-                                color: AppTheme.primaryGreen),
+                            Icon(Icons.calendar_today,
+                                color: context.colors.primaryGreen),
                             const SizedBox(width: 12),
                             Text(
                               selectedDate != null
@@ -379,7 +379,7 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
                                       .format(selectedDate!)
                                   : 'Sin fecha',
                               style: textTheme.bodyLarge
-                                  ?.copyWith(color: AppTheme.darkText),
+                                  ?.copyWith(color: context.colors.darkText),
                             ),
                             if (selectedDate != null) ...[
                               const Spacer(),
@@ -387,7 +387,7 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
                                 onPressed: () =>
                                     setState(() => selectedDate = null),
                                 icon: const Icon(Icons.close, size: 18),
-                                color: AppTheme.greyText,
+                                color: context.colors.greyText,
                               ),
                             ],
                           ],
@@ -413,19 +413,19 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
                     child: ElevatedButton(
                       onPressed: isLoading ? null : _saveGrade,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryGreen,
-                        foregroundColor: AppTheme.white,
+                        backgroundColor: context.colors.primaryGreen,
+                        foregroundColor: context.colors.white,
                         elevation: 2,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: isLoading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 22,
                               height: 22,
                               child: CircularProgressIndicator(
-                                color: AppTheme.white,
+                                color: context.colors.white,
                                 strokeWidth: 2,
                               ),
                             )
@@ -451,12 +451,12 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Cancelar',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.darkText,
+                          color: context.colors.darkText,
                         ),
                       ),
                     ),
@@ -475,7 +475,7 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
     final subjects = subjectProvider.subjects;
 
     if (subjectProvider.isLoading && subjects.isEmpty) {
-      return const LinearProgressIndicator(color: AppTheme.primaryGreen);
+      return LinearProgressIndicator(color: context.colors.primaryGreen);
     }
 
     if (subjects.isEmpty) {
@@ -487,7 +487,7 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
           children: [
             Text(
               'No tienes materias registradas.',
-              style: textTheme.bodyMedium?.copyWith(color: AppTheme.greyText),
+              style: textTheme.bodyMedium?.copyWith(color: context.colors.greyText),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
@@ -521,7 +521,7 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
                       subject.nombre,
                       overflow: TextOverflow.ellipsis,
                       style: textTheme.bodyLarge
-                          ?.copyWith(color: AppTheme.darkText),
+                          ?.copyWith(color: context.colors.darkText),
                     ),
                   ),
                 ),
@@ -557,13 +557,13 @@ class _GradeFormScreenState extends State<GradeFormScreen> {
       showCheckmark: false,
       onSelected: (_) => setState(() => selectedTipo = value),
       labelStyle: TextStyle(
-        color: isSelected ? AppTheme.white : AppTheme.darkText,
+        color: isSelected ? context.colors.white : context.colors.darkText,
         fontWeight: FontWeight.w600,
       ),
-      selectedColor: AppTheme.primaryGreen,
+      selectedColor: context.colors.primaryGreen,
       backgroundColor: Colors.transparent,
       side: BorderSide(
-        color: isSelected ? AppTheme.primaryGreen : colorScheme.outlineVariant,
+        color: isSelected ? context.colors.primaryGreen : colorScheme.outlineVariant,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(999),

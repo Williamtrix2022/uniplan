@@ -34,7 +34,7 @@ class GradeLineChart extends StatelessWidget {
             'Se necesitan al menos 2 calificaciones con fecha\n'
             'para mostrar la tendencia',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(fontSize: 13, color: AppTheme.greyText),
+            style: GoogleFonts.inter(fontSize: 13, color: context.colors.greyText),
           ),
         ),
       );
@@ -85,7 +85,7 @@ class GradeLineChart extends StatelessWidget {
             horizontalLines: [
               HorizontalLine(
                 y: 3.0,
-                color: AppTheme.warning,
+                color: context.colors.warning,
                 strokeWidth: 1.5,
                 dashArray: [6, 4],
               ),
@@ -95,7 +95,7 @@ class GradeLineChart extends StatelessWidget {
             LineChartBarData(
               spots: spots,
               isCurved: true,
-              color: AppTheme.primaryGreen,
+              color: context.colors.primaryGreen,
               barWidth: 3,
               dotData: FlDotData(
                 show: true,
@@ -110,7 +110,7 @@ class GradeLineChart extends StatelessWidget {
               ),
               belowBarData: BarAreaData(
                 show: true,
-                color: AppTheme.primaryGreen.withValues(alpha: 0.1),
+                color: context.colors.primaryGreen.withValues(alpha: 0.1),
               ),
             ),
           ],
@@ -153,7 +153,7 @@ class GradeBarChart extends StatelessWidget {
         child: Center(
           child: Text(
             'No hay calificaciones para agrupar',
-            style: GoogleFonts.inter(fontSize: 13, color: AppTheme.greyText),
+            style: GoogleFonts.inter(fontSize: 13, color: context.colors.greyText),
           ),
         ),
       );

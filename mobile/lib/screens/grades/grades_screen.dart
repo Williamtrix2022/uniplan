@@ -48,7 +48,7 @@ class _GradesScreenState extends State<GradesScreen> {
     final isLoading = provider.isLoading && !provider.isInitialized;
 
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -56,13 +56,13 @@ class _GradesScreenState extends State<GradesScreen> {
             if (provider.error != null) _buildErrorBanner(provider),
             Expanded(
               child: isLoading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                          color: AppTheme.primaryGreen),
+                          color: context.colors.primaryGreen),
                     )
                   : RefreshIndicator(
                       onRefresh: provider.refresh,
-                      color: AppTheme.primaryGreen,
+                      color: context.colors.primaryGreen,
                       child: provider.grades.isEmpty
                           ? _buildEmptyState(context)
                           : _buildContent(context, provider),
@@ -73,8 +73,8 @@ class _GradesScreenState extends State<GradesScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToForm(context),
-        backgroundColor: AppTheme.primaryGreen,
-        child: const Icon(Icons.add, color: AppTheme.white),
+        backgroundColor: context.colors.primaryGreen,
+        child: Icon(Icons.add, color: context.colors.white),
       ),
     );
   }
@@ -91,7 +91,7 @@ class _GradesScreenState extends State<GradesScreen> {
             IconButton(
               onPressed: () => Navigator.pop(context),
               icon: const Icon(Icons.arrow_back_ios_new_rounded),
-              color: AppTheme.darkText,
+              color: context.colors.darkText,
               iconSize: 20,
               padding: EdgeInsets.zero,
               constraints: const BoxConstraints(),
@@ -103,14 +103,14 @@ class _GradesScreenState extends State<GradesScreen> {
               style: GoogleFonts.inter(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.darkText,
+                color: context.colors.darkText,
               ),
             ),
           ),
           IconButton(
             onPressed: () => _navigateToManageSubjects(context),
             icon: const Icon(Icons.school_outlined),
-            color: AppTheme.darkText,
+            color: context.colors.darkText,
             iconSize: 22,
             tooltip: 'Gestionar materias',
           ),
@@ -145,22 +145,22 @@ class _GradesScreenState extends State<GradesScreen> {
         vertical: AppSizes.paddingS,
       ),
       decoration: BoxDecoration(
-        color: AppTheme.errorContainer,
+        color: context.colors.errorContainer,
         borderRadius: BorderRadius.circular(AppSizes.radiusM),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, color: AppTheme.error, size: 18),
+          Icon(Icons.error_outline, color: context.colors.error, size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               provider.error!,
-              style: GoogleFonts.inter(fontSize: 13, color: AppTheme.error),
+              style: GoogleFonts.inter(fontSize: 13, color: context.colors.error),
             ),
           ),
           GestureDetector(
             onTap: provider.clearError,
-            child: const Icon(Icons.close, color: AppTheme.error, size: 18),
+            child: Icon(Icons.close, color: context.colors.error, size: 18),
           ),
         ],
       ),
@@ -187,7 +187,7 @@ class _GradesScreenState extends State<GradesScreen> {
                   Icon(
                     Icons.grade_outlined,
                     size: 64,
-                    color: AppTheme.greyText.withValues(alpha: 0.5),
+                    color: context.colors.greyText.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -195,7 +195,7 @@ class _GradesScreenState extends State<GradesScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.darkText,
+                      color: context.colors.darkText,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -203,7 +203,7 @@ class _GradesScreenState extends State<GradesScreen> {
                     'Registra tu primera nota para ver tu progreso académico',
                     textAlign: TextAlign.center,
                     style:
-                        GoogleFonts.inter(fontSize: 14, color: AppTheme.greyText),
+                        GoogleFonts.inter(fontSize: 14, color: context.colors.greyText),
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton.icon(
@@ -211,8 +211,8 @@ class _GradesScreenState extends State<GradesScreen> {
                     icon: const Icon(Icons.add),
                     label: const Text('Nueva calificación'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryGreen,
-                      foregroundColor: AppTheme.white,
+                      backgroundColor: context.colors.primaryGreen,
+                      foregroundColor: context.colors.white,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -221,7 +221,7 @@ class _GradesScreenState extends State<GradesScreen> {
                     icon: const Icon(Icons.school_outlined, size: 18),
                     label: const Text('Gestionar materias'),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppTheme.greyText,
+                      foregroundColor: context.colors.greyText,
                     ),
                   ),
                 ],
@@ -259,7 +259,7 @@ class _GradesScreenState extends State<GradesScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                 ),
               ),
               TextButton.icon(
@@ -267,7 +267,7 @@ class _GradesScreenState extends State<GradesScreen> {
                 icon: const Icon(Icons.tune_rounded, size: 18),
                 label: const Text('Gestionar'),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppTheme.greyText,
+                  foregroundColor: context.colors.greyText,
                   padding: const EdgeInsets.symmetric(horizontal: 8),
                   minimumSize: Size.zero,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
@@ -284,7 +284,7 @@ class _GradesScreenState extends State<GradesScreen> {
           else
             Text(
               'No hay materias con calificaciones aún',
-              style: GoogleFonts.inter(fontSize: 13, color: AppTheme.greyText),
+              style: GoogleFonts.inter(fontSize: 13, color: context.colors.greyText),
             ),
           const SizedBox(height: 24),
           Text(
@@ -292,7 +292,7 @@ class _GradesScreenState extends State<GradesScreen> {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppTheme.darkText,
+              color: context.colors.darkText,
             ),
           ),
           const SizedBox(height: 12),
@@ -300,9 +300,9 @@ class _GradesScreenState extends State<GradesScreen> {
             width: double.infinity,
             padding: const EdgeInsets.fromLTRB(8, 20, 20, 12),
             decoration: BoxDecoration(
-              color: AppTheme.surface,
+              color: context.colors.surface,
               borderRadius: BorderRadius.circular(AppSizes.radiusM),
-              border: Border.all(color: AppTheme.outlineVariant),
+              border: Border.all(color: context.colors.outlineVariant),
             ),
             child: GradeLineChart(grades: provider.grades),
           ),

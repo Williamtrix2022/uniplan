@@ -62,13 +62,13 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
     final grades = provider.gradesBySubject(widget.idMateria);
 
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       body: RefreshIndicator(
         onRefresh: () async {
           await context.read<GradeProvider>().refresh();
           await _loadProjection();
         },
-        color: AppTheme.primaryGreen,
+        color: context.colors.primaryGreen,
         child: CustomScrollView(
           slivers: [
             _buildSliverAppBar(context),
@@ -88,7 +88,7 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
                         style: GoogleFonts.inter(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
-                          color: AppTheme.darkText,
+                          color: context.colors.darkText,
                         ),
                       ),
                     ),
@@ -100,10 +100,10 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
                         width: double.infinity,
                         padding: const EdgeInsets.fromLTRB(8, 20, 20, 12),
                         decoration: BoxDecoration(
-                          color: AppTheme.surface,
+                          color: context.colors.surface,
                           borderRadius:
                               BorderRadius.circular(AppSizes.radiusM),
-                          border: Border.all(color: AppTheme.outlineVariant),
+                          border: Border.all(color: context.colors.outlineVariant),
                         ),
                         child: GradeBarChart(grades: grades),
                       ),
@@ -118,7 +118,7 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.darkText,
+                        color: context.colors.darkText,
                       ),
                     ),
                   ),
@@ -149,8 +149,8 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToForm(context),
-        backgroundColor: AppTheme.primaryGreen,
-        child: const Icon(Icons.add, color: AppTheme.white),
+        backgroundColor: context.colors.primaryGreen,
+        child: Icon(Icons.add, color: context.colors.white),
       ),
     );
   }
@@ -203,9 +203,9 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
 
   Widget _buildProjectionCard(BuildContext context) {
     if (_isLoadingProjection) {
-      return const Padding(
-        padding: EdgeInsets.symmetric(horizontal: AppSizes.paddingL),
-        child: LinearProgressIndicator(color: AppTheme.primaryGreen),
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingL),
+        child: LinearProgressIndicator(color: context.colors.primaryGreen),
       );
     }
 
@@ -214,7 +214,7 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
 
     final promedio = projection.promedioActual;
     final promedioColor =
-        promedio != null ? Grade.colorForValor(promedio) : AppTheme.greyText;
+        promedio != null ? Grade.colorForValor(promedio) : context.colors.greyText;
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppSizes.paddingL),
@@ -222,7 +222,7 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
         width: double.infinity,
         padding: const EdgeInsets.all(AppSizes.paddingL),
         decoration: BoxDecoration(
-          color: AppTheme.lightGreen,
+          color: context.colors.lightGreen,
           borderRadius: BorderRadius.circular(AppSizes.radiusL),
         ),
         child: Column(
@@ -233,7 +233,7 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
                 Text(
                   'Promedio actual',
                   style:
-                      GoogleFonts.inter(fontSize: 13, color: AppTheme.greyText),
+                      GoogleFonts.inter(fontSize: 13, color: context.colors.greyText),
                 ),
                 const Spacer(),
                 Text(
@@ -252,16 +252,16 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
               child: LinearProgressIndicator(
                 value: (projection.porcentajeAcumulado / 100).clamp(0.0, 1.0),
                 minHeight: 6,
-                backgroundColor: AppTheme.white,
+                backgroundColor: context.colors.white,
                 valueColor:
-                    const AlwaysStoppedAnimation(AppTheme.primaryGreen),
+                    AlwaysStoppedAnimation(context.colors.primaryGreen),
               ),
             ),
             const SizedBox(height: 6),
             Text(
               '${projection.porcentajeAcumulado.toStringAsFixed(0)}% evaluado · '
               '${projection.porcentajeRestante.toStringAsFixed(0)}% restante',
-              style: GoogleFonts.inter(fontSize: 12, color: AppTheme.greyText),
+              style: GoogleFonts.inter(fontSize: 12, color: context.colors.greyText),
             ),
             const SizedBox(height: 12),
             Text(
@@ -269,7 +269,7 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
               style: GoogleFonts.inter(
                 fontSize: 14,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.darkText,
+                color: context.colors.darkText,
               ),
             ),
           ],
@@ -297,7 +297,7 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: AppTheme.lightGrey,
+        color: context.colors.lightGrey,
         borderRadius: BorderRadius.circular(AppSizes.radiusL),
       ),
       child: Column(
@@ -305,13 +305,13 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
           Icon(
             Icons.grade_outlined,
             size: 48,
-            color: AppTheme.greyText.withValues(alpha: 0.5),
+            color: context.colors.greyText.withValues(alpha: 0.5),
           ),
           const SizedBox(height: 12),
           Text(
             'Aún no hay calificaciones para esta materia',
             textAlign: TextAlign.center,
-            style: GoogleFonts.inter(fontSize: 14, color: AppTheme.greyText),
+            style: GoogleFonts.inter(fontSize: 14, color: context.colors.greyText),
           ),
         ],
       ),
@@ -357,7 +357,7 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+            style: TextButton.styleFrom(foregroundColor: context.colors.error),
             child: const Text('Eliminar'),
           ),
         ],
@@ -370,9 +370,9 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
       await context.read<GradeProvider>().deleteGrade(grade.id);
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Calificación eliminada'),
-            backgroundColor: AppTheme.success,
+          SnackBar(
+            content: const Text('Calificación eliminada'),
+            backgroundColor: context.colors.success,
           ),
         );
       }
@@ -381,7 +381,7 @@ class _SubjectGradesScreenState extends State<SubjectGradesScreen> {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Error al eliminar: $e'),
-          backgroundColor: AppTheme.error,
+          backgroundColor: context.colors.error,
         ));
       }
     }
