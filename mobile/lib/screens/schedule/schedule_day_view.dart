@@ -35,7 +35,7 @@ class ScheduleDayView extends StatelessWidget {
     final schedules = provider.schedulesForDay(dia);
 
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -61,14 +61,14 @@ class ScheduleDayView extends StatelessWidget {
               style: GoogleFonts.inter(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.darkText,
+                color: context.colors.darkText,
               ),
             ),
             Text(
               '${schedules.length} clase${schedules.length != 1 ? 's' : ''}',
               style: GoogleFonts.inter(
                 fontSize: 12,
-                color: AppTheme.greyText,
+                color: context.colors.greyText,
               ),
             ),
           ],
@@ -78,7 +78,7 @@ class ScheduleDayView extends StatelessWidget {
           ? _buildEmptyState(context)
           : RefreshIndicator(
               onRefresh: provider.refresh,
-              color: AppTheme.primaryGreen,
+              color: context.colors.primaryGreen,
               child: ListView.builder(
                 padding: const EdgeInsets.fromLTRB(
                   AppSizes.paddingM,
@@ -93,8 +93,8 @@ class ScheduleDayView extends StatelessWidget {
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: () => _navigateToForm(context, prefillDay: dia),
-        backgroundColor: AppTheme.primaryGreen,
-        child: const Icon(Icons.add, color: AppTheme.white),
+        backgroundColor: context.colors.primaryGreen,
+        child: Icon(Icons.add, color: context.colors.white),
       ),
     );
   }
@@ -114,11 +114,11 @@ class ScheduleDayView extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(AppSizes.radiusL),
           border: isConflict
-              ? Border.all(color: AppTheme.error, width: 1.5)
-              : Border.all(color: AppTheme.outlineVariant),
+              ? Border.all(color: context.colors.error, width: 1.5)
+              : Border.all(color: context.colors.outlineVariant),
           boxShadow: AppTheme.softShadow,
         ),
         child: IntrinsicHeight(
@@ -148,17 +148,17 @@ class ScheduleDayView extends StatelessWidget {
                       style: GoogleFonts.inter(
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
-                        color: AppTheme.darkText,
+                        color: context.colors.darkText,
                       ),
                     ),
                     const SizedBox(height: 2),
-                    Container(width: 1, height: 12, color: AppTheme.borderGrey),
+                    Container(width: 1, height: 12, color: context.colors.borderGrey),
                     const SizedBox(height: 2),
                     Text(
                       schedule.horaFinFormatted,
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        color: AppTheme.greyText,
+                        color: context.colors.greyText,
                       ),
                     ),
                   ],
@@ -166,7 +166,7 @@ class ScheduleDayView extends StatelessWidget {
               ),
 
               // Separador vertical
-              Container(width: 1, color: AppTheme.borderGrey),
+              Container(width: 1, color: context.colors.borderGrey),
 
               // Contenido principal
               Expanded(
@@ -186,17 +186,17 @@ class ScheduleDayView extends StatelessWidget {
                               style: GoogleFonts.inter(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w700,
-                                color: AppTheme.darkText,
+                                color: context.colors.darkText,
                               ),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
                           if (isConflict)
-                            const Icon(
+                            Icon(
                               Icons.warning_amber_rounded,
                               size: 16,
-                              color: AppTheme.error,
+                              color: context.colors.error,
                             ),
                         ],
                       ),
@@ -207,7 +207,7 @@ class ScheduleDayView extends StatelessWidget {
                           schedule.materiaProfesor!,
                           style: GoogleFonts.inter(
                             fontSize: 12,
-                            color: AppTheme.greyText,
+                            color: context.colors.greyText,
                           ),
                         ),
                       ],
@@ -216,17 +216,17 @@ class ScheduleDayView extends StatelessWidget {
                         const SizedBox(height: 4),
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               Icons.meeting_room_outlined,
                               size: 12,
-                              color: AppTheme.greyText,
+                              color: context.colors.greyText,
                             ),
                             const SizedBox(width: 4),
                             Text(
                               schedule.aula!,
                               style: GoogleFonts.inter(
                                 fontSize: 12,
-                                color: AppTheme.greyText,
+                                color: context.colors.greyText,
                               ),
                             ),
                           ],
@@ -257,9 +257,9 @@ class ScheduleDayView extends StatelessWidget {
                 ),
               ),
 
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
-                color: AppTheme.greyText,
+                color: context.colors.greyText,
                 size: 20,
               ),
               const SizedBox(width: 8),
@@ -280,7 +280,7 @@ class ScheduleDayView extends StatelessWidget {
           Icon(
             Icons.event_available_outlined,
             size: 72,
-            color: AppTheme.primaryGreen.withValues(alpha: 0.4),
+            color: context.colors.primaryGreen.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
           Text(
@@ -288,7 +288,7 @@ class ScheduleDayView extends StatelessWidget {
             style: GoogleFonts.inter(
               fontSize: 18,
               fontWeight: FontWeight.w700,
-              color: AppTheme.darkText,
+              color: context.colors.darkText,
             ),
           ),
           const SizedBox(height: 8),
@@ -296,7 +296,7 @@ class ScheduleDayView extends StatelessWidget {
             'Toca el botón + para agregar una clase',
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: AppTheme.greyText,
+              color: context.colors.greyText,
             ),
           ),
         ],

@@ -31,7 +31,7 @@ class ClassDetailScreen extends StatelessWidget {
     final color = schedule.colorMateria;
 
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       body: CustomScrollView(
         slivers: [
           _buildSliverAppBar(context, color),
@@ -232,8 +232,8 @@ class ClassDetailScreen extends StatelessWidget {
               icon: const Icon(Icons.edit_outlined),
               label: const Text('Editar clase'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.primaryGreen,
-                foregroundColor: AppTheme.white,
+                backgroundColor: context.colors.primaryGreen,
+                foregroundColor: context.colors.white,
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSizes.radiusM),
@@ -254,8 +254,8 @@ class ClassDetailScreen extends StatelessWidget {
               icon: const Icon(Icons.delete_outline_rounded),
               label: const Text('Eliminar clase'),
               style: OutlinedButton.styleFrom(
-                foregroundColor: AppTheme.error,
-                side: const BorderSide(color: AppTheme.error),
+                foregroundColor: context.colors.error,
+                side: BorderSide(color: context.colors.error),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(AppSizes.radiusM),
                 ),
@@ -302,7 +302,7 @@ class ClassDetailScreen extends StatelessWidget {
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+            style: TextButton.styleFrom(foregroundColor: context.colors.error),
             child: const Text('Eliminar'),
           ),
         ],
@@ -318,7 +318,7 @@ class ClassDetailScreen extends StatelessWidget {
       if (context.mounted) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Error al eliminar: $e'),
-          backgroundColor: AppTheme.error,
+          backgroundColor: context.colors.error,
         ));
       }
     }

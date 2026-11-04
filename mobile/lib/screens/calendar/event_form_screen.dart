@@ -104,10 +104,10 @@ class _EventFormScreenState extends State<EventFormScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppTheme.primaryGreen,
-              onPrimary: AppTheme.white,
-              onSurface: AppTheme.darkText,
+            colorScheme: ColorScheme.light(
+              primary: context.colors.primaryGreen,
+              onPrimary: context.colors.white,
+              onSurface: context.colors.darkText,
             ),
           ),
           child: child!,
@@ -131,10 +131,10 @@ class _EventFormScreenState extends State<EventFormScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppTheme.primaryGreen,
-              onPrimary: AppTheme.white,
-              onSurface: AppTheme.darkText,
+            colorScheme: ColorScheme.light(
+              primary: context.colors.primaryGreen,
+              onPrimary: context.colors.white,
+              onSurface: context.colors.darkText,
             ),
           ),
           child: child!,
@@ -190,7 +190,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
             content: Text(
               isEditing ? 'Evento actualizado' : 'Evento creado',
             ),
-            backgroundColor: AppTheme.success,
+            backgroundColor: context.colors.success,
           ),
         );
       }
@@ -199,7 +199,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppTheme.error,
+            backgroundColor: context.colors.error,
           ),
         );
       }
@@ -213,7 +213,7 @@ class _EventFormScreenState extends State<EventFormScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       appBar: AppBar(
         title: Text(isEditing ? 'Editar evento' : 'Nuevo evento'),
       ),
@@ -250,12 +250,12 @@ class _EventFormScreenState extends State<EventFormScreen> {
               const SizedBox(height: 20),
 
               // Fecha
-              const Text(
+              Text(
                 'Fecha',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                 ),
               ),
               const SizedBox(height: 8),
@@ -264,23 +264,23 @@ class _EventFormScreenState extends State<EventFormScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(16),
                   decoration: BoxDecoration(
-                    color: AppTheme.lightGrey,
+                    color: context.colors.lightGrey,
                     borderRadius: BorderRadius.circular(AppSizes.radiusM),
                   ),
                   child: Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.calendar_today,
-                        color: AppTheme.primaryGreen,
+                        color: context.colors.primaryGreen,
                         size: 20,
                       ),
                       const SizedBox(width: 12),
                       Text(
                         DateFormat('EEEE, d MMMM yyyy', 'es_ES')
                             .format(selectedDate),
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 14,
-                          color: AppTheme.darkText,
+                          color: context.colors.darkText,
                         ),
                       ),
                     ],
@@ -304,14 +304,14 @@ class _EventFormScreenState extends State<EventFormScreen> {
                         }
                       });
                     },
-                    activeColor: AppTheme.primaryGreen,
+                    activeColor: context.colors.primaryGreen,
                   ),
-                  const Text(
+                  Text(
                     'Todo el día',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.darkText,
+                      color: context.colors.darkText,
                     ),
                   ),
                 ],
@@ -326,12 +326,12 @@ class _EventFormScreenState extends State<EventFormScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Hora inicio',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppTheme.darkText,
+                              color: context.colors.darkText,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -340,25 +340,25 @@ class _EventFormScreenState extends State<EventFormScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: AppTheme.lightGrey,
+                                color: context.colors.lightGrey,
                                 borderRadius:
                                     BorderRadius.circular(AppSizes.radiusM),
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.access_time,
-                                    color: AppTheme.primaryGreen,
+                                    color: context.colors.primaryGreen,
                                     size: 20,
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     selectedStartTime?.format(context) ??
                                         '--:--',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 14,
-                                      color: AppTheme.darkText,
+                                      color: context.colors.darkText,
                                     ),
                                   ),
                                 ],
@@ -373,12 +373,12 @@ class _EventFormScreenState extends State<EventFormScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text(
+                          Text(
                             'Hora fin',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
-                              color: AppTheme.darkText,
+                              color: context.colors.darkText,
                             ),
                           ),
                           const SizedBox(height: 8),
@@ -387,24 +387,24 @@ class _EventFormScreenState extends State<EventFormScreen> {
                             child: Container(
                               padding: const EdgeInsets.all(16),
                               decoration: BoxDecoration(
-                                color: AppTheme.lightGrey,
+                                color: context.colors.lightGrey,
                                 borderRadius:
                                     BorderRadius.circular(AppSizes.radiusM),
                               ),
                               child: Row(
                                 mainAxisAlignment: MainAxisAlignment.center,
                                 children: [
-                                  const Icon(
+                                  Icon(
                                     Icons.access_time,
-                                    color: AppTheme.primaryGreen,
+                                    color: context.colors.primaryGreen,
                                     size: 20,
                                   ),
                                   const SizedBox(width: 8),
                                   Text(
                                     selectedEndTime?.format(context) ?? '--:--',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 14,
-                                      color: AppTheme.darkText,
+                                      color: context.colors.darkText,
                                     ),
                                   ),
                                 ],
@@ -430,12 +430,12 @@ class _EventFormScreenState extends State<EventFormScreen> {
               const SizedBox(height: 20),
 
               // Tipo de evento
-              const Text(
+              Text(
                 'Tipo de evento',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                 ),
               ),
               const SizedBox(height: 8),
@@ -453,12 +453,12 @@ class _EventFormScreenState extends State<EventFormScreen> {
                         });
                       }
                     },
-                    selectedColor: AppTheme.primaryGreen,
-                    backgroundColor: AppTheme.lightGrey,
+                    selectedColor: context.colors.primaryGreen,
+                    backgroundColor: context.colors.lightGrey,
                     labelStyle: TextStyle(
                       color: selectedType == entry.key
-                          ? AppTheme.white
-                          : AppTheme.darkText,
+                          ? context.colors.white
+                          : context.colors.darkText,
                       fontWeight: FontWeight.w600,
                     ),
                   );
@@ -468,12 +468,12 @@ class _EventFormScreenState extends State<EventFormScreen> {
               const SizedBox(height: 20),
 
               // Color
-              const Text(
+              Text(
                 'Color',
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                 ),
               ),
               const SizedBox(height: 8),
@@ -498,15 +498,15 @@ class _EventFormScreenState extends State<EventFormScreen> {
                         shape: BoxShape.circle,
                         border: selectedColor == entry.key
                             ? Border.all(
-                                color: AppTheme.darkText,
+                                color: context.colors.darkText,
                                 width: 3,
                               )
                             : null,
                       ),
                       child: selectedColor == entry.key
-                          ? const Icon(
+                          ? Icon(
                               Icons.check,
-                              color: AppTheme.white,
+                              color: context.colors.white,
                             )
                           : null,
                     ),
@@ -526,14 +526,14 @@ class _EventFormScreenState extends State<EventFormScreen> {
                         hasReminder = value ?? false;
                       });
                     },
-                    activeColor: AppTheme.primaryGreen,
+                    activeColor: context.colors.primaryGreen,
                   ),
-                  const Text(
+                  Text(
                     'Recordarme 30 minutos antes',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.darkText,
+                      color: context.colors.darkText,
                     ),
                   ),
                 ],

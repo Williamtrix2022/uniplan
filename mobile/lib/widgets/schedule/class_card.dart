@@ -29,7 +29,7 @@ class ClassCard extends StatelessWidget {
     final baseColor = schedule.colorMateria;
     final bgColor   = baseColor.withValues(alpha: 0.13);
     final border    = isConflict
-        ? Border.all(color: AppTheme.error, width: 1.5)
+        ? Border.all(color: context.colors.error, width: 1.5)
         : Border(left: BorderSide(color: baseColor, width: 4));
 
     return GestureDetector(
@@ -118,7 +118,7 @@ class _CardContent extends StatelessWidget {
                   style: GoogleFonts.inter(
                     fontSize: isOnlyTitle ? 10 : 12,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.darkText,
+                    color: context.colors.darkText,
                     height: 1.2,
                   ),
                   // Solo el nivel "full" tiene espacio garantizado para un
@@ -129,10 +129,10 @@ class _CardContent extends StatelessWidget {
                 ),
               ),
               if (isConflict)
-                const Icon(
+                Icon(
                   Icons.warning_amber_rounded,
                   size: 12,
-                  color: AppTheme.error,
+                  color: context.colors.error,
                 ),
             ],
           ),
@@ -146,10 +146,10 @@ class _CardContent extends StatelessWidget {
               const SizedBox(height: 2),
               Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.room_outlined,
                     size: 10,
-                    color: AppTheme.greyText,
+                    color: context.colors.greyText,
                   ),
                   const SizedBox(width: 2),
                   Flexible(
@@ -157,7 +157,7 @@ class _CardContent extends StatelessWidget {
                       schedule.aula!,
                       style: GoogleFonts.inter(
                         fontSize: 10,
-                        color: AppTheme.greyText,
+                        color: context.colors.greyText,
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -173,7 +173,7 @@ class _CardContent extends StatelessWidget {
               schedule.rangoHorario,
               style: GoogleFonts.inter(
                 fontSize: 10,
-                color: AppTheme.greyText,
+                color: context.colors.greyText,
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
