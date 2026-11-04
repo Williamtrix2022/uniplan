@@ -66,7 +66,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
     final items = provider.notificationsByFilterGroup(_tipoFilter);
 
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -75,13 +75,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             if (provider.error != null) _buildErrorBanner(provider),
             Expanded(
               child: isLoading
-                  ? const Center(
+                  ? Center(
                       child: CircularProgressIndicator(
-                          color: AppTheme.primaryGreen),
+                          color: context.colors.primaryGreen),
                     )
                   : RefreshIndicator(
                       onRefresh: provider.refresh,
-                      color: AppTheme.primaryGreen,
+                      color: context.colors.primaryGreen,
                       child: items.isEmpty
                           ? _buildEmptyState()
                           : _buildList(context, provider, items),
@@ -104,7 +104,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
           IconButton(
             onPressed: () => Navigator.pop(context),
             icon: const Icon(Icons.arrow_back_ios_new_rounded),
-            color: AppTheme.darkText,
+            color: context.colors.darkText,
             iconSize: 20,
             padding: EdgeInsets.zero,
             constraints: const BoxConstraints(),
@@ -116,7 +116,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               style: GoogleFonts.inter(
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
-                color: AppTheme.darkText,
+                color: context.colors.darkText,
               ),
             ),
           ),
@@ -126,7 +126,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
               child: Text(
                 'Marcar todas',
                 style: GoogleFonts.inter(
-                  color: AppTheme.primaryGreen,
+                  color: context.colors.primaryGreen,
                   fontWeight: FontWeight.w600,
                   fontSize: 13,
                 ),
@@ -152,12 +152,12 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
             label: Text(entry.value),
             selected: selected,
             onSelected: (_) => setState(() => _tipoFilter = entry.key),
-            selectedColor: AppTheme.primaryGreen,
-            backgroundColor: AppTheme.lightGrey,
+            selectedColor: context.colors.primaryGreen,
+            backgroundColor: context.colors.lightGrey,
             labelStyle: GoogleFonts.inter(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: selected ? AppTheme.white : AppTheme.darkText,
+              color: selected ? context.colors.white : context.colors.darkText,
             ),
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(999),
@@ -181,22 +181,22 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         vertical: AppSizes.paddingS,
       ),
       decoration: BoxDecoration(
-        color: AppTheme.errorContainer,
+        color: context.colors.errorContainer,
         borderRadius: BorderRadius.circular(AppSizes.radiusM),
       ),
       child: Row(
         children: [
-          const Icon(Icons.error_outline, color: AppTheme.error, size: 18),
+          Icon(Icons.error_outline, color: context.colors.error, size: 18),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               provider.error!,
-              style: GoogleFonts.inter(fontSize: 13, color: AppTheme.error),
+              style: GoogleFonts.inter(fontSize: 13, color: context.colors.error),
             ),
           ),
           GestureDetector(
             onTap: provider.clearError,
-            child: const Icon(Icons.close, color: AppTheme.error, size: 18),
+            child: Icon(Icons.close, color: context.colors.error, size: 18),
           ),
         ],
       ),
@@ -218,7 +218,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                   Icon(
                     Icons.notifications_none_rounded,
                     size: 64,
-                    color: AppTheme.greyText.withValues(alpha: 0.5),
+                    color: context.colors.greyText.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -226,7 +226,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.darkText,
+                      color: context.colors.darkText,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -234,7 +234,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
                     'Aquí verás avisos de tareas, clases y del sistema',
                     textAlign: TextAlign.center,
                     style: GoogleFonts.inter(
-                        fontSize: 14, color: AppTheme.greyText),
+                        fontSize: 14, color: context.colors.greyText),
                   ),
                 ],
               ),
@@ -289,7 +289,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(notification.mensaje),
-          backgroundColor: AppTheme.info,
+          backgroundColor: context.colors.info,
         ),
       );
       return;
@@ -301,9 +301,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         if (!context.mounted) return;
         if (task == null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Esa tarea ya no existe'),
-              backgroundColor: AppTheme.error,
+            SnackBar(
+              content: const Text('Esa tarea ya no existe'),
+              backgroundColor: context.colors.error,
             ),
           );
         } else {
@@ -317,9 +317,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         if (!context.mounted) return;
         if (schedule == null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Esa clase ya no existe'),
-              backgroundColor: AppTheme.error,
+            SnackBar(
+              content: const Text('Esa clase ya no existe'),
+              backgroundColor: context.colors.error,
             ),
           );
         } else {
@@ -333,9 +333,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
         if (!context.mounted) return;
         if (event == null) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Ese evento ya no existe'),
-              backgroundColor: AppTheme.error,
+            SnackBar(
+              content: const Text('Ese evento ya no existe'),
+              backgroundColor: context.colors.error,
             ),
           );
         } else {
@@ -355,7 +355,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('No se pudo abrir: ${e.toString()}'),
-          backgroundColor: AppTheme.error,
+          backgroundColor: context.colors.error,
         ),
       );
       return; // no se borra si falló por red — se puede reintentar

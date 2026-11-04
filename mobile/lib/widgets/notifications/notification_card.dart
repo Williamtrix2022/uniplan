@@ -71,9 +71,9 @@ class NotificationCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: unread ? AppTheme.lightGreen.withValues(alpha: 0.35) : AppTheme.surface,
+          color: unread ? context.colors.lightGreen.withValues(alpha: 0.35) : context.colors.surface,
           borderRadius: BorderRadius.circular(AppSizes.radiusM),
-          border: Border.all(color: AppTheme.outlineVariant),
+          border: Border.all(color: context.colors.outlineVariant),
           boxShadow: AppTheme.softShadow,
         ),
         child: Padding(
@@ -104,7 +104,7 @@ class NotificationCard extends StatelessWidget {
                               fontSize: 15,
                               fontWeight:
                                   unread ? FontWeight.w700 : FontWeight.w600,
-                              color: AppTheme.darkText,
+                              color: context.colors.darkText,
                             ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
@@ -115,8 +115,8 @@ class NotificationCard extends StatelessWidget {
                           Container(
                             width: 8,
                             height: 8,
-                            decoration: const BoxDecoration(
-                              color: AppTheme.primaryGreen,
+                            decoration: BoxDecoration(
+                              color: context.colors.primaryGreen,
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -128,7 +128,7 @@ class NotificationCard extends StatelessWidget {
                       notification.mensaje,
                       style: GoogleFonts.inter(
                         fontSize: 13,
-                        color: AppTheme.greyText,
+                        color: context.colors.greyText,
                       ),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -138,7 +138,7 @@ class NotificationCard extends StatelessWidget {
                       _relativeTime(notification.fechaCreacion),
                       style: GoogleFonts.inter(
                         fontSize: 11,
-                        color: AppTheme.onSurfaceVariant,
+                        color: context.colors.onSurfaceVariant,
                       ),
                     ),
                   ],
@@ -146,19 +146,19 @@ class NotificationCard extends StatelessWidget {
               ),
               if (onDelete != null)
                 PopupMenuButton<String>(
-                  icon: const Icon(Icons.more_vert, color: AppTheme.greyText),
+                  icon: Icon(Icons.more_vert, color: context.colors.greyText),
                   onSelected: (value) {
                     if (value == 'delete') onDelete!();
                   },
-                  itemBuilder: (context) => const [
+                  itemBuilder: (context) => [
                     PopupMenuItem<String>(
                       value: 'delete',
                       child: Row(
                         children: [
                           Icon(Icons.delete_outline,
-                              size: 18, color: AppTheme.error),
-                          SizedBox(width: 8),
-                          Text('Eliminar'),
+                              size: 18, color: context.colors.error),
+                          const SizedBox(width: 8),
+                          const Text('Eliminar'),
                         ],
                       ),
                     ),

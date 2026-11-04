@@ -80,9 +80,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (mounted) {
         Navigator.pop(context);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Perfil actualizado'),
-            backgroundColor: AppTheme.success,
+          SnackBar(
+            content: const Text('Perfil actualizado'),
+            backgroundColor: context.colors.success,
           ),
         );
       }
@@ -91,7 +91,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppTheme.error,
+            backgroundColor: context.colors.error,
           ),
         );
       }
@@ -105,7 +105,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       appBar: AppBar(
         title: const Text('Editar perfil'),
       ),
@@ -126,7 +126,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           width: 100,
                           height: 100,
                           decoration: BoxDecoration(
-                            color: AppTheme.lightGreen,
+                            color: context.colors.lightGreen,
                             shape: BoxShape.circle,
                           ),
                           child: Center(
@@ -134,10 +134,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               _nameController.text.isNotEmpty
                                   ? _nameController.text[0].toUpperCase()
                                   : 'U',
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 40,
                                 fontWeight: FontWeight.bold,
-                                color: AppTheme.primaryGreen,
+                                color: context.colors.primaryGreen,
                               ),
                             ),
                           ),
@@ -147,13 +147,13 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           right: 0,
                           child: Container(
                             padding: const EdgeInsets.all(8),
-                            decoration: const BoxDecoration(
-                              color: AppTheme.primaryGreen,
+                            decoration: BoxDecoration(
+                              color: context.colors.primaryGreen,
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(
+                            child: Icon(
                               Icons.camera_alt,
-                              color: AppTheme.white,
+                              color: context.colors.white,
                               size: 20,
                             ),
                           ),

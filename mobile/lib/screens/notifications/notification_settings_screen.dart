@@ -74,15 +74,15 @@ class _NotificationSettingsScreenState
     _syncDraftFromProvider(provider.preferences);
 
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: context.colors.surface,
       appBar: AppBar(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: context.colors.surface,
         elevation: 0,
         title: const Text('Notificaciones'),
       ),
       body: provider.isPreferencesLoading && !provider.isInitialized
-          ? const Center(
-              child: CircularProgressIndicator(color: AppTheme.primaryGreen),
+          ? Center(
+              child: CircularProgressIndicator(color: context.colors.primaryGreen),
             )
           : SingleChildScrollView(
               padding: const EdgeInsets.all(AppSizes.paddingM),
@@ -124,37 +124,37 @@ class _NotificationSettingsScreenState
     return Container(
       padding: const EdgeInsets.all(AppSizes.paddingM),
       decoration: BoxDecoration(
-        color: AppTheme.warning.withValues(alpha: 0.1),
+        color: context.colors.warning.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(AppSizes.radiusM),
-        border: Border.all(color: AppTheme.warning),
+        border: Border.all(color: context.colors.warning),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
-              Icon(Icons.schedule, color: AppTheme.warning, size: 20),
-              SizedBox(width: 8),
+              Icon(Icons.schedule, color: context.colors.warning, size: 20),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'Los recordatorios pueden llegar tarde',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.darkText,
+                    color: context.colors.darkText,
                   ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 8),
-          const Text(
+          Text(
             'Android no está permitiendo alarmas exactas para Uniplan. Tus '
             'avisos van a seguir llegando, pero con algunos minutos de '
             'diferencia respecto a la hora que programaste.',
             style: TextStyle(
               fontSize: 13,
-              color: AppTheme.onSurfaceVariant,
+              color: context.colors.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 12),
@@ -165,12 +165,12 @@ class _NotificationSettingsScreenState
               minimumSize: const Size(0, 32),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text(
+            child: Text(
               'Permitir alarmas exactas',
               style: TextStyle(
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.primaryGreen,
+                color: context.colors.primaryGreen,
               ),
             ),
           ),
@@ -182,10 +182,10 @@ class _NotificationSettingsScreenState
   Widget _buildSectionLabel(String label) {
     return Text(
       label,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.bold,
-        color: AppTheme.onSurfaceVariant,
+        color: context.colors.onSurfaceVariant,
         letterSpacing: 1.2,
       ),
     );
@@ -194,9 +194,9 @@ class _NotificationSettingsScreenState
   Widget _card(List<Widget> children) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.outlineVariant),
+        border: Border.all(color: context.colors.outlineVariant),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(children: children),
@@ -212,7 +212,7 @@ class _NotificationSettingsScreenState
         value: _draft.notifTareas,
         onChanged: (v) => setState(() => _draft = _draft.copyWith(notifTareas: v)),
       ),
-      const Divider(height: 1, color: AppTheme.surfaceContainerHighest),
+      Divider(height: 1, color: context.colors.surfaceContainerHighest),
       _buildSwitchItem(
         icon: Icons.school_outlined,
         title: 'Clases',
@@ -220,7 +220,7 @@ class _NotificationSettingsScreenState
         value: _draft.notifClases,
         onChanged: (v) => setState(() => _draft = _draft.copyWith(notifClases: v)),
       ),
-      const Divider(height: 1, color: AppTheme.surfaceContainerHighest),
+      Divider(height: 1, color: context.colors.surfaceContainerHighest),
       _buildSwitchItem(
         icon: Icons.notifications_outlined,
         title: 'Generales',
@@ -229,7 +229,7 @@ class _NotificationSettingsScreenState
         onChanged: (v) =>
             setState(() => _draft = _draft.copyWith(notifGenerales: v)),
       ),
-      const Divider(height: 1, color: AppTheme.surfaceContainerHighest),
+      Divider(height: 1, color: context.colors.surfaceContainerHighest),
       _buildSwitchItem(
         icon: Icons.volume_up_outlined,
         title: 'Sonido',
@@ -255,10 +255,10 @@ class _NotificationSettingsScreenState
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: AppTheme.surfaceContainer,
+              color: context.colors.surfaceContainer,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(icon, color: AppTheme.primaryGreen, size: 22),
+            child: Icon(icon, color: context.colors.primaryGreen, size: 22),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -267,18 +267,18 @@ class _NotificationSettingsScreenState
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.darkText,
+                    color: context.colors.darkText,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.onSurfaceVariant,
+                    color: context.colors.onSurfaceVariant,
                   ),
                 ),
               ],
@@ -292,18 +292,18 @@ class _NotificationSettingsScreenState
             // cuando varios switches están activos a la vez.
             thumbColor: WidgetStateProperty.resolveWith(
               (states) => states.contains(WidgetState.selected)
-                  ? AppTheme.primaryGreen
+                  ? context.colors.primaryGreen
                   : null,
             ),
             trackColor: WidgetStateProperty.resolveWith(
               (states) => states.contains(WidgetState.selected)
-                  ? AppTheme.lightGreen
-                  : AppTheme.surfaceContainer,
+                  ? context.colors.lightGreen
+                  : context.colors.surfaceContainer,
             ),
             trackOutlineColor: WidgetStateProperty.resolveWith(
               (states) => states.contains(WidgetState.selected)
                   ? Colors.transparent
-                  : AppTheme.outlineVariant,
+                  : context.colors.outlineVariant,
             ),
           ),
         ],
@@ -359,16 +359,16 @@ class _NotificationSettingsScreenState
         selected: selected,
         onSelected: (_) => onSelected(),
         showCheckmark: false,
-        selectedColor: AppTheme.lightGreen,
-        backgroundColor: AppTheme.surfaceContainer,
+        selectedColor: context.colors.lightGreen,
+        backgroundColor: context.colors.surfaceContainer,
         labelStyle: TextStyle(
           fontWeight: FontWeight.w600,
-          color: selected ? AppTheme.primaryGreen : AppTheme.darkText,
+          color: selected ? context.colors.primaryGreen : context.colors.darkText,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppSizes.radiusS),
           side: BorderSide(
-            color: selected ? AppTheme.primaryGreen : AppTheme.outlineVariant,
+            color: selected ? context.colors.primaryGreen : context.colors.outlineVariant,
           ),
         ),
       );
@@ -448,13 +448,13 @@ class _NotificationSettingsScreenState
         },
       ),
       if (activo) ...[
-        const Divider(height: 1, color: AppTheme.surfaceContainerHighest),
+        Divider(height: 1, color: context.colors.surfaceContainerHighest),
         _buildTimePickerItem(
           label: 'Desde',
           value: _draft.horaSilencioInicio!,
           onTap: () => _pickQuietHour(isStart: true),
         ),
-        const Divider(height: 1, color: AppTheme.surfaceContainerHighest),
+        Divider(height: 1, color: context.colors.surfaceContainerHighest),
         _buildTimePickerItem(
           label: 'Hasta',
           value: _draft.horaSilencioFin!,
@@ -484,14 +484,14 @@ class _NotificationSettingsScreenState
               children: [
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.primaryGreen,
+                    color: context.colors.primaryGreen,
                   ),
                 ),
                 const SizedBox(width: 4),
-                const Icon(Icons.chevron_right,
-                    color: AppTheme.onSurfaceVariant, size: 20),
+                Icon(Icons.chevron_right,
+                    color: context.colors.onSurfaceVariant, size: 20),
               ],
             ),
           ],
@@ -545,9 +545,9 @@ class _NotificationSettingsScreenState
 
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Preferencias guardadas'),
-          backgroundColor: AppTheme.success,
+        SnackBar(
+          content: const Text('Preferencias guardadas'),
+          backgroundColor: context.colors.success,
         ),
       );
     } catch (e) {
@@ -555,7 +555,7 @@ class _NotificationSettingsScreenState
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
-          backgroundColor: AppTheme.error,
+          backgroundColor: context.colors.error,
         ),
       );
     } finally {

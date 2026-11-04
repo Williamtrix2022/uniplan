@@ -41,7 +41,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(response['message'] ?? 'Contraseña actualizada'),
-            backgroundColor: AppTheme.success,
+            backgroundColor: context.colors.success,
           ),
         );
         Navigator.pop(context);
@@ -51,7 +51,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: AppTheme.error,
+            backgroundColor: context.colors.error,
           ),
         );
       }
@@ -65,7 +65,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       appBar: AppBar(title: const Text('Cambiar contraseña')),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSizes.paddingL),

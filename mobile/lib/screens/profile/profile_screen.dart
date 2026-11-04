@@ -70,7 +70,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+            style: TextButton.styleFrom(foregroundColor: context.colors.error),
             child: const Text('Cerrar sesión'),
           ),
         ],
@@ -91,15 +91,15 @@ class _ProfileScreenState extends State<ProfileScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.surface,
+      backgroundColor: context.colors.surface,
       appBar: AppBar(
-        backgroundColor: AppTheme.surface,
+        backgroundColor: context.colors.surface,
         elevation: 0,
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1),
           child: Container(
             height: 1,
-            color: AppTheme.surfaceContainerHighest,
+            color: context.colors.surfaceContainerHighest,
           ),
         ),
         leading: IconButton(
@@ -111,10 +111,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
             UserAvatar(name: _userName, size: 40),
             const SizedBox(width: 12),
             // Título "Agenda"
-            const Text(
+            Text(
               'Agenda',
               style: TextStyle(
-                color: AppTheme.primaryGreen,
+                color: context.colors.primaryGreen,
                 fontSize: 20,
                 fontWeight: FontWeight.w600,
               ),
@@ -123,7 +123,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
         ),
         actions: [
           IconButton(
-            icon: const Icon(Icons.edit, color: AppTheme.darkText),
+            icon: Icon(Icons.edit, color: context.colors.darkText),
             onPressed: () {
               Navigator.push(
                 context,
@@ -139,7 +139,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
           ? const Center(child: CircularProgressIndicator())
           : RefreshIndicator(
               onRefresh: _loadProfileData,
-              color: AppTheme.primaryGreen,
+              color: context.colors.primaryGreen,
               child: SingleChildScrollView(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 physics: const AlwaysScrollableScrollPhysics(),
@@ -191,7 +191,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 name: nombre,
                 size: 96,
                 fallbackInitial: 'U',
-                borderColor: AppTheme.surface,
+                borderColor: context.colors.surface,
                 borderWidth: 4,
                 boxShadow: AppTheme.cardShadow,
               ),
@@ -200,14 +200,14 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: AppTheme.primaryGreen,
+                  color: context.colors.primaryGreen,
                   shape: BoxShape.circle,
-                  border: Border.all(color: AppTheme.surface, width: 2),
+                  border: Border.all(color: context.colors.surface, width: 2),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.verified,
                   size: 18,
-                  color: AppTheme.white,
+                  color: context.colors.white,
                 ),
               ),
             ],
@@ -216,19 +216,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
           // Nombre
           Text(
             nombre,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: AppTheme.darkText,
+              color: context.colors.darkText,
             ),
           ),
           const SizedBox(height: 4),
           // Email
           Text(
             correo,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppTheme.onSurfaceVariant,
+              color: context.colors.onSurfaceVariant,
             ),
           ),
           const SizedBox(height: 12),
@@ -236,16 +236,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
             decoration: BoxDecoration(
-              color: AppTheme.surfaceContainerHigh,
+              color: context.colors.surfaceContainerHigh,
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppTheme.outlineVariant),
+              border: Border.all(color: context.colors.outlineVariant),
             ),
             child: Text(
               carrera,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 12,
                 fontWeight: FontWeight.w500,
-                color: AppTheme.darkText,
+                color: context.colors.darkText,
               ),
             ),
           ),
@@ -257,10 +257,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildSectionLabel(String label) {
     return Text(
       label,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 12,
         fontWeight: FontWeight.bold,
-        color: AppTheme.onSurfaceVariant,
+        color: context.colors.onSurfaceVariant,
         letterSpacing: 1.2,
       ),
     );
@@ -283,7 +283,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             icon: Icons.task_alt,
             value: '$completadas/$totalTareas',
             label: 'Tareas',
-            color: AppTheme.primaryFixed,
+            color: context.colors.primaryFixed,
           ),
         ),
         const SizedBox(width: 12),
@@ -292,7 +292,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             icon: Icons.timer_outlined,
             value: '$totalSesiones',
             label: 'Pomodoros',
-            color: AppTheme.tertiaryFixed,
+            color: context.colors.tertiaryFixed,
           ),
         ),
         const SizedBox(width: 12),
@@ -301,7 +301,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             icon: Icons.schedule,
             value: '${minutosEstudiados}m',
             label: 'Estudiados',
-            color: AppTheme.secondaryFixed,
+            color: context.colors.secondaryFixed,
           ),
         ),
       ],
@@ -317,9 +317,9 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.outlineVariant),
+        border: Border.all(color: context.colors.outlineVariant),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
@@ -331,23 +331,23 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: color,
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, size: 20, color: AppTheme.darkText),
+            child: Icon(icon, size: 20, color: context.colors.darkText),
           ),
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.bold,
-              color: AppTheme.darkText,
+              color: context.colors.darkText,
             ),
           ),
           const SizedBox(height: 4),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 12,
-              color: AppTheme.onSurfaceVariant,
+              color: context.colors.onSurfaceVariant,
             ),
           ),
         ],
@@ -358,16 +358,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildSettingsSection() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.outlineVariant),
+        border: Border.all(color: context.colors.outlineVariant),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
         children: [
           _buildMenuItem(
             icon: Icons.timer,
-            iconColor: AppTheme.primaryGreen,
+            iconColor: context.colors.primaryGreen,
             title: 'Pomodoro Config',
             subtitle: 'Ajusta tiempos de trabajo y descanso',
             onTap: () {
@@ -379,10 +379,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
           ),
-          const Divider(height: 1, color: AppTheme.surfaceContainerHighest),
+          Divider(height: 1, color: context.colors.surfaceContainerHighest),
           _buildMenuItem(
             icon: Icons.lock_outline,
-            iconColor: AppTheme.primaryGreen,
+            iconColor: context.colors.primaryGreen,
             title: 'Cambiar contraseña',
             subtitle: 'Actualiza tu contraseña desde tu perfil',
             onTap: () {
@@ -394,10 +394,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
           ),
-          const Divider(height: 1, color: AppTheme.surfaceContainerHighest),
+          Divider(height: 1, color: context.colors.surfaceContainerHighest),
           _buildMenuItem(
             icon: Icons.notifications_outlined,
-            iconColor: AppTheme.primaryGreen,
+            iconColor: context.colors.primaryGreen,
             title: 'Notificaciones',
             subtitle: 'Gestiona tus notificaciones',
             onTap: () {
@@ -409,10 +409,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
           ),
-          const Divider(height: 1, color: AppTheme.surfaceContainerHighest),
+          Divider(height: 1, color: context.colors.surfaceContainerHighest),
           _buildMenuItem(
             icon: Icons.palette_outlined,
-            iconColor: AppTheme.primaryGreen,
+            iconColor: context.colors.primaryGreen,
             title: 'Temas',
             subtitle: 'Personaliza la apariencia',
             onTap: () {
@@ -432,16 +432,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
   Widget _buildOtherOptions() {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: AppTheme.outlineVariant),
+        border: Border.all(color: context.colors.outlineVariant),
         boxShadow: AppTheme.softShadow,
       ),
       child: Column(
         children: [
           _buildMenuItem(
             icon: Icons.help_outline,
-            iconColor: AppTheme.primaryGreen,
+            iconColor: context.colors.primaryGreen,
             title: 'Ayuda',
             subtitle: 'Preguntas frecuentes y soporte',
             onTap: () {
@@ -453,10 +453,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
           ),
-          const Divider(height: 1, color: AppTheme.surfaceContainerHighest),
+          Divider(height: 1, color: context.colors.surfaceContainerHighest),
           _buildMenuItem(
             icon: Icons.description_outlined,
-            iconColor: AppTheme.primaryGreen,
+            iconColor: context.colors.primaryGreen,
             title: 'Términos y condiciones',
             subtitle: 'Política de datos y uso del servicio',
             onTap: () {
@@ -465,10 +465,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
           ),
-          const Divider(height: 1, color: AppTheme.surfaceContainerHighest),
+          Divider(height: 1, color: context.colors.surfaceContainerHighest),
           _buildMenuItem(
             icon: Icons.info_outline,
-            iconColor: AppTheme.primaryGreen,
+            iconColor: context.colors.primaryGreen,
             title: 'Acerca de',
             subtitle: 'Versión 1.0.0',
             onTap: () {
@@ -493,7 +493,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               );
             },
           ),
-          const Divider(height: 1, color: AppTheme.surfaceContainerHighest),
+          Divider(height: 1, color: context.colors.surfaceContainerHighest),
           // Cerrar sesión
           InkWell(
             onTap: _logout,
@@ -505,12 +505,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     width: 40,
                     height: 40,
                     decoration: BoxDecoration(
-                      color: AppTheme.errorContainer,
+                      color: context.colors.errorContainer,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       Icons.logout,
-                      color: AppTheme.error,
+                      color: context.colors.error,
                       size: 24,
                     ),
                   ),
@@ -521,18 +521,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       children: [
                         Text(
                           'Cerrar sesión',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.error,
+                            color: context.colors.error,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           '',
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 12,
-                            color: AppTheme.error,
+                            color: context.colors.error,
                           ),
                         ),
                       ],
@@ -540,7 +540,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                   Icon(
                     Icons.chevron_right,
-                    color: AppTheme.onSurfaceVariant,
+                    color: context.colors.onSurfaceVariant,
                     size: 20,
                   ),
                 ],
@@ -569,7 +569,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: AppTheme.surfaceContainer,
+                color: context.colors.surfaceContainer,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(icon, color: iconColor, size: 24),
@@ -581,18 +581,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.darkText,
+                      color: context.colors.darkText,
                     ),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
-                      color: AppTheme.onSurfaceVariant,
+                      color: context.colors.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -600,7 +600,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ),
             Icon(
               Icons.chevron_right,
-              color: AppTheme.onSurfaceVariant,
+              color: context.colors.onSurfaceVariant,
               size: 20,
             ),
           ],

@@ -143,9 +143,9 @@ class _HelpScreenState extends State<HelpScreen> {
       if (mounted) {
         _messageController.clear();
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('¡Gracias! Tu reporte fue enviado.'),
-            backgroundColor: AppTheme.success,
+          SnackBar(
+            content: const Text('¡Gracias! Tu reporte fue enviado.'),
+            backgroundColor: context.colors.success,
           ),
         );
       }
@@ -154,7 +154,7 @@ class _HelpScreenState extends State<HelpScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: AppTheme.error,
+            backgroundColor: context.colors.error,
           ),
         );
       }
@@ -168,7 +168,7 @@ class _HelpScreenState extends State<HelpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       appBar: AppBar(title: const Text('Ayuda')),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -176,18 +176,18 @@ class _HelpScreenState extends State<HelpScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Guía rápida',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 '¿Quieres volver a ver la introducción a Uniplan?',
-                style: TextStyle(fontSize: 14, color: AppTheme.greyText),
+                style: TextStyle(fontSize: 14, color: context.colors.greyText),
               ),
               const SizedBox(height: 12),
               OutlinedButton.icon(
@@ -201,8 +201,8 @@ class _HelpScreenState extends State<HelpScreen> {
                 icon: const Icon(Icons.play_circle_outline),
                 label: const Text('Ver introducción'),
                 style: OutlinedButton.styleFrom(
-                  foregroundColor: AppTheme.primaryGreen,
-                  side: const BorderSide(color: AppTheme.primaryGreen),
+                  foregroundColor: context.colors.primaryGreen,
+                  side: BorderSide(color: context.colors.primaryGreen),
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(AppSizes.radiusM),
@@ -212,32 +212,32 @@ class _HelpScreenState extends State<HelpScreen> {
 
               const SizedBox(height: 32),
 
-              const Text(
+              Text(
                 'Preguntas frecuentes',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                 ),
               ),
               const SizedBox(height: 12),
               ..._faqSections.map((section) => Container(
                     margin: const EdgeInsets.only(bottom: 12),
                     decoration: BoxDecoration(
-                      color: AppTheme.surface,
+                      color: context.colors.surface,
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppTheme.outlineVariant),
+                      border: Border.all(color: context.colors.outlineVariant),
                     ),
                     child: Theme(
                       data: Theme.of(context)
                           .copyWith(dividerColor: Colors.transparent),
                       child: ExpansionTile(
-                        leading: Icon(section.icon, color: AppTheme.primaryGreen),
+                        leading: Icon(section.icon, color: context.colors.primaryGreen),
                         title: Text(
                           section.title,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.darkText,
+                            color: context.colors.darkText,
                           ),
                         ),
                         children: section.items
@@ -250,18 +250,18 @@ class _HelpScreenState extends State<HelpScreen> {
                                     children: [
                                       Text(
                                         faq.question,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontWeight: FontWeight.w600,
                                           fontSize: 13,
-                                          color: AppTheme.darkText,
+                                          color: context.colors.darkText,
                                         ),
                                       ),
                                       const SizedBox(height: 4),
                                       Text(
                                         faq.answer,
-                                        style: const TextStyle(
+                                        style: TextStyle(
                                           fontSize: 13,
-                                          color: AppTheme.greyText,
+                                          color: context.colors.greyText,
                                           height: 1.4,
                                         ),
                                       ),
@@ -275,19 +275,19 @@ class _HelpScreenState extends State<HelpScreen> {
 
               const SizedBox(height: 24),
 
-              const Text(
+              Text(
                 'Reportar un problema o sugerencia',
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 '¿Encontraste un error o tienes una idea para mejorar '
                 'Uniplan? Cuéntanos.',
-                style: TextStyle(fontSize: 14, color: AppTheme.greyText),
+                style: TextStyle(fontSize: 14, color: context.colors.greyText),
               ),
               const SizedBox(height: 16),
 
@@ -296,12 +296,12 @@ class _HelpScreenState extends State<HelpScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
+                    Text(
                       'Módulo',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.darkText,
+                        color: context.colors.darkText,
                       ),
                     ),
                     const SizedBox(height: 8),
@@ -321,12 +321,12 @@ class _HelpScreenState extends State<HelpScreen> {
                       },
                     ),
                     const SizedBox(height: 20),
-                    const Text(
+                    Text(
                       'Mensaje',
                       style: TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.darkText,
+                        color: context.colors.darkText,
                       ),
                     ),
                     const SizedBox(height: 8),
