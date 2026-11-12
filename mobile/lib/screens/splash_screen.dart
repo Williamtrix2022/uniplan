@@ -6,7 +6,11 @@ import 'package:flutter/material.dart';
 
 import 'dart:async';
 import '../config/theme.dart';
+import '../services/auth_service.dart';
+import '../services/onboarding_service.dart';
 import 'auth/login_screen.dart';
+import 'home/home_screen.dart';
+import 'onboarding/onboarding_screen.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -54,14 +58,30 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   Future<void> _initializeApp() async {
-    // Esperar animación
-    await Future.delayed(const Duration(milliseconds: 2500));
+    final authService = AuthService();
+    final onboardingService = OnboardingService();
+
+    // Esperar animación, sesión guardada y flag de onboarding en paralelo.
+    final results = await Future.wait([
+      Future.delayed(const Duration(milliseconds: 2500)),
+      authService.loadToken().then((_) => authService.isAuthenticated()),
+      onboardingService.isCompleted(),
+    ]);
+    final isAuthenticated = results[1] as bool;
+    final onboardingCompleted = results[2] as bool;
 
     if (mounted) {
+      Widget nextScreen;
+      if (!onboardingCompleted) {
+        nextScreen = const OnboardingScreen();
+      } else if (isAuthenticated) {
+        nextScreen = const HomeScreen();
+      } else {
+        nextScreen = const LoginScreen();
+      }
+
       Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => const LoginScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => nextScreen),
       );
     }
   }
