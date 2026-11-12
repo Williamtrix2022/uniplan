@@ -306,7 +306,7 @@ class _HelpScreenState extends State<HelpScreen> {
                     ),
                     const SizedBox(height: 8),
                     DropdownButtonFormField<String>(
-                      initialValue: _selectedModulo,
+                      value: _selectedModulo,
                       isExpanded: true,
                       items: _moduloOptions
                           .map((option) => DropdownMenuItem(
