@@ -74,6 +74,7 @@ const dashboardRoutes = require('./routes/dashboardRoutes');
 const scheduleRoutes = require('./routes/scheduleRoutes');
 const gradeRoutes = require('./routes/gradeRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const reportRoutes = require('./routes/reportRoutes');
 
 
 // 7. Logger simple de peticiones
@@ -104,7 +105,8 @@ app.get('/', (req, res) => {
       dashboard: '/api/dashboard',
       schedules: '/api/schedules',
       grades: '/api/grades',
-      notifications: '/api/notifications'
+      notifications: '/api/notifications',
+      reports: '/api/reports'
     },
     documentation: 'Ver README.md para más información'
   });
@@ -122,6 +124,7 @@ app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/schedules', scheduleRoutes);
 app.use('/api/grades', gradeRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/reports', reportRoutes);
 
 // Health check - Para verificar que el servidor funciona
 app.get('/api/health', (req, res) => {

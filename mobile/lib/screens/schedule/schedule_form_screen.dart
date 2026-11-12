@@ -77,10 +77,10 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
       initialTime: initial,
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.light(
-            primary: AppTheme.primaryGreen,
-            onPrimary: AppTheme.white,
-            onSurface: AppTheme.darkText,
+          colorScheme: ColorScheme.light(
+            primary: context.colors.primaryGreen,
+            onPrimary: context.colors.white,
+            onSurface: context.colors.darkText,
           ),
         ),
         child: child!,
@@ -155,7 +155,7 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
       Navigator.pop(context, true);
       messenger?.showSnackBar(SnackBar(
         content: Text(_isEditing ? 'Clase actualizada' : 'Clase agregada'),
-        backgroundColor: AppTheme.success,
+        backgroundColor: context.colors.success,
       ));
     } on ScheduleConflictException catch (e) {
       if (!mounted) return;
@@ -177,7 +177,7 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
       builder: (ctx) => AlertDialog(
         title: Row(
           children: [
-            const Icon(Icons.warning_amber_rounded, color: AppTheme.warning),
+            Icon(Icons.warning_amber_rounded, color: context.colors.warning),
             const SizedBox(width: 8),
             Text(
               'Conflicto de horario',
@@ -194,7 +194,7 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
           children: [
             Text(
               'Este bloque se superpone con:',
-              style: GoogleFonts.inter(fontSize: 14, color: AppTheme.greyText),
+              style: GoogleFonts.inter(fontSize: 14, color: context.colors.greyText),
             ),
             const SizedBox(height: 8),
             ...e.conflicts.map(
@@ -220,14 +220,14 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 13,
                               fontWeight: FontWeight.w600,
-                              color: AppTheme.darkText,
+                              color: context.colors.darkText,
                             ),
                           ),
                           Text(
                             '${c.dia} · ${c.rangoHorario}',
                             style: GoogleFonts.inter(
                               fontSize: 12,
-                              color: AppTheme.greyText,
+                              color: context.colors.greyText,
                             ),
                           ),
                         ],
@@ -240,7 +240,7 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
             const SizedBox(height: 8),
             Text(
               '¿Deseas guardar igualmente?',
-              style: GoogleFonts.inter(fontSize: 14, color: AppTheme.darkText),
+              style: GoogleFonts.inter(fontSize: 14, color: context.colors.darkText),
             ),
           ],
         ),
@@ -252,8 +252,8 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
           ElevatedButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.warning,
-              foregroundColor: AppTheme.white,
+              backgroundColor: context.colors.warning,
+              foregroundColor: context.colors.white,
             ),
             child: const Text('Guardar de todos modos'),
           ),
@@ -271,7 +271,7 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
   void _showSnack(String msg, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: isError ? AppTheme.error : AppTheme.success,
+      backgroundColor: isError ? context.colors.error : context.colors.success,
     ));
   }
 
@@ -286,7 +286,7 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -306,7 +306,7 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
         title: Text(
           _isEditing ? 'Editar clase' : 'Nueva clase',
           style: theme.textTheme.headlineMedium?.copyWith(
-            color: AppTheme.darkText,
+            color: context.colors.darkText,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -357,9 +357,9 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
                         ),
                       ),
                       const SizedBox(width: 12),
-                      const Icon(
+                      Icon(
                         Icons.arrow_forward,
-                        color: AppTheme.greyText,
+                        color: context.colors.greyText,
                         size: 20,
                       ),
                       const SizedBox(width: 12),
@@ -403,12 +403,12 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
                         ),
                         focusedBorder: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(AppSizes.radiusM),
-                          borderSide: const BorderSide(
-                              color: AppTheme.primaryGreen, width: 1.5),
+                          borderSide: BorderSide(
+                              color: context.colors.primaryGreen, width: 1.5),
                         ),
-                        prefixIcon: const Icon(
+                        prefixIcon: Icon(
                           Icons.meeting_room_outlined,
-                          color: AppTheme.greyText,
+                          color: context.colors.greyText,
                           size: 20,
                         ),
                       ),
@@ -435,19 +435,19 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
                     child: ElevatedButton(
                       onPressed: _isSaving ? null : () => _save(),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryGreen,
-                        foregroundColor: AppTheme.white,
+                        backgroundColor: context.colors.primaryGreen,
+                        foregroundColor: context.colors.white,
                         elevation: 2,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(AppSizes.radiusM),
                         ),
                       ),
                       child: _isSaving
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 22,
                               height: 22,
                               child: CircularProgressIndicator(
-                                color: AppTheme.white,
+                                color: context.colors.white,
                                 strokeWidth: 2,
                               ),
                             )
@@ -471,12 +471,12 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
                           borderRadius: BorderRadius.circular(AppSizes.radiusM),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Cancelar',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.darkText,
+                          color: context.colors.darkText,
                         ),
                       ),
                     ),
@@ -511,7 +511,7 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
     final subjects = subjectProvider.subjects;
 
     if (subjectProvider.isLoading && subjects.isEmpty) {
-      return const LinearProgressIndicator(color: AppTheme.primaryGreen);
+      return LinearProgressIndicator(color: context.colors.primaryGreen);
     }
 
     if (subjects.isEmpty) {
@@ -527,7 +527,7 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
           children: [
             Text(
               'Todavía no tenés materias creadas.',
-              style: GoogleFonts.inter(fontSize: 13, color: AppTheme.greyText),
+              style: GoogleFonts.inter(fontSize: 13, color: context.colors.greyText),
             ),
             const SizedBox(height: 12),
             OutlinedButton.icon(
@@ -557,10 +557,10 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
           value: _selectedSubjectId,
           isExpanded: true,
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          icon: const Padding(
-            padding: EdgeInsets.only(right: 4),
+          icon: Padding(
+            padding: const EdgeInsets.only(right: 4),
             child: Icon(Icons.keyboard_arrow_down_rounded,
-                color: AppTheme.greyText),
+                color: context.colors.greyText),
           ),
           selectedItemBuilder: (_) => subjects
               .map((s) => _buildSubjectRow(s, colorScheme))
@@ -583,7 +583,7 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
       final clean = subject.color.replaceFirst('#', '');
       subjectColor = Color(int.parse('FF$clean', radix: 16));
     } catch (_) {
-      subjectColor = AppTheme.primaryGreen;
+      subjectColor = context.colors.primaryGreen;
     }
 
     return Row(
@@ -604,14 +604,14 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
             style: GoogleFonts.inter(
               fontSize: 14,
               fontWeight: FontWeight.w500,
-              color: AppTheme.darkText,
+              color: context.colors.darkText,
             ),
           ),
         ),
         if (subject.profesor != null && subject.profesor!.isNotEmpty)
           Text(
             subject.profesor!,
-            style: GoogleFonts.inter(fontSize: 12, color: AppTheme.greyText),
+            style: GoogleFonts.inter(fontSize: 12, color: context.colors.greyText),
             overflow: TextOverflow.ellipsis,
           ),
       ],
@@ -640,22 +640,22 @@ class _ScheduleFormScreenState extends State<ScheduleFormScreen> {
               label,
               style: GoogleFonts.inter(
                 fontSize: 11,
-                color: AppTheme.greyText,
+                color: context.colors.greyText,
                 fontWeight: FontWeight.w500,
               ),
             ),
             const SizedBox(height: 4),
             Row(
               children: [
-                const Icon(Icons.access_time_rounded,
-                    color: AppTheme.primaryGreen, size: 18),
+                Icon(Icons.access_time_rounded,
+                    color: context.colors.primaryGreen, size: 18),
                 const SizedBox(width: 6),
                 Text(
                   _formatTimeOfDay(time),
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.darkText,
+                    color: context.colors.darkText,
                   ),
                 ),
               ],

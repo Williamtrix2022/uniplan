@@ -149,7 +149,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error: ${e.toString()}'),
-          backgroundColor: AppTheme.error,
+          backgroundColor: context.colors.error,
         ),
       );
     }
@@ -256,13 +256,13 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       body: SafeArea(
         child: isLoading
             ? const Center(child: CircularProgressIndicator())
             : RefreshIndicator(
                 onRefresh: _onPullToRefresh,
-                color: AppTheme.primaryGreen,
+                color: context.colors.primaryGreen,
                 child: SingleChildScrollView(
                   physics: const AlwaysScrollableScrollPhysics(
                     parent: ClampingScrollPhysics(),
@@ -295,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             style: GoogleFonts.inter(
                               fontSize: 22,
                               fontWeight: FontWeight.bold,
-                              color: AppTheme.darkText,
+                              color: context.colors.darkText,
                             ),
                           ),
                           TextButton(
@@ -310,7 +310,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             child: Text(
                               'Ver todo →',
                               style: GoogleFonts.inter(
-                                color: AppTheme.primaryGreen,
+                                color: context.colors.primaryGreen,
                                 fontWeight: FontWeight.w600,
                                 fontSize: 13,
                               ),
@@ -339,8 +339,8 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ).then((_) => _loadDashboardData());
         },
-        backgroundColor: AppTheme.primaryGreen,
-        child: const Icon(Icons.add, color: AppTheme.white),
+        backgroundColor: context.colors.primaryGreen,
+        child: Icon(Icons.add, color: context.colors.white),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerFloat,
       bottomNavigationBar: BottomNavBar(
@@ -367,7 +367,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                 ),
               ),
               const SizedBox(height: 4),
@@ -376,7 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 style: GoogleFonts.inter(
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                 ),
               ),
               const SizedBox(height: 4),
@@ -384,7 +384,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 _getFormattedDate(),
                 style: GoogleFonts.inter(
                   fontSize: 14,
-                  color: AppTheme.onSurfaceVariant,
+                  color: context.colors.onSurfaceVariant,
                 ),
               ),
             ],
@@ -429,7 +429,7 @@ class _HomeScreenState extends State<HomeScreen> {
           },
           icon: const Icon(Icons.notifications_outlined),
           iconSize: 28,
-          color: AppTheme.darkText,
+          color: context.colors.darkText,
         ),
         if (unreadCount > 0)
           Positioned(
@@ -438,15 +438,15 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
               constraints: const BoxConstraints(minWidth: 16, minHeight: 16),
-              decoration: const BoxDecoration(
-                color: AppTheme.error,
+              decoration: BoxDecoration(
+                color: context.colors.error,
                 shape: BoxShape.circle,
               ),
               child: Text(
                 unreadCount > 99 ? '99+' : '$unreadCount',
                 textAlign: TextAlign.center,
-                style: const TextStyle(
-                  color: AppTheme.white,
+                style: TextStyle(
+                  color: context.colors.white,
                   fontSize: 10,
                   fontWeight: FontWeight.bold,
                 ),
@@ -462,7 +462,7 @@ class _HomeScreenState extends State<HomeScreen> {
       width: double.infinity,
       padding: const EdgeInsets.all(32),
       decoration: BoxDecoration(
-        color: AppTheme.lightGreen,
+        color: context.colors.lightGreen,
         borderRadius: BorderRadius.circular(AppSizes.radiusXL),
       ),
       child: Column(
@@ -481,8 +481,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   child: CustomPaint(
                     painter: _CircularProgressPainter(
                       progress: 1.0,
-                      color: AppTheme.primaryGreen,
-                      backgroundColor: AppTheme.white,
+                      color: context.colors.primaryGreen,
+                      backgroundColor: context.colors.white,
                     ),
                   ),
                 ),
@@ -493,20 +493,20 @@ class _HomeScreenState extends State<HomeScreen> {
                   children: [
                     Text(
                       '${_pomodoroWorkDuration.toString().padLeft(2, '0')}:00',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 48,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.darkText,
+                        color: context.colors.darkText,
                         height: 1,
                       ),
                     ),
                     const SizedBox(height: 4),
-                    const Text(
+                    Text(
                       'FOCUS SESSION',
                       style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.greyText,
+                        color: context.colors.greyText,
                         letterSpacing: 1.2,
                       ),
                     ),
@@ -538,8 +538,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 icon: const Icon(Icons.play_arrow, size: 20),
                 label: const Text('Start'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppTheme.primaryGreen,
-                  foregroundColor: AppTheme.white,
+                  backgroundColor: context.colors.primaryGreen,
+                  foregroundColor: context.colors.white,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 32,
                     vertical: 14,
@@ -555,7 +555,7 @@ class _HomeScreenState extends State<HomeScreen> {
               // Botón Configuración
               Container(
                 decoration: BoxDecoration(
-                  color: AppTheme.white,
+                  color: context.colors.white,
                   borderRadius: BorderRadius.circular(AppSizes.radiusM),
                 ),
                 child: IconButton(
@@ -568,7 +568,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ).then((_) => _loadPomodoroPreferences());
                   },
                   icon: const Icon(Icons.settings_outlined),
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                 ),
               ),
             ],
@@ -582,7 +582,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: AppTheme.lightGreen.withOpacity(0.3),
+        color: context.colors.lightGreen.withOpacity(0.3),
         borderRadius: BorderRadius.circular(AppSizes.radiusM),
       ),
       child: Row(
@@ -616,11 +616,11 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Racha actual',
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.greyText,
+                    color: context.colors.greyText,
                     fontWeight: FontWeight.w500,
                   ),
                 ),
@@ -632,14 +632,14 @@ class _HomeScreenState extends State<HomeScreen> {
                   style: GoogleFonts.inter(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.darkText,
+                    color: context.colors.darkText,
                   ),
                 ),
                 Text(
                   '$pomodorosThisWeek pomodoros esta semana',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 11,
-                    color: AppTheme.greyText,
+                    color: context.colors.greyText,
                   ),
                 ),
               ],
@@ -655,7 +655,7 @@ class _HomeScreenState extends State<HomeScreen> {
       return Container(
         padding: const EdgeInsets.all(40),
         decoration: BoxDecoration(
-          color: AppTheme.lightGrey,
+          color: context.colors.lightGrey,
           borderRadius: BorderRadius.circular(AppSizes.radiusL),
         ),
         child: Column(
@@ -664,7 +664,7 @@ class _HomeScreenState extends State<HomeScreen> {
             Icon(
               Icons.check_circle_outline,
               size: 60,
-              color: AppTheme.greyText.withOpacity(0.5),
+              color: context.colors.greyText.withOpacity(0.5),
             ),
             const SizedBox(height: 16),
             Text(
@@ -673,7 +673,7 @@ class _HomeScreenState extends State<HomeScreen> {
               style: GoogleFonts.inter(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.darkText,
+                color: context.colors.darkText,
               ),
             ),
             const SizedBox(height: 8),
@@ -682,7 +682,7 @@ class _HomeScreenState extends State<HomeScreen> {
               textAlign: TextAlign.center,
               style: GoogleFonts.inter(
                 fontSize: 14,
-                color: AppTheme.onSurfaceVariant,
+                color: context.colors.onSurfaceVariant,
               ),
             ),
             const SizedBox(height: 12),
@@ -737,9 +737,9 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(AppSizes.radiusM),
-          border: Border.all(color: AppTheme.outlineVariant, width: 1),
+          border: Border.all(color: context.colors.outlineVariant, width: 1),
           boxShadow: AppTheme.softShadow,
         ),
         child: Stack(
@@ -775,8 +775,8 @@ class _HomeScreenState extends State<HomeScreen> {
                             ? Icons.check_circle
                             : Icons.radio_button_unchecked,
                         color: task.isCompleted
-                            ? AppTheme.primaryGreen
-                            : AppTheme.onSurfaceVariant,
+                            ? context.colors.primaryGreen
+                            : context.colors.onSurfaceVariant,
                         size: 24,
                       ),
                     ),
@@ -790,7 +790,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           style: GoogleFonts.inter(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.darkText,
+                            color: context.colors.darkText,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -804,7 +804,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     vertical: 2,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: AppTheme.surfaceContainerHighest,
+                                    color: context.colors.surfaceContainerHighest,
                                     borderRadius: BorderRadius.circular(999),
                                   ),
                                   child: Text(
@@ -814,7 +814,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     style: GoogleFonts.inter(
                                       fontSize: 12,
                                       fontWeight: FontWeight.w600,
-                                      color: AppTheme.onSurfaceVariant,
+                                      color: context.colors.onSurfaceVariant,
                                     ),
                                   ),
                                 ),
@@ -826,7 +826,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   .format(task.fechaEntrega),
                               style: GoogleFonts.inter(
                                 fontSize: 12,
-                                color: AppTheme.onSurfaceVariant,
+                                color: context.colors.onSurfaceVariant,
                               ),
                             ),
                           ],
@@ -835,8 +835,8 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   PopupMenuButton<String>(
-                    icon: const Icon(Icons.more_vert,
-                        color: AppTheme.greyText),
+                    icon: Icon(Icons.more_vert,
+                        color: context.colors.greyText),
                     onSelected: (value) async {
                       if (value == 'delete') {
                         try {
@@ -844,9 +844,9 @@ class _HomeScreenState extends State<HomeScreen> {
                           if (!mounted) return;
                           _loadDashboardData();
                           ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Tarea eliminada'),
-                              backgroundColor: AppTheme.success,
+                            SnackBar(
+                              content: const Text('Tarea eliminada'),
+                              backgroundColor: context.colors.success,
                             ),
                           );
                         } catch (e) {
@@ -854,21 +854,21 @@ class _HomeScreenState extends State<HomeScreen> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             SnackBar(
                               content: Text('Error: ${e.toString()}'),
-                              backgroundColor: AppTheme.error,
+                              backgroundColor: context.colors.error,
                             ),
                           );
                         }
                       }
                     },
-                    itemBuilder: (context) => const [
+                    itemBuilder: (context) => [
                       PopupMenuItem<String>(
                         value: 'delete',
                         child: Row(
                           children: [
                             Icon(Icons.delete_outline,
-                                size: 18, color: AppTheme.error),
-                            SizedBox(width: 8),
-                            Text('Eliminar'),
+                                size: 18, color: context.colors.error),
+                            const SizedBox(width: 8),
+                            const Text('Eliminar'),
                           ],
                         ),
                       ),
@@ -884,12 +884,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Color _getTaskStatusColor(Task task, bool isOverdue) {
-    if (isOverdue) return AppTheme.error;
+    if (isOverdue) return context.colors.error;
     if (task.isCompleted) {
-      return AppTheme.onSurfaceVariant.withOpacity(0.4);
+      return context.colors.onSurfaceVariant.withOpacity(0.4);
     }
-    if (task.estado == 'en_progreso') return AppTheme.info;
-    return AppTheme.primaryGreen;
+    if (task.estado == 'en_progreso') return context.colors.info;
+    return context.colors.primaryGreen;
   }
 
 }

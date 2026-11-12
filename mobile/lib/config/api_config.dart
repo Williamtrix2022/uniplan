@@ -78,6 +78,9 @@ class ApiConfig {
   static String notificationRead(int id) =>
       '$apiPrefix/notifications/$id/read';
 
+  // Reports (problemas y sugerencias)
+  static const String reports = '$apiPrefix/reports';
+
   // Dashboard
   static const String dashboard = '$apiPrefix/dashboard';
   static const String dashboardWeekly = '$apiPrefix/dashboard/weekly';

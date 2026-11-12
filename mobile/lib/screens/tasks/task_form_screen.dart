@@ -74,10 +74,10 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
       builder: (context, child) {
         return Theme(
           data: Theme.of(context).copyWith(
-            colorScheme: const ColorScheme.light(
-              primary: AppTheme.primaryGreen,
-              onPrimary: AppTheme.white,
-              onSurface: AppTheme.darkText,
+            colorScheme: ColorScheme.light(
+              primary: context.colors.primaryGreen,
+              onPrimary: context.colors.white,
+              onSurface: context.colors.darkText,
             ),
           ),
           child: child!,
@@ -133,7 +133,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
       messenger?.showSnackBar(
         SnackBar(
           content: Text(isEditing ? 'Tarea actualizada' : 'Tarea creada'),
-          backgroundColor: AppTheme.success,
+          backgroundColor: context.colors.success,
         ),
       );
     } catch (e) {
@@ -141,7 +141,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('Error: ${e.toString()}'),
-            backgroundColor: AppTheme.error,
+            backgroundColor: context.colors.error,
           ),
         );
       }
@@ -220,7 +220,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
     final isLoadingSubjects = subjectProvider.isLoading && subjects.isEmpty;
 
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -240,7 +240,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
         title: Text(
           isEditing ? 'Editar tarea' : 'Nueva tarea',
           style: textTheme.headlineMedium?.copyWith(
-            color: AppTheme.darkText,
+            color: context.colors.darkText,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -311,7 +311,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                             Text(
                               'Todavía no tenés materias creadas.',
                               style: textTheme.bodyMedium?.copyWith(
-                                color: AppTheme.greyText,
+                                color: context.colors.greyText,
                               ),
                             ),
                             const SizedBox(height: 12),
@@ -324,8 +324,8 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                         ),
                       )
                     else if (isLoadingSubjects)
-                      const LinearProgressIndicator(
-                          color: AppTheme.primaryGreen)
+                      LinearProgressIndicator(
+                          color: context.colors.primaryGreen)
                     else
                       Container(
                         decoration: _selectorDecoration(context),
@@ -333,12 +333,12 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                           child: DropdownButton<int?>(
                             value: selectedSubjectId,
                             isExpanded: true,
-                            icon: const Padding(
-                              padding: EdgeInsets.only(right: 12),
+                            icon: Padding(
+                              padding: const EdgeInsets.only(right: 12),
                               child: Text(
                                 'CAMBIAR',
                                 style: TextStyle(
-                                  color: AppTheme.info,
+                                  color: context.colors.info,
                                   fontSize: 12,
                                   fontWeight: FontWeight.w700,
                                 ),
@@ -401,14 +401,14 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                             horizontal: 12, vertical: 14),
                         child: Row(
                           children: [
-                            const Icon(Icons.calendar_today,
-                                color: AppTheme.primaryGreen),
+                            Icon(Icons.calendar_today,
+                                color: context.colors.primaryGreen),
                             const SizedBox(width: 12),
                             Text(
                               DateFormat('MMMM d, yyyy', 'es_ES')
                                   .format(selectedDate),
                               style: textTheme.bodyLarge
-                                  ?.copyWith(color: AppTheme.darkText),
+                                  ?.copyWith(color: context.colors.darkText),
                             ),
                           ],
                         ),
@@ -458,8 +458,8 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                           horizontal: 12, vertical: 12),
                       child: Row(
                         children: [
-                          const Icon(Icons.account_tree_outlined,
-                              color: AppTheme.darkText),
+                          Icon(Icons.account_tree_outlined,
+                              color: context.colors.darkText),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Column(
@@ -469,13 +469,13 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                                   'Marcar como proyecto',
                                   style: textTheme.bodyLarge?.copyWith(
                                     fontWeight: FontWeight.w600,
-                                    color: AppTheme.darkText,
+                                    color: context.colors.darkText,
                                   ),
                                 ),
                                 Text(
                                   'Las tareas de proyecto aparecen en su pestaña',
                                   style: textTheme.labelMedium?.copyWith(
-                                    color: AppTheme.greyText,
+                                    color: context.colors.greyText,
                                   ),
                                 ),
                               ],
@@ -485,7 +485,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                             value: selectedIsProject,
                             trackColor: WidgetStateProperty.resolveWith(
                               (states) => states.contains(WidgetState.selected)
-                                  ? AppTheme.primaryGreen
+                                  ? context.colors.primaryGreen
                                   : null,
                             ),
                             onChanged: (value) =>
@@ -513,19 +513,19 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                     child: ElevatedButton(
                       onPressed: isLoading ? null : _saveTask,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.primaryGreen,
-                        foregroundColor: AppTheme.white,
+                        backgroundColor: context.colors.primaryGreen,
+                        foregroundColor: context.colors.white,
                         elevation: 2,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
                       child: isLoading
-                          ? const SizedBox(
+                          ? SizedBox(
                               width: 22,
                               height: 22,
                               child: CircularProgressIndicator(
-                                color: AppTheme.white,
+                                color: context.colors.white,
                                 strokeWidth: 2,
                               ),
                             )
@@ -549,12 +549,12 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                           borderRadius: BorderRadius.circular(12),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Cancelar',
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w600,
-                          color: AppTheme.darkText,
+                          color: context.colors.darkText,
                         ),
                       ),
                     ),
@@ -601,7 +601,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 maxLines: 1,
                 style: textTheme.bodyLarge?.copyWith(
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                 ),
               ),
               Text(
@@ -609,7 +609,7 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 overflow: TextOverflow.ellipsis,
                 maxLines: 1,
                 style:
-                    textTheme.labelMedium?.copyWith(color: AppTheme.greyText),
+                    textTheme.labelMedium?.copyWith(color: context.colors.greyText),
               ),
             ],
           ),
@@ -654,10 +654,10 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
                 ),
               Text(
                 label,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                 ),
               ),
             ],
@@ -676,13 +676,13 @@ class _TaskFormScreenState extends State<TaskFormScreen> {
       showCheckmark: false,
       onSelected: (_) => setState(() => selectedStatus = value),
       labelStyle: TextStyle(
-        color: isSelected ? AppTheme.white : AppTheme.darkText,
+        color: isSelected ? context.colors.white : context.colors.darkText,
         fontWeight: FontWeight.w600,
       ),
-      selectedColor: AppTheme.primaryGreen,
+      selectedColor: context.colors.primaryGreen,
       backgroundColor: Colors.transparent,
       side: BorderSide(
-        color: isSelected ? AppTheme.primaryGreen : colorScheme.outlineVariant,
+        color: isSelected ? context.colors.primaryGreen : colorScheme.outlineVariant,
       ),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(999),

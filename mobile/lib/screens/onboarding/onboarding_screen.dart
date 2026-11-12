@@ -90,7 +90,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     final isLastPage = _currentPage == _pages.length - 1;
 
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       body: SafeArea(
         child: Column(
           children: [
@@ -100,10 +100,10 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 padding: const EdgeInsets.all(AppSizes.paddingM),
                 child: TextButton(
                   onPressed: _finish,
-                  child: const Text(
+                  child: Text(
                     'Saltar',
                     style: TextStyle(
-                      color: AppTheme.greyText,
+                      color: context.colors.greyText,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -127,33 +127,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         Container(
                           width: 160,
                           height: 160,
-                          decoration: const BoxDecoration(
-                            color: AppTheme.lightGreen,
+                          decoration: BoxDecoration(
+                            color: context.colors.lightGreen,
                             shape: BoxShape.circle,
                           ),
                           child: Icon(
                             page.icon,
                             size: 72,
-                            color: AppTheme.primaryGreen,
+                            color: context.colors.primaryGreen,
                           ),
                         ),
                         const SizedBox(height: 40),
                         Text(
                           page.title,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 24,
                             fontWeight: FontWeight.w700,
-                            color: AppTheme.darkText,
+                            color: context.colors.darkText,
                           ),
                         ),
                         const SizedBox(height: 12),
                         Text(
                           page.description,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 15,
-                            color: AppTheme.greyText,
+                            color: context.colors.greyText,
                             height: 1.4,
                           ),
                         ),
@@ -178,8 +178,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         height: 8,
                         decoration: BoxDecoration(
                           color: isActive
-                              ? AppTheme.primaryGreen
-                              : AppTheme.borderGrey,
+                              ? context.colors.primaryGreen
+                              : context.colors.borderGrey,
                           borderRadius: BorderRadius.circular(4),
                         ),
                       );

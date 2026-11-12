@@ -83,7 +83,7 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
   void _showSnack(String msg, {bool isError = false}) {
     ScaffoldMessenger.of(context).showSnackBar(SnackBar(
       content: Text(msg),
-      backgroundColor: isError ? AppTheme.error : AppTheme.success,
+      backgroundColor: isError ? context.colors.error : context.colors.success,
     ));
   }
 
@@ -133,7 +133,7 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.pop(dialogContext, true),
-            style: TextButton.styleFrom(foregroundColor: AppTheme.error),
+            style: TextButton.styleFrom(foregroundColor: context.colors.error),
             child: const Text('Eliminar'),
           ),
         ],
@@ -179,7 +179,7 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
     final isLoading = provider.isLoading && !provider.isInitialized;
 
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
@@ -192,7 +192,7 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
                   onPressed: () => Navigator.pop(context),
                   style: IconButton.styleFrom(
                     shape: const CircleBorder(),
-                    hoverColor: AppTheme.surfaceContainerHighest,
+                    hoverColor: context.colors.surfaceContainerHighest,
                   ),
                   icon: const Icon(Icons.arrow_back),
                 ),
@@ -203,14 +203,14 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
           style: GoogleFonts.inter(
             fontSize: 20,
             fontWeight: FontWeight.w700,
-            color: AppTheme.darkText,
+            color: context.colors.darkText,
           ),
         ),
         actions: [
           IconButton(
             onPressed: _openGradesOverview,
             icon: const Icon(Icons.insights_outlined),
-            color: AppTheme.darkText,
+            color: context.colors.darkText,
             tooltip: 'Resumen y tendencia de notas',
           ),
           Padding(
@@ -232,21 +232,21 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
         ],
       ),
       body: isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppTheme.primaryGreen),
+          ? Center(
+              child: CircularProgressIndicator(color: context.colors.primaryGreen),
             )
           : RefreshIndicator(
               onRefresh: provider.refresh,
-              color: AppTheme.primaryGreen,
+              color: context.colors.primaryGreen,
               child: provider.subjects.isEmpty
                   ? _buildEmptyState()
                   : _buildSubjectsList(provider.subjects),
             ),
       floatingActionButton: FloatingActionButton(
         onPressed: _showCreateSubjectDialog,
-        backgroundColor: AppTheme.primaryGreen,
+        backgroundColor: context.colors.primaryGreen,
         tooltip: 'Nueva materia',
-        child: const Icon(Icons.add, color: AppTheme.white),
+        child: Icon(Icons.add, color: context.colors.white),
       ),
       bottomNavigationBar: BottomNavBar(
         currentIndex: _selectedIndex,
@@ -275,7 +275,7 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
                   Icon(
                     Icons.school_outlined,
                     size: 64,
-                    color: AppTheme.greyText.withValues(alpha: 0.5),
+                    color: context.colors.greyText.withValues(alpha: 0.5),
                   ),
                   const SizedBox(height: 16),
                   Text(
@@ -283,7 +283,7 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
                     style: GoogleFonts.inter(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.darkText,
+                      color: context.colors.darkText,
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -292,7 +292,7 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
                     'organizar tus tareas, clases y calificaciones',
                     textAlign: TextAlign.center,
                     style:
-                        GoogleFonts.inter(fontSize: 14, color: AppTheme.greyText),
+                        GoogleFonts.inter(fontSize: 14, color: context.colors.greyText),
                   ),
                 ],
               ),
@@ -324,15 +324,15 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
       final clean = subject.color.replaceFirst('#', '');
       subjectColor = Color(int.parse('FF$clean', radix: 16));
     } catch (_) {
-      subjectColor = AppTheme.primaryGreen;
+      subjectColor = context.colors.primaryGreen;
     }
 
     return Container(
       margin: const EdgeInsets.only(bottom: 12),
       decoration: BoxDecoration(
-        color: AppTheme.surface,
+        color: context.colors.surface,
         borderRadius: BorderRadius.circular(AppSizes.radiusM),
-        border: Border.all(color: AppTheme.outlineVariant),
+        border: Border.all(color: context.colors.outlineVariant),
         boxShadow: AppTheme.softShadow,
       ),
       child: InkWell(
@@ -362,7 +362,7 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
                       style: GoogleFonts.inter(
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.darkText,
+                        color: context.colors.darkText,
                       ),
                     ),
                     if (subject.codigo != null &&
@@ -373,19 +373,19 @@ class _ManageSubjectsScreenState extends State<ManageSubjectsScreen> {
                         overflow: TextOverflow.ellipsis,
                         maxLines: 1,
                         style: GoogleFonts.inter(
-                            fontSize: 12, color: AppTheme.greyText),
+                            fontSize: 12, color: context.colors.greyText),
                       ),
                     ],
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right, color: AppTheme.greyText),
+              Icon(Icons.chevron_right, color: context.colors.greyText),
               IconButton(
                 onPressed: () => _confirmAndDeleteSubject(subject),
                 icon: const Icon(Icons.delete_outline),
-                color: AppTheme.error,
+                color: context.colors.error,
                 style: IconButton.styleFrom(
-                  hoverColor: AppTheme.errorContainer,
+                  hoverColor: context.colors.errorContainer,
                   shape: const CircleBorder(),
                 ),
               ),

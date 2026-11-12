@@ -106,7 +106,7 @@ class _WeekViewState extends State<WeekView> {
                   style: GoogleFonts.inter(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
-                    color: AppTheme.darkText,
+                    color: context.colors.darkText,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -114,7 +114,7 @@ class _WeekViewState extends State<WeekView> {
                   rangeText,
                   style: GoogleFonts.inter(
                     fontSize: 13,
-                    color: AppTheme.greyText,
+                    color: context.colors.greyText,
                   ),
                 ),
               ],
@@ -125,19 +125,19 @@ class _WeekViewState extends State<WeekView> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
-                color: AppTheme.error.withValues(alpha: 0.1),
+                color: context.colors.error.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(AppSizes.radiusM),
                 border: Border.all(
-                  color: AppTheme.error.withValues(alpha: 0.3),
+                  color: context.colors.error.withValues(alpha: 0.3),
                 ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.warning_amber_rounded,
                     size: 14,
-                    color: AppTheme.error,
+                    color: context.colors.error,
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -146,7 +146,7 @@ class _WeekViewState extends State<WeekView> {
                     style: GoogleFonts.inter(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.error,
+                      color: context.colors.error,
                     ),
                   ),
                 ],
@@ -169,7 +169,7 @@ class _WeekViewState extends State<WeekView> {
             margin: const EdgeInsets.only(bottom: 12),
             height: 56,
             decoration: BoxDecoration(
-              color: AppTheme.lightGrey,
+              color: context.colors.lightGrey,
               borderRadius: BorderRadius.circular(AppSizes.radiusM),
             ),
           ),

@@ -87,8 +87,8 @@ class _DayChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bgColor   = isSelected ? AppTheme.primaryGreen : AppTheme.lightGrey;
-    final textColor = isSelected ? AppTheme.white : AppTheme.darkText;
+    final bgColor   = isSelected ? context.colors.primaryGreen : context.colors.lightGrey;
+    final textColor = isSelected ? context.colors.white : context.colors.darkText;
 
     return GestureDetector(
       onTap: onTap,
@@ -121,7 +121,7 @@ class _DayChip extends StatelessWidget {
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 color: isToday
-                    ? (isSelected ? AppTheme.white : AppTheme.primaryGreen)
+                    ? (isSelected ? context.colors.white : context.colors.primaryGreen)
                     : Colors.transparent,
               ),
             ),

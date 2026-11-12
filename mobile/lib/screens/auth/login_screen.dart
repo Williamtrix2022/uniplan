@@ -100,7 +100,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: AppTheme.error,
+            backgroundColor: context.colors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -133,7 +133,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text(e.toString()),
-            backgroundColor: AppTheme.error,
+            backgroundColor: context.colors.error,
             behavior: SnackBarBehavior.floating,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
@@ -151,7 +151,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       body: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSizes.paddingL),
@@ -180,14 +180,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  AppTheme.lightGreen.withOpacity(0.3),
-                                  AppTheme.lightGreen.withOpacity(0.6),
+                                  context.colors.lightGreen.withOpacity(0.3),
+                                  context.colors.lightGreen.withOpacity(0.6),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(AppSizes.radiusXL * 1.5),
                               boxShadow: [
                                 BoxShadow(
-                                  color: AppTheme.primaryGreen.withOpacity(0.1),
+                                  color: context.colors.primaryGreen.withOpacity(0.1),
                                   blurRadius: 30,
                                   offset: const Offset(0, 10),
                                 ),
@@ -206,7 +206,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                       height: 100,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: AppTheme.primaryGreen.withOpacity(0.05),
+                                        color: context.colors.primaryGreen.withOpacity(0.05),
                                       ),
                                     ),
                                   ),
@@ -218,7 +218,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                       height: 80,
                                       decoration: BoxDecoration(
                                         shape: BoxShape.circle,
-                                        color: AppTheme.primaryGreen.withOpacity(0.05),
+                                        color: context.colors.primaryGreen.withOpacity(0.05),
                                       ),
                                     ),
                                   ),
@@ -232,10 +232,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                         fit: BoxFit.contain,
                                         errorBuilder: (context, error, stackTrace) {
                                           // Fallback al icono si no carga la imagen
-                                          return const Icon(
+                                          return Icon(
                                             Icons.school_rounded,
                                             size: 100,
-                                            color: AppTheme.primaryGreen,
+                                            color: context.colors.primaryGreen,
                                           );
                                         },
                                       ),
@@ -252,12 +252,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     const SizedBox(height: 40),
 
                     // Título con mejor tipografía
-                    const Text(
+                    Text(
                       'Bienvenido de nuevo',
                       style: TextStyle(
                         fontSize: 32,
                         fontWeight: FontWeight.w800,
-                        color: AppTheme.darkText,
+                        color: context.colors.darkText,
                         letterSpacing: -0.5,
                         height: 1.2,
                       ),
@@ -267,7 +267,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       'Tu espacio de enfoque te espera ✨',
                       style: TextStyle(
                         fontSize: 15,
-                        color: AppTheme.greyText.withOpacity(0.8),
+                        color: context.colors.greyText.withOpacity(0.8),
                         fontWeight: FontWeight.w400,
                       ),
                     ),
@@ -327,7 +327,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           );
                         },
                         style: TextButton.styleFrom(
-                          foregroundColor: AppTheme.primaryGreen,
+                          foregroundColor: context.colors.primaryGreen,
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                         ),
                         child: const Text(
@@ -360,8 +360,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  AppTheme.borderGrey.withOpacity(0),
-                                  AppTheme.borderGrey,
+                                  context.colors.borderGrey.withOpacity(0),
+                                  context.colors.borderGrey,
                                 ],
                               ),
                             ),
@@ -372,7 +372,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           child: Text(
                             'o continúa con',
                             style: TextStyle(
-                              color: AppTheme.greyText.withOpacity(0.7),
+                              color: context.colors.greyText.withOpacity(0.7),
                               fontSize: 13,
                               fontWeight: FontWeight.w500,
                             ),
@@ -384,8 +384,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [
-                                  AppTheme.borderGrey,
-                                  AppTheme.borderGrey.withOpacity(0),
+                                  context.colors.borderGrey,
+                                  context.colors.borderGrey.withOpacity(0),
                                 ],
                               ),
                             ),
@@ -429,7 +429,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           Text(
                             '¿No tienes una cuenta? ',
                             style: TextStyle(
-                              color: AppTheme.darkText.withOpacity(0.7),
+                              color: context.colors.darkText.withOpacity(0.7),
                               fontSize: 14,
                               fontWeight: FontWeight.w400,
                             ),
@@ -448,14 +448,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 horizontal: 4,
                                 vertical: 2,
                               ),
-                              child: const Text(
+                              child: Text(
                                 'Regístrate',
                                 style: TextStyle(
-                                  color: AppTheme.primaryGreen,
+                                  color: context.colors.primaryGreen,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
                                   decoration: TextDecoration.underline,
-                                  decorationColor: AppTheme.primaryGreen,
+                                  decorationColor: context.colors.primaryGreen,
                                   decorationThickness: 2,
                                 ),
                               ),
@@ -517,9 +517,9 @@ class _SocialButtonState extends State<_SocialButton> {
             ),
           ),
           style: OutlinedButton.styleFrom(
-            foregroundColor: AppTheme.darkText,
+            foregroundColor: context.colors.darkText,
             side: BorderSide(
-              color: AppTheme.borderGrey.withOpacity(0.6),
+              color: context.colors.borderGrey.withOpacity(0.6),
               width: 1.5,
             ),
             padding: const EdgeInsets.symmetric(vertical: 16),
@@ -528,7 +528,7 @@ class _SocialButtonState extends State<_SocialButton> {
             ),
             backgroundColor: Colors.white,
             elevation: _isPressed ? 0 : 2,
-            shadowColor: AppTheme.primaryGreen.withOpacity(0.1),
+            shadowColor: context.colors.primaryGreen.withOpacity(0.1),
           ),
         ),
       ),

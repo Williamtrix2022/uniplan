@@ -14,6 +14,7 @@ import 'providers/schedule_provider.dart';
 import 'providers/grade_provider.dart';
 import 'providers/notification_provider.dart';
 import 'providers/subject_provider.dart';
+import 'providers/theme_provider.dart';
 import 'screens/auth/reset_password_screen.dart';
 import 'screens/splash_screen.dart';
 import 'services/local_notification_service.dart';
@@ -56,11 +57,14 @@ class _MyAppState extends State<MyApp> {
   late final AppLinks _appLinks;
   StreamSubscription<Uri>? _linkSubscription;
 
+  final ThemeProvider _themeProvider = ThemeProvider();
+
   @override
   void initState() {
     super.initState();
     _appLinks = AppLinks();
     _setupDeepLinks();
+    _themeProvider.initialize();
   }
 
   Future<void> _setupDeepLinks() async {
@@ -113,13 +117,18 @@ class _MyAppState extends State<MyApp> {
         ChangeNotifierProvider(create: (_) => GradeProvider()),
         ChangeNotifierProvider(create: (_) => SubjectProvider()),
         ChangeNotifierProvider(create: (_) => NotificationProvider()),
+        ChangeNotifierProvider.value(value: _themeProvider),
       ],
-      child: MaterialApp(
-        navigatorKey: _navigatorKey,
-        title: 'Uniplan',
-        debugShowCheckedModeBanner: false,
-        theme: AppTheme.lightTheme,
-        home: const SplashScreen(), // Inicia con Splash Screen
+      child: Consumer<ThemeProvider>(
+        builder: (context, themeProvider, _) => MaterialApp(
+          navigatorKey: _navigatorKey,
+          title: 'Uniplan',
+          debugShowCheckedModeBanner: false,
+          theme: AppTheme.lightTheme,
+          darkTheme: AppTheme.darkTheme,
+          themeMode: themeProvider.themeMode,
+          home: const SplashScreen(), // Inicia con Splash Screen
+        ),
       ),
     );
   }

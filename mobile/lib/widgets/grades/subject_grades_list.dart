@@ -28,7 +28,7 @@ class SubjectGradesList extends StatelessWidget {
   Widget _buildItem(BuildContext context, SubjectAverage materia) {
     final promedio = materia.promedio;
     final progress = promedio != null ? (promedio / 5.0).clamp(0.0, 1.0) : 0.0;
-    final color = promedio != null ? Grade.colorForValor(promedio) : AppTheme.greyText;
+    final color = promedio != null ? Grade.colorForValor(promedio) : context.colors.greyText;
 
     return GestureDetector(
       onTap: onTap != null ? () => onTap!(materia) : null,
@@ -36,9 +36,9 @@ class SubjectGradesList extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.all(AppSizes.paddingM),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(AppSizes.radiusM),
-          border: Border.all(color: AppTheme.outlineVariant),
+          border: Border.all(color: context.colors.outlineVariant),
           boxShadow: AppTheme.softShadow,
         ),
         child: Column(
@@ -61,7 +61,7 @@ class SubjectGradesList extends StatelessWidget {
                     style: GoogleFonts.inter(
                       fontSize: 14,
                       fontWeight: FontWeight.w600,
-                      color: AppTheme.darkText,
+                      color: context.colors.darkText,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -76,8 +76,8 @@ class SubjectGradesList extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 4),
-                const Icon(Icons.chevron_right,
-                    color: AppTheme.greyText, size: 18),
+                Icon(Icons.chevron_right,
+                    color: context.colors.greyText, size: 18),
               ],
             ),
             const SizedBox(height: 10),
@@ -86,7 +86,7 @@ class SubjectGradesList extends StatelessWidget {
               child: LinearProgressIndicator(
                 value: progress,
                 minHeight: 6,
-                backgroundColor: AppTheme.lightGrey,
+                backgroundColor: context.colors.lightGrey,
                 valueColor: AlwaysStoppedAnimation(color),
               ),
             ),
@@ -94,7 +94,7 @@ class SubjectGradesList extends StatelessWidget {
             Text(
               '${materia.porcentajeAcumulado.toStringAsFixed(0)}% evaluado · '
               '${_estadoLabel(materia.estado)}',
-              style: GoogleFonts.inter(fontSize: 11, color: AppTheme.greyText),
+              style: GoogleFonts.inter(fontSize: 11, color: context.colors.greyText),
             ),
           ],
         ),

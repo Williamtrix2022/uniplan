@@ -16,7 +16,7 @@ class TermsScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       appBar: AppBar(
         title: const Text('Términos y Condiciones'),
       ),
@@ -31,13 +31,13 @@ class TermsScreen extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                 ),
               ),
               const SizedBox(height: 4),
               Text(
                 'Versión $kTerminosVersion · Universidad de Córdoba',
-                style: const TextStyle(fontSize: 12, color: AppTheme.greyText),
+                style: TextStyle(fontSize: 12, color: context.colors.greyText),
               ),
               const SizedBox(height: 24),
               const _TermsSection(
@@ -129,19 +129,19 @@ class _TermsSection extends StatelessWidget {
         children: [
           Text(
             title,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w700,
-              color: AppTheme.darkText,
+              color: context.colors.darkText,
             ),
           ),
           const SizedBox(height: 8),
           Text(
             body,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               height: 1.5,
-              color: AppTheme.darkText,
+              color: context.colors.darkText,
             ),
           ),
         ],

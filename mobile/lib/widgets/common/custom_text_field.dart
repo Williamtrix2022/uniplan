@@ -54,10 +54,10 @@ class _CustomTextFieldState extends State<CustomTextField> {
         if (widget.label != null) ...[
           Text(
             widget.label!,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: AppTheme.darkText,
+              color: context.colors.darkText,
             ),
           ),
           const SizedBox(height: 8),
@@ -70,16 +70,16 @@ class _CustomTextFieldState extends State<CustomTextField> {
           onChanged: widget.onChanged,
           maxLines: widget.obscureText ? 1 : widget.maxLines,
           enabled: widget.enabled,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 14,
-            color: AppTheme.darkText,
+            color: context.colors.darkText,
           ),
           decoration: InputDecoration(
             hintText: widget.hintText,
             prefixIcon: widget.prefixIcon != null
                 ? Icon(
                     widget.prefixIcon,
-                    color: AppTheme.greyText,
+                    color: context.colors.greyText,
                     size: 20,
                   )
                 : null,
@@ -87,7 +87,7 @@ class _CustomTextFieldState extends State<CustomTextField> {
                 ? IconButton(
                     icon: Icon(
                       _obscureText ? Icons.visibility_off : Icons.visibility,
-                      color: AppTheme.greyText,
+                      color: context.colors.greyText,
                       size: 20,
                     ),
                     onPressed: () {

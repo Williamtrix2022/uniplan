@@ -27,10 +27,10 @@ class TimeSlot extends StatelessWidget {
         padding: const EdgeInsets.only(right: 8),
         child: Text(
           '${hour.toString().padLeft(2, '0')}:00',
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w500,
-            color: AppTheme.greyText,
+            color: context.colors.greyText,
           ),
           textAlign: TextAlign.right,
         ),

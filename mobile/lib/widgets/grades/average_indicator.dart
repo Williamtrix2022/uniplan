@@ -37,7 +37,7 @@ class AverageIndicator extends StatelessWidget {
         ProgressRing(
           progress: progress,
           color: _color,
-          backgroundColor: AppTheme.white,
+          backgroundColor: context.colors.white,
           size: size,
           strokeWidth: 12,
           child: Column(
@@ -48,7 +48,7 @@ class AverageIndicator extends StatelessWidget {
                 style: GoogleFonts.inter(
                   fontSize: 32,
                   fontWeight: FontWeight.bold,
-                  color: AppTheme.darkText,
+                  color: context.colors.darkText,
                   height: 1,
                 ),
               ),
@@ -57,7 +57,7 @@ class AverageIndicator extends StatelessWidget {
                 'de 5.0',
                 style: GoogleFonts.inter(
                   fontSize: 12,
-                  color: AppTheme.greyText,
+                  color: context.colors.greyText,
                 ),
               ),
             ],
@@ -69,7 +69,7 @@ class AverageIndicator extends StatelessWidget {
           style: GoogleFonts.inter(
             fontSize: 14,
             fontWeight: FontWeight.w600,
-            color: AppTheme.darkText,
+            color: context.colors.darkText,
           ),
         ),
       ],

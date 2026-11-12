@@ -304,7 +304,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                   ? '¡Sesión completada! $currentCycle pomodoros'
                   : 'Sesión guardada',
             ),
-            backgroundColor: AppTheme.success,
+            backgroundColor: context.colors.success,
           ),
         );
       }
@@ -376,13 +376,13 @@ class _PomodoroScreenState extends State<PomodoroScreen>
   Color get currentColor {
     switch (currentState) {
       case PomodoroState.working:
-        return AppTheme.primaryGreen;
+        return context.colors.primaryGreen;
       case PomodoroState.resting:
-        return AppTheme.info;
+        return context.colors.info;
       case PomodoroState.paused:
-        return AppTheme.warning;
+        return context.colors.warning;
       default:
-        return AppTheme.primaryGreen;
+        return context.colors.primaryGreen;
     }
   }
 
@@ -402,7 +402,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       appBar: AppBar(
         title: const Text('Pomodoro'),
         actions: [
@@ -448,7 +448,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                       painter: CircularTimerPainter(
                         progress: progress,
                         color: currentColor,
-                        backgroundColor: AppTheme.lightGreen,
+                        backgroundColor: context.colors.lightGreen,
                       ),
                     ),
 
@@ -458,20 +458,20 @@ class _PomodoroScreenState extends State<PomodoroScreen>
                       children: [
                         Text(
                           _formatTime(secondsRemaining),
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 56,
                             fontWeight: FontWeight.bold,
-                            color: AppTheme.darkText,
+                            color: context.colors.darkText,
                             height: 1,
                           ),
                         ),
                         const SizedBox(height: 8),
                         Text(
                           statusText,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.greyText,
+                            color: context.colors.greyText,
                             letterSpacing: 1.5,
                           ),
                         ),
@@ -487,10 +487,10 @@ class _PomodoroScreenState extends State<PomodoroScreen>
             // Contador de ciclos
             Text(
               'Pomodoro $currentCycle/$cyclesBeforeLongBreak',
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.primaryGreen,
+                color: context.colors.primaryGreen,
               ),
             ),
 
@@ -526,8 +526,8 @@ class _PomodoroScreenState extends State<PomodoroScreen>
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: AppTheme.primaryGreen,
-              foregroundColor: AppTheme.white,
+              backgroundColor: context.colors.primaryGreen,
+              foregroundColor: context.colors.white,
               padding: const EdgeInsets.symmetric(
                 horizontal: 48,
                 vertical: 16,
@@ -586,7 +586,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
       children: [
         Container(
           decoration: BoxDecoration(
-            color: isPrimary ? AppTheme.primaryGreen : AppTheme.white,
+            color: isPrimary ? context.colors.primaryGreen : context.colors.white,
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
@@ -597,13 +597,13 @@ class _PomodoroScreenState extends State<PomodoroScreen>
             ],
             border: isPrimary
                 ? null
-                : Border.all(color: AppTheme.borderGrey, width: 2),
+                : Border.all(color: context.colors.borderGrey, width: 2),
           ),
           child: IconButton(
             onPressed: onPressed,
             icon: Icon(icon),
             iconSize: 32,
-            color: isPrimary ? AppTheme.white : AppTheme.darkText,
+            color: isPrimary ? context.colors.white : context.colors.darkText,
             padding: const EdgeInsets.all(16),
           ),
         ),
@@ -613,7 +613,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
           style: TextStyle(
             fontSize: 11,
             fontWeight: FontWeight.w600,
-            color: AppTheme.greyText,
+            color: context.colors.greyText,
             letterSpacing: 0.5,
           ),
         ),
@@ -625,20 +625,20 @@ class _PomodoroScreenState extends State<PomodoroScreen>
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.lightGreen.withOpacity(0.3),
+        color: context.colors.lightGreen.withOpacity(0.3),
         borderRadius: BorderRadius.circular(AppSizes.radiusM),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(8),
-            decoration: const BoxDecoration(
-              color: AppTheme.primaryGreen,
+            decoration: BoxDecoration(
+              color: context.colors.primaryGreen,
               shape: BoxShape.circle,
             ),
-            child: const Icon(
+            child: Icon(
               Icons.task_alt,
-              color: AppTheme.white,
+              color: context.colors.white,
               size: 20,
             ),
           ),
@@ -647,20 +647,20 @@ class _PomodoroScreenState extends State<PomodoroScreen>
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Tarea actual',
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppTheme.greyText,
+                    color: context.colors.greyText,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   selectedTask!.titulo,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.darkText,
+                    color: context.colors.darkText,
                   ),
                 ),
               ],
@@ -674,7 +674,7 @@ class _PomodoroScreenState extends State<PomodoroScreen>
               });
             },
             iconSize: 20,
-            color: AppTheme.greyText,
+            color: context.colors.greyText,
           ),
         ],
       ),
@@ -698,22 +698,22 @@ class _PomodoroScreenState extends State<PomodoroScreen>
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: AppTheme.lightGrey,
+          color: context.colors.lightGrey,
           borderRadius: BorderRadius.circular(AppSizes.radiusM),
           border:
-              Border.all(color: AppTheme.borderGrey, style: BorderStyle.solid),
+              Border.all(color: context.colors.borderGrey, style: BorderStyle.solid),
         ),
-        child: const Row(
+        child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add_task, color: AppTheme.primaryGreen),
-            SizedBox(width: 8),
+            Icon(Icons.add_task, color: context.colors.primaryGreen),
+            const SizedBox(width: 8),
             Text(
               'Seleccionar tarea',
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: AppTheme.darkText,
+                color: context.colors.darkText,
               ),
             ),
           ],
@@ -784,7 +784,7 @@ class _TaskSelectorDialog extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSizes.radiusL),
       ),
@@ -799,22 +799,22 @@ class _TaskSelectorDialog extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const Icon(Icons.task_alt, color: AppTheme.primaryGreen),
+                  Icon(Icons.task_alt, color: context.colors.primaryGreen),
                   const SizedBox(width: 10),
-                  const Expanded(
+                  Expanded(
                     child: Text(
                       'Elegí una tarea',
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
-                        color: AppTheme.darkText,
+                        color: context.colors.darkText,
                       ),
                     ),
                   ),
                   IconButton(
                     onPressed: () => Navigator.pop(context),
                     icon: const Icon(Icons.close),
-                    color: AppTheme.greyText,
+                    color: context.colors.greyText,
                   ),
                 ],
               ),
@@ -899,7 +899,7 @@ class _TaskSelectorTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: AppTheme.lightGrey,
+      color: context.colors.lightGrey,
       borderRadius: BorderRadius.circular(AppSizes.radiusM),
       child: InkWell(
         borderRadius: BorderRadius.circular(AppSizes.radiusM),
@@ -925,9 +925,9 @@ class _TaskSelectorTile extends StatelessWidget {
                       task.titulo,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontWeight: FontWeight.w600,
-                        color: AppTheme.darkText,
+                        color: context.colors.darkText,
                         fontSize: 14,
                       ),
                     ),
@@ -940,22 +940,22 @@ class _TaskSelectorTile extends StatelessWidget {
                               task.materiaNombre!,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: AppTheme.greyText,
+                                color: context.colors.greyText,
                               ),
                             ),
                           ),
-                          const Padding(
-                            padding: EdgeInsets.symmetric(horizontal: 6),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 6),
                             child: Text('·',
-                                style: TextStyle(color: AppTheme.greyText)),
+                                style: TextStyle(color: context.colors.greyText)),
                           ),
                         ],
                         Icon(
                           Icons.calendar_today,
                           size: 11,
-                          color: _isOverdue ? AppTheme.error : AppTheme.greyText,
+                          color: _isOverdue ? context.colors.error : context.colors.greyText,
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -963,7 +963,7 @@ class _TaskSelectorTile extends StatelessWidget {
                           style: TextStyle(
                             fontSize: 12,
                             color:
-                                _isOverdue ? AppTheme.error : AppTheme.greyText,
+                                _isOverdue ? context.colors.error : context.colors.greyText,
                             fontWeight: _isOverdue
                                 ? FontWeight.w600
                                 : FontWeight.normal,
@@ -974,8 +974,8 @@ class _TaskSelectorTile extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.chevron_right,
-                  color: AppTheme.greyText, size: 20),
+              Icon(Icons.chevron_right,
+                  color: context.colors.greyText, size: 20),
             ],
           ),
         ),

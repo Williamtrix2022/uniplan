@@ -62,9 +62,9 @@ class _PomodoroSettingsScreenState extends State<PomodoroSettingsScreen> {
     setState(() => _isSaving = false);
 
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Configuración guardada'),
-        backgroundColor: AppTheme.success,
+      SnackBar(
+        content: const Text('Configuración guardada'),
+        backgroundColor: context.colors.success,
       ),
     );
     Navigator.pop(context);
@@ -73,31 +73,31 @@ class _PomodoroSettingsScreenState extends State<PomodoroSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppTheme.white,
+      backgroundColor: context.colors.white,
       appBar: AppBar(
         title: const Text('Configuración Pomodoro'),
       ),
       body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(color: AppTheme.primaryGreen),
+          ? Center(
+              child: CircularProgressIndicator(color: context.colors.primaryGreen),
             )
           : SingleChildScrollView(
         padding: const EdgeInsets.all(AppSizes.paddingL),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text(
+            Text(
               'Tiempos',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.darkText,
+                color: context.colors.darkText,
               ),
             ),
             const SizedBox(height: 4),
-            const Text(
+            Text(
               'Elige un preset o ajústalo manualmente',
-              style: TextStyle(fontSize: 13, color: AppTheme.greyText),
+              style: TextStyle(fontSize: 13, color: context.colors.greyText),
             ),
             const SizedBox(height: 12),
             _buildPresetChips(),
@@ -157,12 +157,12 @@ class _PomodoroSettingsScreenState extends State<PomodoroSettingsScreen> {
 
             const SizedBox(height: 32),
 
-            const Text(
+            Text(
               'Automatización',
               style: TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.bold,
-                color: AppTheme.darkText,
+                color: context.colors.darkText,
               ),
             ),
             const SizedBox(height: 16),
@@ -243,16 +243,16 @@ class _PomodoroSettingsScreenState extends State<PomodoroSettingsScreen> {
             workDuration = entry.value.$1;
             shortBreak = entry.value.$2;
           }),
-          selectedColor: AppTheme.lightGreen,
-          backgroundColor: AppTheme.surfaceContainer,
+          selectedColor: context.colors.lightGreen,
+          backgroundColor: context.colors.surfaceContainer,
           labelStyle: TextStyle(
             fontWeight: FontWeight.w600,
-            color: selected ? AppTheme.primaryGreen : AppTheme.darkText,
+            color: selected ? context.colors.primaryGreen : context.colors.darkText,
           ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(AppSizes.radiusS),
             side: BorderSide(
-              color: selected ? AppTheme.primaryGreen : AppTheme.outlineVariant,
+              color: selected ? context.colors.primaryGreen : context.colors.outlineVariant,
             ),
           ),
         );
@@ -274,10 +274,10 @@ class _PomodoroSettingsScreenState extends State<PomodoroSettingsScreen> {
       children: [
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w600,
-            color: AppTheme.darkText,
+            color: context.colors.darkText,
           ),
         ),
         const SizedBox(height: 8),
@@ -295,15 +295,15 @@ class _PomodoroSettingsScreenState extends State<PomodoroSettingsScreen> {
                 margin: const EdgeInsets.symmetric(horizontal: 8),
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 decoration: BoxDecoration(
-                  color: AppTheme.lightGreen,
+                  color: context.colors.lightGreen,
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Text(
                   '$value$unit',
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.bold,
-                    color: AppTheme.primaryGreen,
+                    color: context.colors.primaryGreen,
                   ),
                 ),
               ),
@@ -326,12 +326,12 @@ class _PomodoroSettingsScreenState extends State<PomodoroSettingsScreen> {
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: AppTheme.surfaceContainer,
+        color: context.colors.surfaceContainer,
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(color: AppTheme.outlineVariant),
+        border: Border.all(color: context.colors.outlineVariant),
       ),
       child: IconButton(
-        icon: Icon(icon, color: AppTheme.darkText),
+        icon: Icon(icon, color: context.colors.darkText),
         onPressed: onPressed,
       ),
     );
@@ -346,7 +346,7 @@ class _PomodoroSettingsScreenState extends State<PomodoroSettingsScreen> {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.lightGrey,
+        color: context.colors.lightGrey,
         borderRadius: BorderRadius.circular(AppSizes.radiusM),
       ),
       child: Row(
@@ -357,18 +357,18 @@ class _PomodoroSettingsScreenState extends State<PomodoroSettingsScreen> {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppTheme.darkText,
+                    color: context.colors.darkText,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
-                    color: AppTheme.greyText,
+                    color: context.colors.greyText,
                   ),
                 ),
               ],
@@ -377,7 +377,7 @@ class _PomodoroSettingsScreenState extends State<PomodoroSettingsScreen> {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeColor: AppTheme.primaryGreen,
+            activeColor: context.colors.primaryGreen,
           ),
         ],
       ),

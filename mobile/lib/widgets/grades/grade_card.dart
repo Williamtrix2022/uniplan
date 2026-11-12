@@ -28,9 +28,9 @@ class GradeCard extends StatelessWidget {
       child: Container(
         margin: const EdgeInsets.only(bottom: 12),
         decoration: BoxDecoration(
-          color: AppTheme.surface,
+          color: context.colors.surface,
           borderRadius: BorderRadius.circular(AppSizes.radiusM),
-          border: Border.all(color: AppTheme.outlineVariant),
+          border: Border.all(color: context.colors.outlineVariant),
           boxShadow: AppTheme.softShadow,
         ),
         child: Stack(
@@ -66,7 +66,7 @@ class GradeCard extends StatelessWidget {
                                 vertical: 2,
                               ),
                               decoration: BoxDecoration(
-                                color: AppTheme.surfaceContainerHighest,
+                                color: context.colors.surfaceContainerHighest,
                                 borderRadius: BorderRadius.circular(999),
                               ),
                               child: Text(
@@ -74,7 +74,7 @@ class GradeCard extends StatelessWidget {
                                 style: GoogleFonts.inter(
                                   fontSize: 11,
                                   fontWeight: FontWeight.w600,
-                                  color: AppTheme.onSurfaceVariant,
+                                  color: context.colors.onSurfaceVariant,
                                 ),
                               ),
                             ),
@@ -83,7 +83,7 @@ class GradeCard extends StatelessWidget {
                               '${grade.porcentaje.toStringAsFixed(0)}%',
                               style: GoogleFonts.inter(
                                 fontSize: 12,
-                                color: AppTheme.greyText,
+                                color: context.colors.greyText,
                               ),
                             ),
                           ],
@@ -96,7 +96,7 @@ class GradeCard extends StatelessWidget {
                           style: GoogleFonts.inter(
                             fontSize: 15,
                             fontWeight: FontWeight.w600,
-                            color: AppTheme.darkText,
+                            color: context.colors.darkText,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -108,7 +108,7 @@ class GradeCard extends StatelessWidget {
                                 .format(grade.fechaEvaluacion!),
                             style: GoogleFonts.inter(
                               fontSize: 12,
-                              color: AppTheme.greyText,
+                              color: context.colors.greyText,
                             ),
                           ),
                         ],
@@ -126,19 +126,19 @@ class GradeCard extends StatelessWidget {
                   ),
                   if (onDelete != null)
                     PopupMenuButton<String>(
-                      icon: const Icon(Icons.more_vert, color: AppTheme.greyText),
+                      icon: Icon(Icons.more_vert, color: context.colors.greyText),
                       onSelected: (value) {
                         if (value == 'delete') onDelete!();
                       },
-                      itemBuilder: (context) => const [
+                      itemBuilder: (context) => [
                         PopupMenuItem<String>(
                           value: 'delete',
                           child: Row(
                             children: [
                               Icon(Icons.delete_outline,
-                                  size: 18, color: AppTheme.error),
-                              SizedBox(width: 8),
-                              Text('Eliminar'),
+                                  size: 18, color: context.colors.error),
+                              const SizedBox(width: 8),
+                              const Text('Eliminar'),
                             ],
                           ),
                         ),

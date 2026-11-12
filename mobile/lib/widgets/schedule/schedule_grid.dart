@@ -127,7 +127,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
     return Column(
       children: [
         _buildDayHeaders(),
-        const Divider(height: 1, color: AppTheme.borderGrey),
+        Divider(height: 1, color: context.colors.borderGrey),
         Expanded(
           child: SingleChildScrollView(
             controller: _verticalController,
@@ -182,11 +182,11 @@ class _ScheduleGridState extends State<ScheduleGrid> {
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
           color: isToday
-              ? AppTheme.primaryGreen.withValues(alpha: 0.08)
+              ? context.colors.primaryGreen.withValues(alpha: 0.08)
               : Colors.transparent,
           border: Border(
             bottom: BorderSide(
-              color: isToday ? AppTheme.primaryGreen : AppTheme.borderGrey,
+              color: isToday ? context.colors.primaryGreen : context.colors.borderGrey,
               width: isToday ? 2 : 1,
             ),
           ),
@@ -197,7 +197,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
           style: GoogleFonts.inter(
             fontSize: 12,
             fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
-            color: isToday ? AppTheme.primaryGreen : AppTheme.darkText,
+            color: isToday ? context.colors.primaryGreen : context.colors.darkText,
           ),
         ),
       ),
@@ -311,15 +311,15 @@ class _ScheduleGridState extends State<ScheduleGrid> {
           Container(
             width:  8,
             height: 8,
-            decoration: const BoxDecoration(
-              color: AppTheme.error,
+            decoration: BoxDecoration(
+              color: context.colors.error,
               shape: BoxShape.circle,
             ),
           ),
           Expanded(
             child: Container(
               height: 2,
-              color: AppTheme.error,
+              color: context.colors.error,
             ),
           ),
         ],
@@ -337,7 +337,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
           Icon(
             Icons.calendar_today_outlined,
             size: 64,
-            color: AppTheme.greyText.withValues(alpha: 0.4),
+            color: context.colors.greyText.withValues(alpha: 0.4),
           ),
           const SizedBox(height: 16),
           Text(
@@ -345,7 +345,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
             style: GoogleFonts.inter(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: AppTheme.darkText,
+              color: context.colors.darkText,
             ),
           ),
           const SizedBox(height: 8),
@@ -353,7 +353,7 @@ class _ScheduleGridState extends State<ScheduleGrid> {
             'Toca + para agregar tu primera clase',
             style: GoogleFonts.inter(
               fontSize: 14,
-              color: AppTheme.greyText,
+              color: context.colors.greyText,
             ),
           ),
         ],
