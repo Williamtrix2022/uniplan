@@ -479,7 +479,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           const SizedBox(height: 8),
           DropdownButtonFormField<String>(
-            initialValue: _selectedUniversity,
+            value: _selectedUniversity,
             isExpanded: true,
             items: _universityOptions
                 .map((option) => DropdownMenuItem(
